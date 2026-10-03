@@ -17,6 +17,10 @@ const banners = [
     src: "/hero-banner-categories.png",
     alt: "앱부터 오프라인 가게까지, 한 곳에서 자유롭게 홍보. 웹사이트, 서비스, 상품, 콘텐츠, 이벤트를 카테고리별로 소개해보세요.",
   },
+  {
+    src: "/hero-banner-reach.png",
+    alt: "홍보는 더 간단하게, 도달은 더 넓게. 더홍보에서 앱, 서비스, 가게, 상품, 콘텐츠를 깔끔하게 소개하고 더 많은 사람에게 보여주세요.",
+  },
 ] as const;
 
 export function Hero() {
