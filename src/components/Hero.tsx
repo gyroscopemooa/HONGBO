@@ -21,6 +21,18 @@ const banners = [
     src: "/hero-banner-reach.png",
     alt: "홍보는 더 간단하게, 도달은 더 넓게. 더홍보에서 앱, 서비스, 가게, 상품, 콘텐츠를 깔끔하게 소개하고 더 많은 사람에게 보여주세요.",
   },
+  {
+    src: "/hero-banner-discovery.png",
+    alt: "내 서비스와 이야기를 사람들이 더 쉽게 발견하게. 복잡한 절차 없이 글을 올리고 관심 있는 사람들과 연결해보세요.",
+  },
+  {
+    src: "/hero-banner-everything.png",
+    alt: "무엇이든 올리고 더 많은 사람에게 알려보세요. 앱, 가게, 상품, 콘텐츠, 이벤트까지 한 곳에서 자유롭게 홍보할 수 있어요.",
+  },
+  {
+    src: "/hero-banner-community.png",
+    alt: "좋은 이야기와 상품을 더 많은 사람에게. 가게, 서비스, 콘텐츠, 이벤트까지 한 번의 등록으로 널리 알려보세요.",
+  },
 ] as const;
 
 export function Hero() {
