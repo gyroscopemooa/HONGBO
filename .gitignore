@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# 공개 가능한 값만 담은 운영용 설정은 커밋합니다 (비밀 값 금지)
+!.env.production
 
 # vercel
 .vercel
