@@ -49,7 +49,7 @@ export function Hero() {
         if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
       }}
     >
-      <div className="relative mx-auto aspect-[2172/724] max-w-[2172px]">
+      <div className="relative mx-auto aspect-[2172/724] max-w-[1440px]">
         {banners.map((banner, index) => {
           const active = index === current;
 
