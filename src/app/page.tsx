@@ -62,8 +62,8 @@ export default async function HomePage() {
         </section>
       )}
 
-      <div className="wrap grid items-start gap-5 pt-5 lg:grid-cols-[minmax(0,1fr)_270px_290px]">
-        <section aria-label="최신 홍보글" className="rounded-2xl border border-line bg-white p-3 shadow-card sm:p-4">
+      <div className="wrap grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-5 pt-5 lg:grid-cols-[minmax(0,1fr)_270px_290px]">
+        <section aria-label="최신 홍보글" className="min-w-0 rounded-2xl border border-line bg-white p-3 shadow-card sm:p-4">
           <div className="mb-1.5 flex items-center justify-between px-1.5 pt-1">
             <h2 className="flex items-center gap-2 text-[19px] font-extrabold tracking-[-0.04em]">
               <Siren size={20} className="text-brand" aria-hidden /> 최신 홍보글
@@ -84,7 +84,7 @@ export default async function HomePage() {
 
         <RankList posts={popular} />
 
-        <aside aria-label="사이드" className="space-y-4">
+        <aside aria-label="사이드" className="min-w-0 space-y-4">
           {sideBanners[0] && <PromoBanner banner={sideBanners[0]} className="min-h-[132px]" />}
           <NoticeList notices={notices} />
           {sideBanners[1] && <PromoBanner banner={sideBanners[1]} className="min-h-[104px]" />}

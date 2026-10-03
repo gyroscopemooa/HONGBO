@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export function RankList({ posts, title = "실시간 인기글" }: { posts: Post[]; title?: string }) {
   return (
-    <section aria-label={title} className="h-full rounded-2xl border border-line bg-white p-4 shadow-card sm:p-5">
+    <section aria-label={title} className="h-full min-w-0 rounded-2xl border border-line bg-white p-4 shadow-card sm:p-5">
       <h2 className="mb-3 flex items-center gap-2 text-[19px] font-extrabold tracking-[-0.04em]">
         <span className="flex size-7 items-center justify-center rounded-lg bg-brand-soft text-brand">
           <Trophy size={16} aria-hidden />
