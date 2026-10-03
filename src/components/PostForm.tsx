@@ -245,6 +245,17 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
       setFormError({ text: `${missing.join(", ")}을(를) 입력해주세요.` });
       return;
     }
+    const over: [string, string, number, number][] = [
+      ["title", "제목", f.title.length, LIMITS.titleMax],
+      ["shortDescription", "한 줄 소개", f.shortDescription.length, LIMITS.shortMax],
+      ["description", "상세 설명", f.description.length, LIMITS.descMax],
+    ].filter(([, , n, max]) => (n as number) > (max as number)) as [string, string, number, number][];
+    if (over.length) {
+      setErrors(Object.fromEntries(over.map(([k, label, , max]) => [k, `${label}은(는) ${max.toLocaleString()}자까지 입력할 수 있어요.`])));
+      setFormError({ text: `${over.map(([, label, n, max]) => `${label} ${(n - max).toLocaleString()}자`).join(", ")} 초과 — 글자수를 줄여주세요.` });
+      requestAnimationFrame(() => document.querySelector<HTMLElement>('[role="alert"]')?.scrollIntoView({ behavior: "smooth", block: "center" }));
+      return;
+    }
     if (busyCount > 0) {
       setFormError({ text: "이미지를 올리는 중이에요. 잠시만 기다려주세요." });
       return;

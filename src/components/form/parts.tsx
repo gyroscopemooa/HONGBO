@@ -41,6 +41,11 @@ export function Field({
         )}
       </div>
       {children}
+      {counter && counter.now > counter.max && !error && (
+        <p role="status" className="mt-1.5 text-[13px] font-medium text-brand-dark">
+          {label}은(는) {counter.max.toLocaleString()}자까지 입력할 수 있어요. {(counter.now - counter.max).toLocaleString()}자를 줄여주세요.
+        </p>
+      )}
       {hint && !error && <p className="mt-1.5 text-[12.5px] leading-snug text-muted">{hint}</p>}
       {error && (
         <p id={`${id}-error`} role="alert" className="mt-1.5 text-[13px] font-medium text-brand-dark">

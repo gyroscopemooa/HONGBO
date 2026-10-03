@@ -318,13 +318,20 @@ export const supabaseStore: Store = {
   },
 
   async upsertProfile({ id, nickname, avatarUrl, email }) {
-    const { error } = await sb()
-      .from("profiles")
-      .upsert({ id, nickname, avatar_url: avatarUrl ?? null, email: email ?? null }, { onConflict: "id", ignoreDuplicates: true });
-    if (error) fail("profiles.upsert", error);
-    const p = await this.getProfile(id);
-    if (!p) fail("profiles.upsert", { message: "profile not found" });
-    return p;
+    // 첫 로그인 직후 프로필이 바로 조회되지 않는 경우가 있어, 저장 → 조회를 짧게 재시도합니다.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { error } = await sb()
+        .from("profiles")
+        .upsert({ id, nickname, avatar_url: avatarUrl ?? null, email: email ?? null }, { onConflict: "id", ignoreDuplicates: true });
+      if (error) {
+        if (attempt === 2) fail("profiles.upsert", error);
+      } else {
+        const p = await this.getProfile(id);
+        if (p) return p;
+      }
+      await new Promise((r) => setTimeout(r, 200 * (attempt + 1)));
+    }
+    return fail("profiles.upsert", { message: "profile not found" });
   },
 
   async updateNickname(id, nickname) {
