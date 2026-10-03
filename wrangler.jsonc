@@ -1,7 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"main": ".open-next/worker.js",
-	"name": "thehongbo",
+	"name": "hongbo",
 	"compatibility_date": "2026-10-02",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"assets": {
@@ -12,7 +12,7 @@
 		{
 			// OpenNext 기본 자기 참조 바인딩 (서비스 이름은 위의 name 과 같아야 합니다)
 			"binding": "WORKER_SELF_REFERENCE",
-			"service": "thehongbo"
+			"service": "hongbo"
 		}
 	],
 	"observability": {

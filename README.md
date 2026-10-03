@@ -61,7 +61,7 @@ npm run dev        # http://localhost:3000
 
 1. 코드를 GitHub 저장소에 푸시합니다.
 2. Cloudflare 대시보드 → **Workers & Pages → Create → Import a repository** 로 저장소를 연결합니다.
-   - Worker 이름: `thehongbo` (`wrangler.jsonc` 의 `name` 과 같아야 합니다)
+   - Worker 이름: `hongbo` (`wrangler.jsonc` 의 `name` 과 같아야 합니다)
    - Build command: `npx opennextjs-cloudflare build`
    - Deploy command: `npx opennextjs-cloudflare deploy`
 3. **Build 변수** (Settings → Build → Variables and secrets) — 빌드할 때 화면 코드에 박히는 공개 값입니다.
