@@ -53,6 +53,8 @@ npm run dev        # http://localhost:3000
 | `SUPABASE_SERVICE_ROLE_KEY` | **서버 전용 비밀 키** (절대 `NEXT_PUBLIC_` 금지) |
 | `ADMIN_EMAILS` | 관리자 이메일(쉼표 구분). 이 이메일로 Google 로그인하면 `/admin` 접근 |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | (선택) 문의하기·광고문의 페이지에 표시할 이메일 |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | (선택) 구글 서치콘솔 HTML 태그 소유확인의 `content` 값 |
+| `NEXT_PUBLIC_NAVER_SITE_VERIFICATION` | (선택) 네이버 서치어드바이저 HTML 태그 소유확인의 `content` 값 |
 
 ### 2-4. Cloudflare 배포 (Workers + OpenNext)
 

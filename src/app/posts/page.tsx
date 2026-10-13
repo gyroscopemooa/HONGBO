@@ -9,7 +9,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const title = p.sort === "popular" ? "인기 홍보글" : "전체 홍보글";
   return {
     title,
-    description: "앱, 웹사이트, 서비스, 가게, 상품, 콘텐츠까지 — 더홍보에 올라온 모든 홍보글을 한곳에서 둘러보세요.",
+    description: "앱, 웹사이트, 서비스, 가게, 상품, 콘텐츠까지 — 무료 홍보 사이트 더홍보에 올라온 모든 홍보글을 한곳에서 둘러보세요.",
     alternates: {
       canonical: buildHref("/posts", { sort: p.sort === "popular" ? "popular" : undefined, region: p.region, page: p.page > 1 ? p.page : undefined }),
     },

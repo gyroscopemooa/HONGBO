@@ -13,8 +13,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const c = CATEGORY_MAP[slug];
   const p = parseListParams(await searchParams);
   return {
-    title: `${c.name} 홍보`,
-    description: `${c.desc} 더홍보에서 ${c.name} 홍보글을 무료로 올리고 둘러보세요.`,
+    title: `${c.name} 무료 홍보 - ${c.name} 홍보 사이트`,
+    description: `${c.desc} 무료 홍보 사이트 더홍보에서 ${c.name} 홍보글을 마음껏 올리고 둘러보세요.`,
     alternates: {
       canonical: buildHref(`/category/${slug}`, { sort: p.sort === "popular" ? "popular" : undefined, region: p.region, page: p.page > 1 ? p.page : undefined }),
     },

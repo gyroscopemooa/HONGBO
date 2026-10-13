@@ -33,6 +33,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // 정적 파일·이미지·seed 이미지·검색엔진용 파일은 제외
-    "/((?!_next/static|_next/image|seed/|defaults/|uploads/|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|seed/|defaults/|uploads/|favicon.ico|robots.txt|sitemap.xml|rss.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

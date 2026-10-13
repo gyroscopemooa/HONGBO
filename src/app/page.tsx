@@ -4,6 +4,7 @@ import { ChevronRight, Flame, Siren } from "lucide-react";
 import { Carousel } from "@/components/Carousel";
 import { CategoryTiles } from "@/components/CategoryTiles";
 import { Hero } from "@/components/Hero";
+import { HOME_FAQ, HomeFaq } from "@/components/HomeFaq";
 import { NoticeList } from "@/components/NoticeList";
 import { PostCard } from "@/components/PostCard";
 import { PostRow } from "@/components/PostRow";
@@ -14,7 +15,7 @@ import { getHomeData } from "@/lib/queries";
 import { siteUrl } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: { absolute: `${SITE.name} — ${SITE.tagline}` },
+  title: { absolute: SITE.seoTitle },
   description: SITE.description,
   alternates: { canonical: "/" },
 };
@@ -22,23 +23,47 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const { popular, latest, sideBanners, stripBanners, notices } = await getHomeData();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: SITE.name,
-    url: siteUrl(),
-    description: SITE.description,
-    inLanguage: "ko-KR",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${siteUrl()}/search?q={search_term_string}`,
-      "query-input": "required name=search_term_string",
+  const base = siteUrl();
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": `${base}/#website`,
+      name: SITE.name,
+      alternateName: ["thehongbo", "더홍보 무료 홍보 사이트", "무료홍보사이트 더홍보"],
+      url: base,
+      description: SITE.description,
+      inLanguage: "ko-KR",
+      publisher: { "@id": `${base}/#organization` },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${base}/search?q={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
     },
-  };
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": `${base}/#organization`,
+      name: SITE.name,
+      url: base,
+      logo: `${base}/og.png`,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: HOME_FAQ.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
+  ];
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <h1 className="sr-only">{SITE.name} - 앱·사이트·가게·상품을 마음껏 무료로 홍보하는 홍보 사이트</h1>
       <Hero />
       <CategoryTiles />
 
@@ -90,6 +115,8 @@ export default async function HomePage() {
           {sideBanners[1] && <PromoBanner banner={sideBanners[1]} className="min-h-[104px]" />}
         </aside>
       </div>
+
+      <HomeFaq />
     </>
   );
 }

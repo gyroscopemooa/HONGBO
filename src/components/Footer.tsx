@@ -11,6 +11,7 @@ export function Footer() {
           <div>
             <Logo size="md" />
             <p className="mt-2 text-sm text-muted">{SITE.slogan}</p>
+            <p className="mt-1 text-[13px] text-faint">누구나 마음껏 홍보 가능한 무료 홍보 사이트 · 마케팅 사이트</p>
           </div>
           <nav aria-label="푸터 메뉴" className="flex flex-wrap items-center gap-x-1 gap-y-2 text-sm text-ink-2">
             {[
