@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { CATEGORIES } from "@/lib/constants";
 import { store } from "@/lib/store";
 import { siteUrl } from "@/lib/utils";
+import { listCommunity } from "@/lib/community-store";
 
 // 새 홍보글이 등록되면 바로 반영되도록 요청 시점에 생성합니다.
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: now, changeFrequency: "hourly", priority: 1 },
     { url: `${base}/posts`, lastModified: now, changeFrequency: "hourly", priority: 0.9 },
+    { url: `${base}/community`, changeFrequency: "daily", priority: 0.8 },
     { url: `${base}/region`, lastModified: now, changeFrequency: "daily", priority: 0.6 },
     ...CATEGORIES.map((c) => ({
       url: `${base}/category/${c.slug}`,
@@ -39,6 +41,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       });
     }
+    if (items.length < 1000) break;
+  }
+  for (let page = 1; page <= 5; page++) {
+    const { items } = await listCommunity({ page, pageSize: 1000 });
+    for (const post of items) entries.push({ url: `${base}/community/${post.id}`, lastModified: new Date(post.updatedAt), changeFrequency: "weekly", priority: 0.7 });
     if (items.length < 1000) break;
   }
   return entries;

@@ -44,6 +44,7 @@ function NavInner() {
             </Link>
           );
         })}
+        <Link href="/community" className={linkCls(pathname.startsWith("/community"))} aria-current={pathname.startsWith("/community") ? "page" : undefined}>커뮤니티{underline(pathname.startsWith("/community"))}</Link>
         <span className="mx-1 h-4 w-px shrink-0 bg-line lg:hidden" aria-hidden />
         <div className="flex items-center lg:hidden">
           <Link href="/posts?sort=popular" className={linkCls(sort === "popular")}>인기글</Link>

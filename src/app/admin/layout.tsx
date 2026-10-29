@@ -14,6 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const links: Array<[string, string, number?]> = [
     ["/admin", "대시보드"],
     ["/admin/posts", "홍보글"],
+    ["/admin/community", "커뮤니티"],
     ["/admin/reports", "신고", stats.openReports],
     ["/admin/users", "사용자"],
     ["/admin/banners", "배너"],
