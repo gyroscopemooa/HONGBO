@@ -21,9 +21,11 @@ export function NoticeList({ notices }: { notices: Notice[] }) {
                 <span className="size-1 shrink-0 rounded-full bg-faint" aria-hidden />
                 <span className="truncate">{n.title}</span>
               </span>
-              <time dateTime={n.publishedAt} className="shrink-0 text-[12px] text-faint">
-                {formatDate(n.publishedAt)}
-              </time>
+              {Date.now() - new Date(n.publishedAt).getTime() < 7 * 86_400_000 && (
+                <time dateTime={n.publishedAt} className="shrink-0 text-[12px] text-faint">
+                  {formatDate(n.publishedAt)}
+                </time>
+              )}
             </Link>
           </li>
         ))}

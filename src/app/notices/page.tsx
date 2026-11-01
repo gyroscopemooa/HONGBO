@@ -20,9 +20,11 @@ export default async function NoticesPage() {
             <li key={n.id} id={`n-${n.id}`} className="scroll-mt-28 py-5 first:pt-0 last:pb-0 target:rounded-xl target:bg-brand-soft/50 target:px-3">
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="!mt-0 !mb-1">{n.title}</h2>
-                <time dateTime={n.publishedAt} className="shrink-0 text-xs text-faint">
-                  {formatDate(n.publishedAt)}
-                </time>
+                {Date.now() - new Date(n.publishedAt).getTime() < 7 * 86_400_000 && (
+                  <time dateTime={n.publishedAt} className="shrink-0 text-xs text-faint">
+                    {formatDate(n.publishedAt)}
+                  </time>
+                )}
               </div>
               <p className="whitespace-pre-wrap">{n.body}</p>
             </li>
