@@ -3,6 +3,7 @@
 import { ensureAnonId } from "@/lib/anon";
 import { getCurrentUser } from "@/lib/auth";
 import { createFeatureRequest } from "@/lib/feature-requests";
+import { notifyAdmin } from "@/lib/notify";
 import { rateLimit } from "@/lib/ratelimit";
 
 export async function submitFeatureRequestAction(message: string, contact: string, page: string): Promise<{ ok: boolean; message: string }> {
@@ -26,5 +27,9 @@ export async function submitFeatureRequestAction(message: string, contact: strin
     console.error("feature request failed", error);
     return { ok: false, message: "지금은 접수할 수 없어요. 문의하기로 보내주세요." };
   }
+  await notifyAdmin("[더홍보] 새 기능 요청", `${text}
+
+연락처: ${contact.trim().slice(0, 100) || "-"}
+페이지: ${page.slice(0, 200)}`);
   return { ok: true, message: "소중한 의견 고마워요. 운영자가 확인할게요." };
 }
