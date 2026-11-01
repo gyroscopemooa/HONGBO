@@ -396,6 +396,17 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                 홍보글 잘 쓰는 법 보기
               </Link>
             </p>
+            {f.category !== "quick" && (
+              <div role="note" className="mt-3 flex items-start gap-2.5 rounded-xl border border-line bg-soft px-4 py-3 text-[13.5px] leading-relaxed text-ink-2">
+                <CircleAlert size={17} className="mt-0.5 shrink-0 text-muted" aria-hidden />
+                <p>
+                  무성의한 글, 도배, 운영정책 위반 글은 삭제될 수 있어요.{" "}
+                  <Link href="/policy" target="_blank" className="font-semibold underline hover:text-brand">
+                    운영정책 보기
+                  </Link>
+                </p>
+              </div>
+            )}
             {f.category === "quick" && (
               <div role="note" className="mt-3 flex items-start gap-2.5 rounded-xl border border-[#f3c9dc] bg-[#fff4f9] px-4 py-3 text-[13.5px] leading-relaxed text-[#8a2a5a]">
                 <CircleAlert size={17} className="mt-0.5 shrink-0" aria-hidden />
@@ -629,18 +640,6 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                 </>
               )}
             </div>
-          </div>
-        )}
-
-        {f.category !== "quick" && (
-          <div role="note" className="flex items-start gap-2.5 rounded-xl border border-line bg-soft px-4 py-3 text-[13.5px] leading-relaxed text-ink-2">
-            <CircleAlert size={17} className="mt-0.5 shrink-0 text-muted" aria-hidden />
-            <p>
-              무성의한 글, 도배, 운영정책 위반 글은 삭제될 수 있어요.{" "}
-              <Link href="/policy" target="_blank" className="font-semibold underline hover:text-brand">
-                운영정책 보기
-              </Link>
-            </p>
           </div>
         )}
 
