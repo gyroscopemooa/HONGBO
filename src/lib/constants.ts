@@ -158,6 +158,9 @@ export const CATEGORY_MAP = Object.fromEntries(
 
 export const CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug) as CategorySlug[];
 
+/** 커뮤니티의 '홍보글 쓰는 법' 안내 글 */
+export const WRITING_GUIDE_PATH = "/community/8ca6c06d-0eac-4fa8-8e30-784fe0ba5134";
+
 export function isCategorySlug(v: unknown): v is CategorySlug {
   return typeof v === "string" && v in CATEGORY_MAP;
 }

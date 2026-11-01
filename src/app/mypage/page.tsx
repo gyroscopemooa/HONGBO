@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Eye, MousePointerClick, PencilLine } from "lucide-react";
+import { Eye, Heart, MousePointerClick, PencilLine } from "lucide-react";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { NicknameForm } from "@/components/NicknameForm";
 import { OwnerActions } from "@/components/OwnerActions";
@@ -28,9 +28,14 @@ export default async function MyPage() {
           <h1 className="text-[26px] font-black tracking-[-0.045em] sm:text-[32px]">내 홍보</h1>
           <p className="mt-1.5 text-[15px] text-muted">작성한 홍보글을 수정하고, 다시 홍보하거나 삭제할 수 있어요.</p>
         </div>
-        <Link href="/write" className="btn btn-primary">
-          <PencilLine size={16} aria-hidden /> 새 홍보글 쓰기
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/mypage/favorites" className="btn btn-outline">
+            <Heart size={16} aria-hidden /> 내 찜
+          </Link>
+          <Link href="/write" className="btn btn-primary">
+            <PencilLine size={16} aria-hidden /> 새 홍보글 쓰기
+          </Link>
+        </div>
       </header>
 
       <section className="mb-6 rounded-2xl border border-line bg-white p-4 shadow-card sm:p-5" aria-label="내 정보">

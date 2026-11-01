@@ -7,6 +7,9 @@ import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { ExternalCta } from "@/components/ExternalCta";
 import { Gallery } from "@/components/Gallery";
 import { YoutubeEmbed } from "@/components/YoutubeEmbed";
+import { BadgeKit } from "@/components/BadgeKit";
+import { FavoriteButton } from "@/components/FavoriteButton";
+import { isFavorite } from "@/lib/favorites-store";
 import { OwnerActions } from "@/components/OwnerActions";
 import { PostCard } from "@/components/PostCard";
 import { ReportButton } from "@/components/ReportButton";
@@ -57,6 +60,7 @@ export default async function PostDetailPage({ params }: Props) {
 
   const isOwner = !!user && post.authorId === user.id;
   const canManage = isOwner || !!user?.isAdmin;
+  const favorited = user ? await isFavorite(user.id, post.id).catch(() => false) : false;
   const publicNow = isPostPublic(post);
   if (!publicNow && !canManage) notFound();
 
@@ -187,6 +191,7 @@ export default async function PostDetailPage({ params }: Props) {
             </div>
             <div className="mt-3 flex items-center gap-4">
               <CopyLinkButton path={`/post/${post.id}`} />
+              <FavoriteButton postId={post.id} initial={favorited} loggedIn={!!user} />
               <ReportButton postId={post.id} />
             </div>
 
@@ -194,6 +199,7 @@ export default async function PostDetailPage({ params }: Props) {
               <div className="mt-4 rounded-xl bg-soft p-3">
                 <p className="mb-2 text-xs font-semibold text-muted">{isOwner ? "내가 쓴 글" : "관리자 메뉴"}</p>
                 <OwnerActions postId={post.id} canRenew={isOwner} size="sm" redirectTo={isOwner ? "/mypage" : "/admin/posts"} />
+                {isOwner && publicNow && <BadgeKit postId={post.id} origin={siteUrl()} />}
               </div>
             )}
           </div>
