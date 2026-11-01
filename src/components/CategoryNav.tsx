@@ -2,11 +2,57 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import { Flame, Clock, MapPin } from "lucide-react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { ChevronDown, Flame, Clock, MapPin } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "./CategoryIcon";
+
+/** 커뮤니티 · 홍보소모임을 하나로 묶은 드롭다운 (데스크톱) */
+function CommunityMenu({ pathname, items, linkCls }: { pathname: string; items: Array<[string, string]>; linkCls: (active: boolean) => string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const active = items.some(([href]) => pathname.startsWith(href));
+
+  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(true)} className={linkCls(active)}>
+        커뮤니티
+        <ChevronDown size={14} aria-hidden className={cn("transition-transform", open && "rotate-180")} />
+        {active && <span className="absolute inset-x-3 bottom-0 h-[3px] rounded-t-full bg-brand" aria-hidden />}
+      </button>
+      {open && (
+        <div role="menu" className="absolute left-0 top-full z-50 min-w-[150px] rounded-xl border border-line bg-white p-1.5 shadow-pop">
+          {items.map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              role="menuitem"
+              className={cn("block rounded-lg px-3 py-2 text-[14px] font-semibold hover:bg-soft", pathname.startsWith(href) ? "text-brand" : "text-ink-2")}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function NavInner() {
   const pathname = usePathname();
@@ -62,21 +108,16 @@ function NavInner() {
         </div>
       </div>
       <div className="hidden shrink-0 items-center border-l border-line pl-2 xl:flex">
-        {extra.map(([href, label]) => (
-          <Link key={href} href={href} className={linkCls(pathname.startsWith(href))} aria-current={pathname.startsWith(href) ? "page" : undefined}>
-            {label}
-            {underline(pathname.startsWith(href))}
-          </Link>
-        ))}
+        <CommunityMenu pathname={pathname} items={extra} linkCls={linkCls} />
         <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
-        <Link href="/posts?sort=popular" title="인기글" aria-label="인기글" className={linkCls(sort === "popular")}>
-          <Flame size={17} aria-hidden />
+        <Link href="/posts?sort=popular" className={linkCls(sort === "popular")}>
+          <Flame size={15} aria-hidden /> 인기글
         </Link>
-        <Link href="/posts?sort=latest" title="최신글" aria-label="최신글" className={linkCls(sort === "latest")}>
-          <Clock size={17} aria-hidden />
+        <Link href="/posts?sort=latest" className={linkCls(sort === "latest")}>
+          <Clock size={15} aria-hidden /> 최신글
         </Link>
-        <Link href="/region" title="지역별" aria-label="지역별" className={linkCls(pathname === "/region")}>
-          <MapPin size={17} aria-hidden />
+        <Link href="/region" className={linkCls(pathname === "/region")}>
+          <MapPin size={15} aria-hidden /> 지역별
         </Link>
       </div>
     </nav>
