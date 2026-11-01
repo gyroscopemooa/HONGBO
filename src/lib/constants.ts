@@ -238,7 +238,7 @@ export const LIMITS = {
   addressMax: 120,
   contactMax: 100,
   /** 일반 글 노출 기간(일). 갱신(다시 홍보하기)하면 이 기간만큼 다시 연장됩니다. */
-  postLifetimeDays: 60,
+  postLifetimeDays: 180,
   /** 계정당 연속 등록 제한 */
   postsPer10Min: 3,
   postsPerDay: 10,
