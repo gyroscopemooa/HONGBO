@@ -84,6 +84,7 @@ const TITLE_PLACEHOLDER: Record<CategorySlug, string> = {
   content: "예) 퇴근 후 1분 생활팁 쇼츠 채널",
   events: "예) 신규 앱 베타테스터 모집",
   free: "예) 개인 포트폴리오 구경해주세요",
+  quick: "예) 오늘 오픈한 우리 동네 빵집",
 };
 
 export function postToFormState(p: Post): FormState {
@@ -95,7 +96,7 @@ export function postToFormState(p: Post): FormState {
     description: p.description,
     primaryImageUrl: p.primaryImageUrl,
     images: p.images,
-    externalUrl: p.category === "apps" || p.category === "offline" ? "" : p.externalUrl,
+    externalUrl: p.category === "apps" || p.category === "offline" ? "" : (p.externalUrl ?? ""),
     playUrl: p.extra.playUrl ?? "",
     appStoreUrl: p.extra.appStoreUrl ?? "",
     siteUrl: p.extra.siteUrl ?? "",
@@ -215,7 +216,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
     if (f.description.trim().length < LIMITS.descMin) m.push("상세 설명");
     if (f.category === "apps" && !f.playUrl.trim() && !f.appStoreUrl.trim() && !f.siteUrl.trim()) m.push("앱 링크");
     else if (f.category === "offline" && !f.mapUrl.trim() && !f.businessUrl.trim()) m.push("지도/문의 링크");
-    else if (f.category && f.category !== "apps" && f.category !== "offline" && !f.externalUrl.trim()) m.push("링크");
+    else if (f.category && f.category !== "apps" && f.category !== "offline" && f.category !== "quick" && !f.externalUrl.trim()) m.push("링크");
     return m;
   }, [f]);
 
@@ -384,6 +385,14 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
               </p>
             )}
             {cat && <p className="mt-3 text-[13px] text-muted">{cat.desc}</p>}
+            {f.category === "quick" && (
+              <div role="note" className="mt-3 flex items-start gap-2.5 rounded-xl border border-[#f3c9dc] bg-[#fff4f9] px-4 py-3 text-[13.5px] leading-relaxed text-[#8a2a5a]">
+                <CircleAlert size={17} className="mt-0.5 shrink-0" aria-hidden />
+                <p>
+                  <b>꼭 읽어주세요.</b> 한줄홍보는 누구나 가볍게 올릴 수 있는 공간이에요. 대신 <b>무성의한 글, 내용 없는 짧은 소개, 반복·도배 글</b>은 사전 경고 없이 운영정책 위반으로 삭제될 수 있어요.
+                </p>
+              </div>
+            )}
           </div>
         </SectionCard>
 
@@ -433,7 +442,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                     className="field"
                   />
                 </Field>
-                <LinkInput id="mapUrl" label="지도 링크" value={f.mapUrl} onChange={(v) => set("mapUrl", v)} error={errors.mapUrl} placeholder="네이버지도 · 카카오맵 · Google Maps 공유 링크" hint="지도 링크 또는 아래 영업/문의 링크 중 하나는 꼭 필요해요." />
+                <LinkInput id="mapUrl" label="지도 링크" value={f.mapUrl} onChange={(v) => set("mapUrl", v)} onApply={applyOg} error={errors.mapUrl} placeholder="네이버지도 · 카카오맵 · Google Maps 공유 링크" hint="지도 링크 또는 아래 영업/문의 링크 중 하나는 꼭 필요해요." />
                 <LinkInput id="businessUrl" label="영업/문의 링크" optional value={f.businessUrl} onChange={(v) => set("businessUrl", v)} error={errors.businessUrl} placeholder="인스타그램, 블로그, 예약 페이지 등" withFetch onApply={applyOg} />
               </>
             )}
@@ -466,7 +475,8 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                               ? "신청 링크"
                               : "바로가기 링크"
                   }
-                  required
+                  required={f.category !== "quick"}
+                  optional={f.category === "quick"}
                   value={f.externalUrl}
                   onChange={(v) => set("externalUrl", v)}
                   error={errors.externalUrl}
@@ -606,6 +616,15 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
               )}
             </div>
           </div>
+        )}
+
+        {f.category !== "quick" && (
+          <p className="text-[12.5px] leading-relaxed text-muted">
+            무성의한 글, 도배, 운영정책 위반 글은 삭제될 수 있어요.{" "}
+            <Link href="/policy" target="_blank" className="font-semibold underline hover:text-brand">
+              운영정책 보기
+            </Link>
+          </p>
         )}
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

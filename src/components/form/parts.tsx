@@ -177,7 +177,7 @@ export function LinkInput({
   required,
   optional,
   hint,
-  withFetch,
+  withFetch = true,
   onApply,
 }: {
   id: string;

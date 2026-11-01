@@ -36,14 +36,46 @@ export function Carousel({
     return () => ro.disconnect();
   }, [update]);
 
+  // 자동 슬라이드: 마우스를 올리거나 직접 조작하면 잠시 멈춥니다.
+  const hovering = useRef(false);
+  const pausedUntil = useRef(0);
+  const pauseFor = (ms: number) => {
+    pausedUntil.current = Date.now() + ms;
+  };
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setInterval(() => {
+      const el = ref.current;
+      if (!el || hovering.current || document.hidden || Date.now() < pausedUntil.current) return;
+      if (el.scrollWidth <= el.clientWidth + 4) return;
+      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 4) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+        return;
+      }
+      const first = el.firstElementChild as HTMLElement | null;
+      el.scrollBy({ left: first ? first.offsetWidth + 12 : el.clientWidth / 2, behavior: "smooth" });
+    }, 3200);
+    return () => window.clearInterval(id);
+  }, []);
+
   const scrollBy = (dir: -1 | 1) => {
     const el = ref.current;
     if (!el) return;
+    pauseFor(8000);
     el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" });
   };
 
   return (
-    <section aria-label={title} className="wrap py-4 sm:py-5">
+    <section
+      aria-label={title}
+      className="wrap py-4 sm:py-5"
+      onMouseEnter={() => (hovering.current = true)}
+      onMouseLeave={() => (hovering.current = false)}
+      onFocus={() => (hovering.current = true)}
+      onBlur={() => (hovering.current = false)}
+      onTouchStart={() => pauseFor(8000)}
+    >
       <div className="mb-3 flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-[19px] font-extrabold tracking-[-0.04em] sm:text-[21px]">
           {icon}

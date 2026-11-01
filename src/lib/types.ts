@@ -25,7 +25,8 @@ export interface Post {
   primaryImageUrl: string | null;
   /** 추가 이미지(최대 4장) */
   images: string[];
-  externalUrl: string;
+  /** 한줄홍보는 링크 없이도 등록할 수 있어 null 일 수 있습니다 */
+  externalUrl: string | null;
   /** 앱: "android,ios" / 콘텐츠: "youtube" 등 */
   platform: string | null;
   price: string | null;
@@ -57,7 +58,7 @@ export interface PostInput {
   description: string;
   primaryImageUrl: string | null;
   images: string[];
-  externalUrl: string;
+  externalUrl: string | null;
   platform: string | null;
   price: string | null;
   region: string | null;

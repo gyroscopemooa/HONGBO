@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   Handshake,
   Store,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import type { CategorySlug } from "@/lib/constants";
@@ -22,6 +23,7 @@ export const CATEGORY_ICONS: Record<CategorySlug | "all", LucideIcon> = {
   content: Clapperboard,
   events: CalendarCheck,
   free: Megaphone,
+  quick: Zap,
 };
 
 export function CategoryIcon({

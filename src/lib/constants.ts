@@ -41,7 +41,8 @@ export type CategorySlug =
   | "products"
   | "content"
   | "events"
-  | "free";
+  | "free"
+  | "quick";
 
 export interface CategoryInfo {
   slug: CategorySlug;
@@ -138,6 +139,16 @@ export const CATEGORIES: CategoryInfo[] = [
     color: "#0e9ad8",
     tint: "#e5f5fd",
     defaultImage: "/defaults/free.svg",
+  },
+  {
+    slug: "quick",
+    name: "한줄홍보",
+    short: "한줄홍보",
+    cta: "바로가기",
+    desc: "링크가 없어도 괜찮아요. 가볍게 한두 줄로 알리는 홍보예요.",
+    color: "#e0569b",
+    tint: "#ffeaf4",
+    defaultImage: "/defaults/quick.svg",
   },
 ];
 

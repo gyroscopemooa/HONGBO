@@ -149,14 +149,16 @@ export default async function PostDetailPage({ params }: Props) {
             )}
 
             <div className="mt-5 hidden space-y-2 lg:block">
-              {publicNow && <ExternalCta href={post.externalUrl} postId={post.id} label={label} />}
+              {publicNow && post.externalUrl && <ExternalCta href={post.externalUrl} postId={post.id} label={label} />}
               {publicNow &&
                 others.map((l) => (
                   <ExternalCta key={l.url} href={l.url} postId={post.id} label={l.label} variant="outline" />
                 ))}
-              <p className="flex items-center justify-center gap-1 pt-1 text-xs text-faint">
-                <Globe size={12} aria-hidden /> {getDomain(post.externalUrl)} 으로 이동해요
-              </p>
+              {post.externalUrl && (
+                <p className="flex items-center justify-center gap-1 pt-1 text-xs text-faint">
+                  <Globe size={12} aria-hidden /> {getDomain(post.externalUrl)} 으로 이동해요
+                </p>
+              )}
             </div>
             <div className="mt-4 space-y-2 lg:hidden">
               {publicNow &&
@@ -234,7 +236,7 @@ export default async function PostDetailPage({ params }: Props) {
         </section>
       )}
 
-      {publicNow && (
+      {publicNow && post.externalUrl && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 p-3 backdrop-blur lg:hidden">
           <div className="mx-auto max-w-[520px]">
             <ExternalCta href={post.externalUrl} postId={post.id} label={label} />

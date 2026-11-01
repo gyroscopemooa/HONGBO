@@ -157,6 +157,11 @@ export function parsePostInput(raw: unknown): ParseResult {
       if (period) extra.period = period.slice(0, 80);
       break;
     }
+    case "quick": {
+      // 한줄홍보는 링크가 선택 사항
+      externalUrl = linkField("externalUrl", v.externalUrl);
+      break;
+    }
     default: {
       externalUrl = linkField("externalUrl", v.externalUrl, true);
     }
@@ -217,8 +222,9 @@ export function parsePostInput(raw: unknown): ParseResult {
     errors.description = "운영정책상 등록할 수 없는 내용이 포함되어 있어요. 내용을 확인해주세요.";
   }
 
-  if (Object.keys(errors).length > 0 || !externalUrl) {
-    if (!externalUrl && !errors.externalUrl && !errors.playUrl && !errors.mapUrl && !errors.businessUrl) {
+  const linkOptional = category === "quick";
+  if (Object.keys(errors).length > 0 || (!externalUrl && !linkOptional)) {
+    if (!externalUrl && !linkOptional && !errors.externalUrl && !errors.playUrl && !errors.mapUrl && !errors.businessUrl) {
       errors.externalUrl = "링크를 입력해주세요.";
     }
     return { ok: false, errors, message: "입력한 내용을 다시 확인해주세요." };

@@ -29,7 +29,7 @@ function toPost(r: Row): Post {
     description: r.description as string,
     primaryImageUrl: (r.primary_image_url as string | null) ?? null,
     images: [...imgs].sort((a, b) => a.sort_order - b.sort_order).map((i) => i.image_url),
-    externalUrl: r.external_url as string,
+    externalUrl: (r.external_url as string | null) ?? null,
     platform: (r.platform as string | null) ?? null,
     price: (r.price as string | null) ?? null,
     region: (r.region as string | null) ?? null,

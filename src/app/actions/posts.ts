@@ -34,7 +34,7 @@ export async function createPostAction(raw: unknown): Promise<ActionResult> {
     return { ok: false, message: `하루에 등록할 수 있는 홍보글(${LIMITS.postsPerDay}개)을 모두 사용했어요.` };
   }
   // 같은 링크 반복 등록 제한
-  if (await store.findActiveByUrl(user.id, parsed.data.externalUrl)) {
+  if (parsed.data.externalUrl && (await store.findActiveByUrl(user.id, parsed.data.externalUrl))) {
     return {
       ok: false,
       message: "같은 링크로 등록한 홍보글이 이미 있어요. 기존 글을 수정하거나 '다시 홍보하기'를 이용해주세요.",
@@ -60,7 +60,7 @@ export async function updatePostAction(id: number, raw: unknown): Promise<Action
   const parsed = parsePostInput(raw);
   if (!parsed.ok) return { ok: false, message: parsed.message, errors: parsed.errors };
 
-  if (post.authorId && (await store.findActiveByUrl(post.authorId, parsed.data.externalUrl, post.id))) {
+  if (post.authorId && parsed.data.externalUrl && (await store.findActiveByUrl(post.authorId, parsed.data.externalUrl, post.id))) {
     return {
       ok: false,
       message: "같은 링크로 등록한 다른 홍보글이 있어요.",

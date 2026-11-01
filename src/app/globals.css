@@ -261,3 +261,26 @@
   background: var(--color-soft);
   font-weight: 700;
 }
+
+/* 로고 호버 애니메이션 */
+@keyframes hb-logo-hop {
+  0% { transform: translateY(0) scale(1, 1); }
+  30% { transform: translateY(-0.32em) scale(0.94, 1.08); }
+  55% { transform: translateY(0) scale(1.1, 0.88); }
+  75% { transform: translateY(-0.1em) scale(0.98, 1.03); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+@keyframes hb-logo-in {
+  0% { opacity: 0; transform: translateY(0.45em) rotate(-8deg) scale(0.7); }
+  100% { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+}
+@keyframes hb-logo-wave {
+  0% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-0.3em) rotate(-7deg); }
+  50% { transform: translateY(0.06em) rotate(5deg); }
+  75% { transform: translateY(-0.12em) rotate(-2deg); }
+  100% { transform: translateY(0) rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hb-logo-letter { animation: none !important; }
+}
