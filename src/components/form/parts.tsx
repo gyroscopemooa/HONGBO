@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, Link2, LoaderCircle, Sparkles, X } from "lucide-react";
+import { Download, ImagePlus, Link2, LoaderCircle, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { processAndUpload, processImage, uploadImage } from "@/lib/image-client";
 import { cn } from "@/lib/utils";
@@ -251,7 +251,7 @@ export function LinkInput({
         </div>
         {withFetch && (
           <button type="button" onClick={fetchOg} disabled={loading} className="btn btn-outline shrink-0 !px-3.5">
-            {loading ? <LoaderCircle size={16} className="animate-spin" aria-hidden /> : <Sparkles size={16} aria-hidden />}
+            {loading ? <LoaderCircle size={16} className="animate-spin" aria-hidden /> : <Download size={16} aria-hidden />}
             <span className="hidden sm:inline">정보 가져오기</span>
             <span className="sm:hidden">가져오기</span>
           </button>
