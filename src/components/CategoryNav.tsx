@@ -19,9 +19,13 @@ function NavInner() {
       ? "all"
       : null;
 
+  const extra: Array<[string, string]> = [
+    ["/community", "커뮤니티"],
+    ["/meetup", "홍보소모임"],
+  ];
   const linkCls = (active: boolean) =>
     cn(
-      "relative inline-flex h-12 shrink-0 items-center gap-1.5 px-3 text-[14.5px] font-semibold transition-colors sm:px-3.5",
+      "relative inline-flex h-12 shrink-0 items-center gap-1.5 px-2.5 text-[14.5px] font-semibold transition-colors sm:px-3",
       active ? "text-brand" : "text-ink-2 hover:text-brand",
     );
   const underline = (active: boolean) =>
@@ -44,24 +48,35 @@ function NavInner() {
             </Link>
           );
         })}
-        <Link href="/community" className={linkCls(pathname.startsWith("/community"))} aria-current={pathname.startsWith("/community") ? "page" : undefined}>커뮤니티{underline(pathname.startsWith("/community"))}</Link>
-        <Link href="/meetup" className={linkCls(pathname.startsWith("/meetup"))} aria-current={pathname.startsWith("/meetup") ? "page" : undefined}>홍보소모임{underline(pathname.startsWith("/meetup"))}</Link>
-        <span className="mx-1 h-4 w-px shrink-0 bg-line lg:hidden" aria-hidden />
-        <div className="flex items-center lg:hidden">
+        <div className="flex items-center xl:hidden">
+          {extra.map(([href, label]) => (
+            <Link key={href} href={href} className={linkCls(pathname.startsWith(href))} aria-current={pathname.startsWith(href) ? "page" : undefined}>
+              {label}
+              {underline(pathname.startsWith(href))}
+            </Link>
+          ))}
+          <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
           <Link href="/posts?sort=popular" className={linkCls(sort === "popular")}>인기글</Link>
           <Link href="/posts?sort=latest" className={linkCls(sort === "latest")}>최신글</Link>
           <Link href="/region" className={linkCls(pathname === "/region")}>지역별</Link>
         </div>
       </div>
-      <div className="hidden shrink-0 items-center gap-1 border-l border-line pl-3 lg:flex">
-        <Link href="/posts?sort=popular" className={linkCls(sort === "popular")}>
-          <Flame size={15} aria-hidden /> 인기글
+      <div className="hidden shrink-0 items-center border-l border-line pl-2 xl:flex">
+        {extra.map(([href, label]) => (
+          <Link key={href} href={href} className={linkCls(pathname.startsWith(href))} aria-current={pathname.startsWith(href) ? "page" : undefined}>
+            {label}
+            {underline(pathname.startsWith(href))}
+          </Link>
+        ))}
+        <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
+        <Link href="/posts?sort=popular" title="인기글" aria-label="인기글" className={linkCls(sort === "popular")}>
+          <Flame size={17} aria-hidden />
         </Link>
-        <Link href="/posts?sort=latest" className={linkCls(sort === "latest")}>
-          <Clock size={15} aria-hidden /> 최신글
+        <Link href="/posts?sort=latest" title="최신글" aria-label="최신글" className={linkCls(sort === "latest")}>
+          <Clock size={17} aria-hidden />
         </Link>
-        <Link href="/region" className={linkCls(pathname === "/region")}>
-          <MapPin size={15} aria-hidden /> 지역별
+        <Link href="/region" title="지역별" aria-label="지역별" className={linkCls(pathname === "/region")}>
+          <MapPin size={17} aria-hidden />
         </Link>
       </div>
     </nav>
