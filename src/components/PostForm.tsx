@@ -16,6 +16,7 @@ import {
   type CategorySlug,
 } from "@/lib/constants";
 import { inferRegion } from "@/lib/policy";
+import { youtubeWatchUrl } from "@/lib/youtube";
 import type { Post } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "./CategoryIcon";
@@ -41,6 +42,7 @@ export interface FormState {
   snsPlatform: string;
   usageType: string;
   period: string;
+  videoUrl: string;
   price: string;
   region: string;
   tags: string[];
@@ -66,6 +68,7 @@ const EMPTY: FormState = {
   snsPlatform: "youtube",
   usageType: "",
   period: "",
+  videoUrl: "",
   price: "",
   region: "",
   tags: [],
@@ -107,6 +110,7 @@ export function postToFormState(p: Post): FormState {
     snsPlatform: p.category === "content" && p.platform ? p.platform : "youtube",
     usageType: p.extra.usageType ?? "",
     period: p.extra.period ?? "",
+    videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
     price: p.price ?? "",
     region: p.region ?? "",
     tags: p.tags,
@@ -138,6 +142,7 @@ function toPayload(f: FormState) {
       usageType: f.usageType,
       period: f.period,
       businessUrl: f.businessUrl,
+      videoUrl: f.videoUrl,
     },
   };
 }
@@ -566,6 +571,9 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                 <ImageSlot key={`new-${f.images.length}`} size="sm" value={null} alt="" onChange={(u) => u && set("images", [...f.images, u])} onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} />
               )}
             </div>
+          </Field>
+          <Field id="videoUrl" label="유튜브 영상" optional error={errors.videoUrl} hint="영상 주소를 붙여넣으면 상세 페이지에서 바로 재생할 수 있어요. (직접 영상 업로드는 지원하지 않아요)">
+            <input id="videoUrl" value={f.videoUrl} maxLength={300} onChange={(e) => set("videoUrl", e.target.value)} placeholder="https://www.youtube.com/watch?v=…" className="field" />
           </Field>
         </SectionCard>
 

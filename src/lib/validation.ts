@@ -7,6 +7,7 @@ import {
   USAGE_TYPES,
   type CategorySlug,
 } from "./constants";
+import { parseYoutubeId } from "./youtube";
 import { findBannedKeyword, inferRegion, isRegion } from "./policy";
 import type { PostExtra, PostInput } from "./types";
 import { isAllowedImageUrl, isMapUrl, normalizeExternalUrl } from "./url";
@@ -37,6 +38,7 @@ const rawSchema = z.object({
       usageType: str(40),
       period: str(200),
       businessUrl: str(2100),
+      videoUrl: str(2100),
     })
     .default({}),
 });
@@ -98,6 +100,13 @@ export function parsePostInput(raw: unknown): ParseResult {
     }
     return r.url;
   };
+
+  const videoInput = blankToNull(v.extra.videoUrl);
+  if (videoInput) {
+    const ytId = parseYoutubeId(videoInput);
+    if (ytId) extra.youtubeId = ytId;
+    else errors.videoUrl = "유튜브 영상 주소를 입력해주세요. (youtube.com, youtu.be)";
+  }
 
   let externalUrl: string | null = null;
   let mapUrl: string | null = null;

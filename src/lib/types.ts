@@ -13,6 +13,8 @@ export interface PostExtra {
   period?: string;
   /** 오프라인 가게: 영업/문의 링크 */
   businessUrl?: string;
+  /** 유튜브 영상 ID (상세 페이지에서 재생) */
+  youtubeId?: string;
 }
 
 export interface Post {

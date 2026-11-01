@@ -6,6 +6,7 @@ import { CategoryBadge } from "@/components/CategoryBadge";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { ExternalCta } from "@/components/ExternalCta";
 import { Gallery } from "@/components/Gallery";
+import { YoutubeEmbed } from "@/components/YoutubeEmbed";
 import { OwnerActions } from "@/components/OwnerActions";
 import { PostCard } from "@/components/PostCard";
 import { ReportButton } from "@/components/ReportButton";
@@ -115,6 +116,11 @@ export default async function PostDetailPage({ params }: Props) {
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_370px] lg:gap-8">
         <div className="min-w-0 lg:col-start-1 lg:row-start-1">
           <Gallery images={images} title={post.title} />
+          {post.extra.youtubeId && (
+            <div className="mt-4">
+              <YoutubeEmbed id={post.extra.youtubeId} title={post.title} />
+            </div>
+          )}
         </div>
 
         <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1" aria-label="홍보 정보">
