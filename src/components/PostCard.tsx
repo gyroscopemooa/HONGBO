@@ -38,9 +38,9 @@ export function PostCard({ post, eager = false, preview = false }: { post: Post;
               <Eye size={13} aria-hidden />
               {formatCount(post.viewCount)}
             </span>
-          ) : (
+          ) : Date.now() - new Date(post.publishedAt).getTime() < 7 * 86_400_000 ? (
             <span className="text-xs text-faint">{relativeTime(post.publishedAt)}</span>
-          )}
+          ) : null}
         </div>
       </div>
     </>

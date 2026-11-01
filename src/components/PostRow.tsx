@@ -23,9 +23,11 @@ export function PostRow({ post }: { post: Post }) {
         </div>
         <p className="mt-1 truncate text-[13px] text-muted">{post.shortDescription}</p>
       </div>
-      <time dateTime={post.publishedAt} className="shrink-0 text-xs text-faint sm:text-[12.5px]">
-        {relativeTime(post.publishedAt)}
-      </time>
+      {Date.now() - new Date(post.publishedAt).getTime() < 7 * 86_400_000 && (
+        <time dateTime={post.publishedAt} className="shrink-0 text-xs text-faint sm:text-[12.5px]">
+          {relativeTime(post.publishedAt)}
+        </time>
+      )}
     </Link>
   );
 }

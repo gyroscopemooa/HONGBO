@@ -237,7 +237,7 @@ export const LIMITS = {
   /** 이 개수 이상의 유효 이벤트가 쌓이면 운영자 큐레이션 대신 자동 인기순으로 전환 */
   autoPopularMinEvents: 300,
   /** 카드에 조회수를 표시하는 최소 실제 조회수 */
-  showViewsFrom: 10,
+  showViewsFrom: 1000,
   uploadMaxBytes: 4 * 1024 * 1024,
 };
 

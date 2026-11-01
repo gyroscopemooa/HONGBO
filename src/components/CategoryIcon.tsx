@@ -6,7 +6,7 @@ import {
   Megaphone,
   Monitor,
   ShoppingBag,
-  Sparkles,
+  Handshake,
   Store,
   type LucideIcon,
 } from "lucide-react";
@@ -16,7 +16,7 @@ export const CATEGORY_ICONS: Record<CategorySlug | "all", LucideIcon> = {
   all: LayoutGrid,
   apps: Gamepad2,
   websites: Monitor,
-  services: Sparkles,
+  services: Handshake,
   offline: Store,
   products: ShoppingBag,
   content: Clapperboard,

@@ -35,8 +35,8 @@ export async function getPopularPosts(limit: number): Promise<Post[]> {
 
 export async function getHomeData() {
   const [popular, latest, side, strip, notices] = await Promise.all([
-    getPopularPosts(12),
-    store.listPosts({ publicOnly: true, sort: "latest", pageSize: 10 }),
+    getPopularPosts(18),
+    store.listPosts({ publicOnly: true, sort: "latest", pageSize: 20 }),
     store.listBanners({ activeOnly: true, placement: "side" }),
     store.listBanners({ activeOnly: true, placement: "strip" }),
     store.listNotices(5),
