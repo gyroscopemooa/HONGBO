@@ -13,9 +13,9 @@ export const dynamic = "force-dynamic";
 
 const title = SITE.seoTitle;
 
-// 서치콘솔 / 네이버 서치어드바이저 소유확인 값 (발급받은 content 값만 환경변수로 넣으면 됩니다)
+// 서치콘솔 / 네이버 서치어드바이저 소유확인 값
 const googleVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
-const naverVerification = process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION?.trim();
+const naverVerification = "2ecfde29bd30f414f8f2ac323f0c57c198862909";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } },
   verification: {
     google: googleVerification || undefined,
-    other: naverVerification ? { "naver-site-verification": naverVerification } : undefined,
+    other: { "naver-site-verification": naverVerification },
   },
   openGraph: {
     type: "website",
