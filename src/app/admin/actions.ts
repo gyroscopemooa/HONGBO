@@ -45,6 +45,15 @@ export async function adminPinPost(formData: FormData) {
   refresh();
 }
 
+export async function adminSetOfficial(formData: FormData) {
+  await requireAdmin();
+  const id = int(formData.get("id"));
+  if (!id) return;
+  const v = String(formData.get("official") ?? "");
+  await store.setOfficial(id, v === "official" || v === "verified" ? v : null);
+  refresh();
+}
+
 export async function adminBulkSeed(formData: FormData) {
   await requireAdmin();
   const action = String(formData.get("action"));

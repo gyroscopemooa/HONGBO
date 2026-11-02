@@ -5,6 +5,7 @@ import type { Post } from "@/lib/types";
 import { cn, formatCount, relativeTime } from "@/lib/utils";
 import { BenefitBadges } from "./BenefitBadges";
 import { CategoryBadge } from "./CategoryBadge";
+import { OfficialBadge } from "./OfficialBadge";
 import { PostImage } from "./PostImage";
 
 const CARD_SIZES = "(min-width:1024px) 190px, (min-width:640px) 30vw, 46vw";
@@ -15,6 +16,7 @@ export function PostCard({ post, eager = false, preview = false }: { post: Post;
     <>
       <div className="relative">
         <PostImage src={post.primaryImageUrl} alt="" category={post.category} sizes={CARD_SIZES} eager={eager} />
+        {post.extra.official && <OfficialBadge value={post.extra.official} className="absolute right-2 top-2 z-10" />}
         {benefitLabels(post.extra.benefits).length > 0 && <BenefitBadges values={post.extra.benefits} className="absolute bottom-2 left-2 z-10" />}
         {post.region && (
           <span className="absolute left-2 top-2 inline-flex items-center gap-0.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[11.5px] font-bold text-ink-2 shadow-sm">

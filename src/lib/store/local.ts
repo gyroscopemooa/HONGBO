@@ -230,7 +230,9 @@ export const localStore: Store = {
     const db = load();
     const p = db.posts.find((x) => x.id === id);
     if (!p) return null;
+    const official = p.extra?.official;
     Object.assign(p, input, { updatedAt: new Date().toISOString() });
+    if (official) p.extra = { ...p.extra, official };
     save(db);
     return clone(p);
   },
@@ -248,6 +250,16 @@ export const localStore: Store = {
     const db = load();
     db.posts = db.posts.filter((x) => x.id !== id);
     db.reports = db.reports.filter((r) => r.postId !== id);
+    save(db);
+  },
+
+  async setOfficial(id, value) {
+    const db = load();
+    const p = db.posts.find((x) => x.id === id);
+    if (!p) return;
+    p.extra = { ...p.extra };
+    if (value) p.extra.official = value;
+    else delete p.extra.official;
     save(db);
   },
 

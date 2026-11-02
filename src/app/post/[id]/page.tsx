@@ -16,6 +16,7 @@ import { ReportButton } from "@/components/ReportButton";
 import { TrackEvent } from "@/components/TrackEvent";
 import { getCurrentUser } from "@/lib/auth";
 import { CATEGORY_MAP, LIMITS, PLATFORM_LABELS, benefitLabels } from "@/lib/constants";
+import { OfficialBadge } from "@/components/OfficialBadge";
 import { BenefitBadges } from "@/components/BenefitBadges";
 import { ctaLabel, platformText, secondaryLinks } from "@/lib/post-links";
 import { effectiveStatus, isPostPublic } from "@/lib/queries";
@@ -138,7 +139,12 @@ export default async function PostDetailPage({ params }: Props) {
                 </span>
               )}
             </div>
-            {benefitLabels(post.extra.benefits).length > 0 && <BenefitBadges values={post.extra.benefits} className="mt-3" />}
+            {(post.extra.official || benefitLabels(post.extra.benefits).length > 0) && (
+              <div className="mt-3 flex flex-wrap items-center gap-1">
+                <OfficialBadge value={post.extra.official} />
+                <BenefitBadges values={post.extra.benefits} />
+              </div>
+            )}
             <h1 className="mt-3 text-[22px] font-black leading-[1.3] tracking-[-0.04em] sm:text-[24px]">{post.title}</h1>
             <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{post.shortDescription}</p>
 
@@ -191,7 +197,7 @@ export default async function PostDetailPage({ params }: Props) {
                 )}
               </span>
             </div>
-            <div className="mt-3 flex items-center gap-4">
+            <div className="mt-3 flex flex-wrap items-start gap-x-4 gap-y-2 [&_a]:whitespace-nowrap [&_button]:whitespace-nowrap">
               <CopyLinkButton path={`/post/${post.id}`} />
               <FavoriteButton postId={post.id} initial={favorited} loggedIn={!!user} />
               <ReportButton postId={post.id} />

@@ -17,6 +17,8 @@ export interface PostExtra {
   youtubeId?: string;
   /** 혜택 배지 값 (BENEFITS의 value) */
   benefits?: string[];
+  /** 운영자만 지정: official(더홍보 공식) | verified(더홍보 인증). 작성자 입력으로는 바뀌지 않음 */
+  official?: "official" | "verified";
 }
 
 export interface Post {

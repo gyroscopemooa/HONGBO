@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Eye, EyeOff, Pencil, Pin, ShieldBan } from "lucide-react";
-import { adminDeletePost, adminPinPost, adminSetPostStatus } from "../actions";
+import { adminDeletePost, adminPinPost, adminSetOfficial, adminSetPostStatus } from "../actions";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { Pagination } from "@/components/Pagination";
@@ -118,6 +118,15 @@ export default async function AdminPosts({ searchParams }: Props) {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                <form action={adminSetOfficial} className="flex items-center gap-1.5 rounded-lg bg-soft px-2 py-1.5">
+                  <input type="hidden" name="id" value={p.id} />
+                  <select name="official" defaultValue={p.extra.official ?? ""} aria-label="더홍보 표시" className="h-8 rounded-md border border-line bg-white px-2 text-sm">
+                    <option value="">표시 없음</option>
+                    <option value="official">더홍보 공식</option>
+                    <option value="verified">더홍보 인증</option>
+                  </select>
+                  <button className="btn btn-outline btn-sm !px-2.5">저장</button>
+                </form>
                 <form action={adminPinPost} className="flex items-center gap-1.5 rounded-lg bg-soft px-2 py-1.5">
                   <input type="hidden" name="id" value={p.id} />
                   <label className="flex items-center gap-1 text-[12.5px] font-semibold text-ink-2">

@@ -62,6 +62,7 @@ export interface Store {
   updatePost(id: number, input: PostInput): Promise<Post | null>;
   setPostStatus(id: number, status: PostStatus): Promise<void>;
   deletePost(id: number): Promise<void>;
+  setOfficial(id: number, value: "official" | "verified" | null): Promise<void>;
   setPinned(id: number, pinned: boolean, curatedRank: number | null): Promise<void>;
   renewPost(id: number, expiresAt: string | null): Promise<void>;
   /** 시드 글 일괄 처리. 변경된 개수 반환 */

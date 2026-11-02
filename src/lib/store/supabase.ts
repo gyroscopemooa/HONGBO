@@ -188,9 +188,14 @@ export const supabaseStore: Store = {
   },
 
   async updatePost(id, input) {
+    // 운영자가 지정한 공식/인증 표시는 작성자 수정으로 사라지지 않게 유지합니다.
+    const { data: cur } = await sb().from("posts").select("extra").eq("id", id).maybeSingle();
+    const official = ((cur as Row | null)?.extra as PostExtra | null)?.official;
+    const row = inputToRow(input);
+    if (official) row.extra = { ...(row.extra as PostExtra), official };
     const { data, error } = await sb()
       .from("posts")
-      .update({ ...inputToRow(input), updated_at: new Date().toISOString() })
+      .update({ ...row, updated_at: new Date().toISOString() })
       .eq("id", id)
       .select("id")
       .maybeSingle();
@@ -208,6 +213,16 @@ export const supabaseStore: Store = {
   async deletePost(id) {
     const { error } = await sb().from("posts").delete().eq("id", id);
     if (error) fail("posts.delete", error);
+  },
+
+  async setOfficial(id, value) {
+    const { data } = await sb().from("posts").select("extra").eq("id", id).maybeSingle();
+    if (!data) return;
+    const extra = { ...(((data as Row).extra as PostExtra | null) ?? {}) };
+    if (value) extra.official = value;
+    else delete extra.official;
+    const { error } = await sb().from("posts").update({ extra }).eq("id", id);
+    if (error) fail("posts.official", error);
   },
 
   async setPinned(id, pinned, curatedRank) {

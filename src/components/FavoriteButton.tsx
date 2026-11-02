@@ -21,7 +21,7 @@ export function FavoriteButton({ postId, initial, loggedIn }: { postId: number; 
     );
   }
   return (
-    <span className="inline-flex items-center gap-2">
+    <span className="inline-flex flex-col items-start gap-1">
       <button
         type="button"
         disabled={pending}
@@ -38,7 +38,7 @@ export function FavoriteButton({ postId, initial, loggedIn }: { postId: number; 
       >
         <Heart size={14} aria-hidden fill={on ? "currentColor" : "none"} /> {on ? "찜한 글" : "찜하기"}
       </button>
-      {error && <span className="text-xs text-brand-dark">{error}</span>}
+      {error && <span role="alert" className="max-w-[220px] text-xs leading-snug text-brand-dark">{error}</span>}
     </span>
   );
 }
