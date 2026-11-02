@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { Notice } from "@/lib/types";
+import { parseNoticeTitle } from "@/lib/notice";
 import { formatDate } from "@/lib/utils";
 
 export function NoticeList({ notices }: { notices: Notice[] }) {
@@ -19,7 +20,8 @@ export function NoticeList({ notices }: { notices: Notice[] }) {
             <Link href={`/notices#n-${n.id}`} className="group flex items-center justify-between gap-3 py-2.5">
               <span className="flex min-w-0 items-center gap-2 text-[13.5px] text-ink-2 group-hover:text-brand-dark">
                 <span className="size-1 shrink-0 rounded-full bg-faint" aria-hidden />
-                <span className="truncate">{n.title}</span>
+                <span className="shrink-0 rounded bg-soft px-1 text-[11px] font-bold text-muted">{parseNoticeTitle(n.title).kind}</span>
+                <span className="truncate">{parseNoticeTitle(n.title).title}</span>
               </span>
               {Date.now() - new Date(n.publishedAt).getTime() < 7 * 86_400_000 && (
                 <time dateTime={n.publishedAt} className="shrink-0 text-[12px] text-faint">

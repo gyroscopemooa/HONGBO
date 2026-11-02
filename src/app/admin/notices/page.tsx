@@ -2,6 +2,7 @@ import { adminDeleteNotice, adminSaveNotice } from "../actions";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { store } from "@/lib/store";
 import type { Notice } from "@/lib/types";
+import { NOTICE_KINDS, parseNoticeTitle } from "@/lib/notice";
 import { formatDate } from "@/lib/utils";
 
 function NoticeForm({ n }: { n?: Notice }) {
@@ -9,8 +10,14 @@ function NoticeForm({ n }: { n?: Notice }) {
     <form action={adminSaveNotice} className="space-y-3">
       {n && <input type="hidden" name="id" value={n.id} />}
       <label className="block text-xs font-semibold text-muted">
+        구분
+        <select name="kind" defaultValue={n ? parseNoticeTitle(n.title).kind : "공지"} className="field mt-1 !py-2">
+          {NOTICE_KINDS.map((k) => <option key={k} value={k}>{k}</option>)}
+        </select>
+      </label>
+      <label className="block text-xs font-semibold text-muted">
         제목
-        <input name="title" required maxLength={100} defaultValue={n?.title} className="field mt-1 !py-2" />
+        <input name="title" required maxLength={90} defaultValue={n ? parseNoticeTitle(n.title).title : ""} className="field mt-1 !py-2" />
       </label>
       <label className="block text-xs font-semibold text-muted">
         내용

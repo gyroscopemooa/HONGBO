@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { store } from "@/lib/store";
 import { normalizeExternalUrl } from "@/lib/url";
+import { composeNoticeTitle } from "@/lib/notice";
 import type { Banner, PostStatus } from "@/lib/types";
 
 // 모든 관리자 액션은 시작할 때 반드시 관리자 여부를 서버에서 다시 확인합니다.
@@ -135,9 +136,10 @@ export async function adminDeleteBanner(formData: FormData) {
 export async function adminSaveNotice(formData: FormData) {
   await requireAdmin();
   const id = int(formData.get("id"));
-  const title = String(formData.get("title") ?? "").trim().slice(0, 100);
+  const rawTitle = String(formData.get("title") ?? "").trim().slice(0, 90);
   const body = String(formData.get("body") ?? "").trim().slice(0, 3000);
-  if (!title) return;
+  if (!rawTitle) return;
+  const title = composeNoticeTitle(String(formData.get("kind") ?? ""), rawTitle);
   await store.saveNotice({ ...(id ? { id } : {}), title, body, isPinned: formData.get("isPinned") === "on" });
   refresh();
 }
