@@ -9,6 +9,8 @@ import {
   APP_PLATFORMS,
   CATEGORIES,
   CATEGORY_MAP,
+  BENEFITS,
+  BENEFIT_MAX,
   LIMITS,
   REGIONS,
   SNS_PLATFORMS,
@@ -43,6 +45,7 @@ export interface FormState {
   snsPlatform: string;
   usageType: string;
   period: string;
+  benefits: string[];
   videoUrl: string;
   price: string;
   region: string;
@@ -69,6 +72,7 @@ const EMPTY: FormState = {
   snsPlatform: "youtube",
   usageType: "",
   period: "",
+  benefits: [],
   videoUrl: "",
   price: "",
   region: "",
@@ -111,6 +115,7 @@ export function postToFormState(p: Post): FormState {
     snsPlatform: p.category === "content" && p.platform ? p.platform : "youtube",
     usageType: p.extra.usageType ?? "",
     period: p.extra.period ?? "",
+    benefits: p.extra.benefits ?? [],
     videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
     price: p.price ?? "",
     region: p.region ?? "",
@@ -142,6 +147,7 @@ function toPayload(f: FormState) {
       siteUrl: f.siteUrl,
       usageType: f.usageType,
       period: f.period,
+      benefits: f.benefits.join(","),
       businessUrl: f.businessUrl,
       videoUrl: f.videoUrl,
     },
@@ -311,7 +317,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
       address: null,
       mapUrl: null,
       tags: [],
-      extra: {},
+      extra: { benefits: f.benefits },
       contact: null,
       status: "active",
       adminPinned: false,
@@ -560,6 +566,24 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
               aria-invalid={!!errors.shortDescription}
               className="field"
             />
+          </Field>
+          <Field id="benefits" label="혜택이 있나요?" optional hint={`실제로 제공할 수 있는 혜택만 골라 주세요. 최대 ${BENEFIT_MAX}개까지 카드에 배지로 보여요. 허위 표시는 운영정책에 따라 삭제될 수 있어요.`}>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="혜택 선택">
+              {BENEFITS.map((b) => {
+                const on = f.benefits.includes(b.value);
+                return (
+                  <button
+                    key={b.value}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => set("benefits", on ? f.benefits.filter((x) => x !== b.value) : f.benefits.length >= BENEFIT_MAX ? f.benefits : [...f.benefits, b.value])}
+                    className={cn("rounded-full border px-3.5 py-1.5 text-sm font-bold transition", on ? "border-[#e5484d] bg-[#ffecec] text-[#c4262b]" : "border-line bg-white text-muted hover:border-brand-line")}
+                  >
+                    {b.label}
+                  </button>
+                );
+              })}
+            </div>
           </Field>
           <Field id="description" label="상세 설명" required error={errors.description} counter={{ now: f.description.length, max: LIMITS.descMax }}>
             <textarea

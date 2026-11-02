@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Eye, MapPin } from "lucide-react";
-import { LIMITS } from "@/lib/constants";
+import { LIMITS, benefitLabels } from "@/lib/constants";
 import type { Post } from "@/lib/types";
-import { formatCount, relativeTime } from "@/lib/utils";
+import { cn, formatCount, relativeTime } from "@/lib/utils";
+import { BenefitBadges } from "./BenefitBadges";
 import { CategoryBadge } from "./CategoryBadge";
 import { PostImage } from "./PostImage";
 
@@ -14,6 +15,7 @@ export function PostCard({ post, eager = false, preview = false }: { post: Post;
     <>
       <div className="relative">
         <PostImage src={post.primaryImageUrl} alt="" category={post.category} sizes={CARD_SIZES} eager={eager} />
+        {benefitLabels(post.extra.benefits).length > 0 && <BenefitBadges values={post.extra.benefits} className="absolute bottom-2 left-2 z-10" />}
         {post.region && (
           <span className="absolute left-2 top-2 inline-flex items-center gap-0.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[11.5px] font-bold text-ink-2 shadow-sm">
             <MapPin size={11} aria-hidden />
@@ -47,7 +49,7 @@ export function PostCard({ post, eager = false, preview = false }: { post: Post;
   );
 
   return (
-    <article className="group relative h-full overflow-hidden rounded-[14px] border border-line bg-white shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-hover">
+    <article className={cn("group relative h-full overflow-hidden rounded-[14px] border bg-white shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-hover", benefitLabels(post.extra.benefits).length > 0 ? "border-[#e5484d]/60 ring-1 ring-[#e5484d]/20" : "border-line")}>
       {preview ? (
         <div className="flex h-full flex-col">{inner}</div>
       ) : (

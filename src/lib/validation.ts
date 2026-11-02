@@ -1,6 +1,8 @@
 import { z } from "zod";
 import {
   APP_PLATFORMS,
+  BENEFITS,
+  BENEFIT_MAX,
   CATEGORY_SLUGS,
   LIMITS,
   SNS_PLATFORMS,
@@ -37,6 +39,7 @@ const rawSchema = z.object({
       siteUrl: str(2100),
       usageType: str(40),
       period: str(200),
+      benefits: str(200),
       businessUrl: str(2100),
       videoUrl: str(2100),
     })
@@ -107,6 +110,12 @@ export function parsePostInput(raw: unknown): ParseResult {
     if (ytId) extra.youtubeId = ytId;
     else errors.videoUrl = "유튜브 영상 주소를 입력해주세요. (youtube.com, youtu.be)";
   }
+
+  const benefitList = (v.extra.benefits ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => (BENEFITS.map((b) => b.value) as string[]).includes(s));
+  if (benefitList.length) extra.benefits = Array.from(new Set(benefitList)).slice(0, BENEFIT_MAX);
 
   let externalUrl: string | null = null;
   let mapUrl: string | null = null;

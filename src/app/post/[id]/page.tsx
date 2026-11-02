@@ -15,7 +15,8 @@ import { PostCard } from "@/components/PostCard";
 import { ReportButton } from "@/components/ReportButton";
 import { TrackEvent } from "@/components/TrackEvent";
 import { getCurrentUser } from "@/lib/auth";
-import { CATEGORY_MAP, LIMITS, PLATFORM_LABELS } from "@/lib/constants";
+import { CATEGORY_MAP, LIMITS, PLATFORM_LABELS, benefitLabels } from "@/lib/constants";
+import { BenefitBadges } from "@/components/BenefitBadges";
 import { ctaLabel, platformText, secondaryLinks } from "@/lib/post-links";
 import { effectiveStatus, isPostPublic } from "@/lib/queries";
 import { store } from "@/lib/store";
@@ -137,6 +138,7 @@ export default async function PostDetailPage({ params }: Props) {
                 </span>
               )}
             </div>
+            {benefitLabels(post.extra.benefits).length > 0 && <BenefitBadges values={post.extra.benefits} className="mt-3" />}
             <h1 className="mt-3 text-[22px] font-black leading-[1.3] tracking-[-0.04em] sm:text-[24px]">{post.title}</h1>
             <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{post.shortDescription}</p>
 

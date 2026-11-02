@@ -256,3 +256,21 @@ export const LIMITS = {
 };
 
 export const PAGE_SIZE = LIMITS.pageSize;
+
+/** 홍보글 혜택 배지 (글쓴이가 실제로 제공하는 혜택만 선택) */
+export const BENEFITS = [
+  { value: "event", label: "이벤트" },
+  { value: "discount", label: "할인" },
+  { value: "coupon", label: "쿠폰" },
+  { value: "free", label: "무료" },
+  { value: "gift", label: "증정" },
+] as const;
+export const BENEFIT_MAX = 2;
+export function benefitLabels(values?: string[]): string[] {
+  const labels: string[] = [];
+  for (const v of values ?? []) {
+    const found = BENEFITS.find((b) => b.value === v);
+    if (found) labels.push(found.label);
+  }
+  return labels;
+}

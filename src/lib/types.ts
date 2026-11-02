@@ -15,6 +15,8 @@ export interface PostExtra {
   businessUrl?: string;
   /** 유튜브 영상 ID (상세 페이지에서 재생) */
   youtubeId?: string;
+  /** 혜택 배지 값 (BENEFITS의 value) */
+  benefits?: string[];
 }
 
 export interface Post {
