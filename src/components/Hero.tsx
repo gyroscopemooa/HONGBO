@@ -35,7 +35,45 @@ const banners = [
   },
 ] as const;
 
-export function Hero() {
+/** 인플09 협업 안내 슬라이드 — url 이 있으면 인플09 전용 신청 페이지로, 없으면(개발 미리보기) 비활성으로 보입니다. */
+function Infl09Slide({ url, active }: { url: string | null; active: boolean }) {
+  const inner = (
+    <div className="flex size-full items-center justify-between gap-[3cqw] px-[6cqw]">
+      <div className="min-w-0 flex-1">
+        <p className="font-black leading-tight tracking-[-0.04em]" style={{ color: "#3b2399", fontSize: "clamp(15px, 3.3cqw, 48px)" }}>
+          인플루언서 협업 광고 신청하기
+        </p>
+        <p className="mt-[1cqw] hidden leading-snug sm:block" style={{ color: "#5d4b9c", fontSize: "clamp(12px, 1.6cqw, 22px)" }}>
+          우리 상품을 인플루언서 콘텐츠로 소개해 보세요. 샘플 제공으로 영상 1건 또는 라이브 홍보 1회를 진행할 수 있어요.
+        </p>
+        <p className="mt-[0.8cqw] font-bold leading-snug" style={{ color: "#4a2fb0", fontSize: "clamp(10.5px, 1.45cqw, 20px)" }}>
+          기본 콘텐츠 홍보 운영비 30,000원부터 · 샘플 제공 필수
+        </p>
+      </div>
+      <span
+        className="shrink-0 whitespace-nowrap rounded-full font-bold text-white"
+        style={{ background: url ? "#5b3fc4" : "#a79bd6", fontSize: "clamp(11px, 1.6cqw, 22px)", padding: "clamp(6px, 1cqw, 14px) clamp(12px, 2.4cqw, 34px)" }}
+      >
+        {url ? "콘텐츠 홍보 신청하기" : "신청하기 (미리보기)"}
+      </span>
+    </div>
+  );
+  const cls = `absolute inset-0 transition-opacity duration-700 ${active ? "z-10 opacity-100" : "pointer-events-none opacity-0"}`;
+  const style = { background: "linear-gradient(120deg,#f1ecff 0%,#d9cffa 100%)", containerType: "inline-size" as const };
+  return url ? (
+    <a href={url} target="_blank" rel="noopener" aria-hidden={!active} tabIndex={active ? 0 : -1} aria-label="인플루언서 협업 광고 신청하기 (인플09로 이동)" className={cls} style={style}>
+      {inner}
+    </a>
+  ) : (
+    <div aria-hidden={!active} className={cls} style={style}>
+      {inner}
+    </div>
+  );
+}
+
+export function Hero({ infl09 }: { infl09?: { url: string | null; preview: boolean } }) {
+  const showInfl = Boolean(infl09 && (infl09.url || infl09.preview));
+  const total = banners.length + (showInfl ? 1 : 0);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -43,11 +81,11 @@ export function Hero() {
     if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const timer = window.setInterval(() => {
-      setCurrent((index) => (index + 1) % banners.length);
+      setCurrent((index) => (index + 1) % total);
     }, 6000);
 
     return () => window.clearInterval(timer);
-  }, [paused]);
+  }, [paused, total]);
 
   return (
     <section
@@ -62,7 +100,9 @@ export function Hero() {
       }}
     >
       <div className="relative mx-auto aspect-[2172/724] max-w-[1440px]">
-        {banners.map((banner, index) => {
+        {showInfl && <Infl09Slide url={infl09!.url} active={current === 0} />}
+        {banners.map((banner, i) => {
+          const index = i + (showInfl ? 1 : 0);
           const active = index === current;
 
           return (
@@ -81,7 +121,7 @@ export function Hero() {
                 alt={active ? banner.alt : ""}
                 width={2172}
                 height={724}
-                priority={index === 0}
+                priority={i === 0 && !showInfl}
                 className="block h-auto w-full"
               />
             </Link>
@@ -89,9 +129,9 @@ export function Hero() {
         })}
 
         <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-white/75 px-3 py-2 shadow-sm backdrop-blur-sm sm:bottom-4">
-          {banners.map((banner, index) => (
+          {Array.from({ length: total }, (_, index) => (
             <button
-              key={banner.src}
+              key={index}
               type="button"
               aria-label={`${index + 1}번 배너 보기`}
               aria-current={index === current ? "true" : undefined}

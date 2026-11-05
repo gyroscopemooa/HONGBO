@@ -16,6 +16,7 @@ import { PremiumGrid } from "@/components/PremiumGrid";
 import { PromoBanner } from "@/components/PromoBanner";
 import { RankList } from "@/components/RankList";
 import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, AD_PRICES, won } from "@/lib/ads";
+import { infl09ApplyUrl } from "@/lib/infl09";
 import { SITE } from "@/lib/constants";
 import { getHomeData } from "@/lib/queries";
 import { siteUrl } from "@/lib/utils";
@@ -42,6 +43,7 @@ export default async function HomePage() {
   const hasBannerRoom = bannerAds.length < AD_BANNER_SLOTS;
   const bannerCount = bannerAds.length + bannerFill.length + (hasBannerRoom ? 1 : 0);
 
+  const infl09Url = infl09ApplyUrl();
   const base = siteUrl();
   const jsonLd = [
     {
@@ -105,7 +107,7 @@ export default async function HomePage() {
 
       <PremiumGrid ads={premiumAds} fill={fresh} />
 
-      <Hero />
+      <Hero infl09={{ url: infl09Url, preview: !infl09Url && process.env.NODE_ENV !== "production" }} />
       <CategoryTiles />
 
       <Carousel title="오늘의 인기 홍보" icon={<Flame className="text-brand" size={22} fill="currentColor" aria-hidden />} moreHref="/posts?sort=popular">
@@ -165,13 +167,13 @@ export default async function HomePage() {
             </Link>
           </div>
           <div className="divide-y divide-line/60">
-            {latest.slice(0, 10).map((p) => (
+            {latest.slice(0, 11).map((p) => (
               <PostRow key={p.id} post={p} />
             ))}
           </div>
         </section>
 
-        <RankList posts={popular} limit={18} />
+        <RankList posts={popular} limit={20} />
 
         <aside aria-label="사이드" className="min-w-0 space-y-4">
           {sideBanners[0] && <PromoBanner banner={sideBanners[0]} className="min-h-[132px]" />}

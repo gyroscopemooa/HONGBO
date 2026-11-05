@@ -91,7 +91,7 @@ export function getHomeData() {
 
 async function loadHomeData() {
   const [popular, latest, side, strip, notices, premium, adBanners, house] = await Promise.all([
-    getPopularPosts(18),
+    getPopularPosts(20),
     store.listPosts({ publicOnly: true, sort: "latest", pageSize: 20 }),
     store.listBanners({ activeOnly: true, placement: "side" }),
     store.listBanners({ activeOnly: true, placement: "strip" }),
