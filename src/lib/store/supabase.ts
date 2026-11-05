@@ -150,6 +150,7 @@ export const supabaseStore: Store = {
     if (q.category) qb = qb.eq("category", q.category);
     if (q.region) qb = qb.eq("region", q.region);
     if (q.hasRegion) qb = qb.not("region", "is", null);
+    if (q.benefit) qb = q.benefit === "any" ? qb.not("extra->benefits", "is", null) : qb.contains("extra", { benefits: [q.benefit] });
     if (q.isSeed != null) qb = qb.eq("is_seed", q.isSeed);
     if (q.authorId) qb = qb.eq("author_id", q.authorId);
     if (q.pinnedOnly) qb = qb.eq("admin_pinned", true);

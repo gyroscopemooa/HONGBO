@@ -82,9 +82,6 @@ export default async function HomePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <h1 className="sr-only">{SITE.name} - 앱·사이트·가게·상품을 마음껏 무료로 홍보하는 홍보 사이트</h1>
-      <Hero />
-      <CategoryTiles />
-
       <section aria-label="배너" className="wrap pt-5 sm:pt-7">
         <BannerSlider count={bannerCount} label="추천 배너">
           {bannerAds.map(({ post, creative }) => (
@@ -106,6 +103,9 @@ export default async function HomePage() {
       </section>
 
       <PremiumGrid ads={premiumAds} fill={fresh} />
+
+      <Hero />
+      <CategoryTiles />
 
       <Carousel title="오늘의 인기 홍보" icon={<Flame className="text-brand" size={22} fill="currentColor" aria-hidden />} moreHref="/posts?sort=popular">
         {popular.slice(0, 12).map((p, i) => (

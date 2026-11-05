@@ -188,6 +188,10 @@ function matches(p: Post, q: ListQuery, now: number): boolean {
   if (q.category && p.category !== q.category) return false;
   if (q.region && p.region !== q.region) return false;
   if (q.hasRegion && !p.region) return false;
+  if (q.benefit) {
+    const b = p.extra?.benefits ?? [];
+    if (q.benefit === "any" ? b.length === 0 : !b.includes(q.benefit)) return false;
+  }
   if (q.isSeed != null && p.isSeed !== q.isSeed) return false;
   if (q.authorId && p.authorId !== q.authorId) return false;
   if (q.pinnedOnly && !p.adminPinned) return false;

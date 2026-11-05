@@ -30,6 +30,12 @@ export const SITE = {
     "서비스 홍보",
     "더홍보",
     "thehongbo",
+    "이벤트 모음",
+    "이벤트 사이트",
+    "진행중인 이벤트",
+    "할인 쿠폰 모음",
+    "무료 체험",
+    "이벤트 참여",
   ],
 };
 
@@ -266,6 +272,64 @@ export const BENEFITS = [
   { value: "gift", label: "증정" },
 ] as const;
 export const BENEFIT_MAX = 2;
+
+export type BenefitSlug = (typeof BENEFITS)[number]["value"];
+
+/** 혜택 모음 페이지(/benefit/[slug]) 정보 — 등록된 글의 혜택 배지로 자동 분류됩니다. */
+export const BENEFIT_PAGES: Record<
+  BenefitSlug,
+  { label: string; title: string; h1: string; desc: string; intro: string; color: string; tint: string }
+> = {
+  event: {
+    label: "이벤트",
+    title: "진행 중인 이벤트 모음 - 경품·응모·참여 이벤트 한눈에",
+    h1: "진행 중인 이벤트 모음",
+    desc: "앱·가게·쇼핑몰·채널이 직접 올린 진행 중인 이벤트를 한곳에서 모아보세요. 경품, 응모, 참여 이벤트를 놓치지 않고 확인할 수 있어요.",
+    intro: "업체와 크리에이터가 직접 등록한 이벤트만 모았어요. 참여 방법과 기간은 각 글에서 확인하세요.",
+    color: "#e5484d",
+    tint: "#ffecec",
+  },
+  discount: {
+    label: "할인",
+    title: "할인 정보 모음 - 지금 받을 수 있는 할인 혜택",
+    h1: "할인 정보 모음",
+    desc: "가게·상품·서비스의 할인 소식을 한곳에서 확인하세요. 오픈 기념 할인, 첫 주문 할인 등 등록된 할인 혜택을 모았어요.",
+    intro: "할인 조건과 기간이 적힌 홍보글만 모았어요. 자세한 조건은 각 글에서 확인하세요.",
+    color: "#f08a00",
+    tint: "#fff3dd",
+  },
+  coupon: {
+    label: "쿠폰",
+    title: "쿠폰 모음 - 받을 수 있는 쿠폰·프로모션 코드",
+    h1: "쿠폰 모음",
+    desc: "받을 수 있는 쿠폰과 프로모션 혜택을 모아봤어요. 사용 조건과 기간은 각 글에서 확인하세요.",
+    intro: "쿠폰을 제공하는 홍보글만 모았어요. 발급 방법은 글마다 달라요.",
+    color: "#9156f0",
+    tint: "#f3edff",
+  },
+  free: {
+    label: "무료",
+    title: "무료 체험·무료 이용 모음 - 공짜로 써볼 수 있는 서비스",
+    h1: "무료 체험·무료 이용 모음",
+    desc: "무료 체험, 무료 이용, 무료 나눔 혜택을 제공하는 앱·서비스·가게를 모았어요.",
+    intro: "무료로 이용하거나 체험할 수 있는 홍보글만 모았어요. 무료 범위는 각 글에서 확인하세요.",
+    color: "#14a38f",
+    tint: "#e7f8f4",
+  },
+  gift: {
+    label: "증정",
+    title: "증정 이벤트 모음 - 사은품·샘플·무료 증정",
+    h1: "증정 이벤트 모음",
+    desc: "사은품, 샘플, 서비스 증정 혜택이 있는 홍보글을 모았어요.",
+    intro: "증정 혜택을 제공하는 홍보글만 모았어요. 수량과 조건은 각 글에서 확인하세요.",
+    color: "#2f80ed",
+    tint: "#e9f2ff",
+  },
+};
+
+export function isBenefitSlug(v: unknown): v is BenefitSlug {
+  return typeof v === "string" && v in BENEFIT_PAGES;
+}
 
 /** 추가 링크(이벤트 참여, 쿠폰 받기 등) — 제목은 직접 입력하거나 빠른 선택으로 채웁니다. */
 export const EXTRA_LINK_MAX = 5;

@@ -17,6 +17,10 @@ interface Props {
   heading: React.ReactNode;
   description?: string;
   category?: CategorySlug;
+  /** 혜택 필터 (event/discount/coupon/free/gift 또는 any) */
+  benefit?: string;
+  /** 제목 아래에 넣을 추가 영역 (탭 등) */
+  top?: React.ReactNode;
   /** 지역 정보가 있는 글만 보여주기 (지역별 페이지) */
   onlyWithRegion?: boolean;
   /** 검색어 (검색 페이지) */
@@ -33,6 +37,8 @@ export async function ListView({
   heading,
   description,
   category,
+  benefit,
+  top,
   onlyWithRegion,
   query,
   keepParams = {},
@@ -43,6 +49,7 @@ export async function ListView({
   const { items, total } = await store.listPosts({
     publicOnly: true,
     category,
+    benefit,
     q: query,
     region: params.region,
     hasRegion: onlyWithRegion,
@@ -77,6 +84,7 @@ export async function ListView({
         {description && <p className="text-[14.5px] text-muted">{description}</p>}
       </div>
 
+      {top}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Link href={href({ sort: undefined, page: undefined })} className={tab(params.sort === "latest")}>

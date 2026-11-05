@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { CATEGORIES } from "@/lib/constants";
+import { BENEFIT_PAGES, CATEGORIES } from "@/lib/constants";
 import { store } from "@/lib/store";
 import { siteUrl } from "@/lib/utils";
 import { listCommunity } from "@/lib/community-store";
@@ -21,6 +21,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "hourly" as const,
       priority: 0.8,
+    })),
+    { url: `${base}/benefit`, lastModified: now, changeFrequency: "hourly" as const, priority: 0.9 },
+    ...Object.keys(BENEFIT_PAGES).map((k) => ({
+      url: `${base}/benefit/${k}`,
+      lastModified: now,
+      changeFrequency: "hourly" as const,
+      priority: 0.7,
     })),
     ...["notices", "policy", "terms", "privacy", "contact"].map((p) => ({
       url: `${base}/${p}`,

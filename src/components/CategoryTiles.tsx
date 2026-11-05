@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, PencilLine } from "lucide-react";
-import { CATEGORIES } from "@/lib/constants";
+import { ArrowRight, Gift, PencilLine } from "lucide-react";
+import { BENEFITS, BENEFIT_PAGES, CATEGORIES } from "@/lib/constants";
 import { CategoryIcon } from "./CategoryIcon";
 
 const ALL_TILE = { slug: "all" as const, name: "전체", color: "#f04f4a", tint: "#fff0ef", href: "/posts" };
@@ -36,6 +36,22 @@ export function CategoryTiles() {
           홍보글 작성하기
           <ArrowRight size={16} aria-hidden />
         </Link>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 lg:col-span-2" aria-label="혜택 모아보기">
+        <Link href="/benefit" className="inline-flex items-center gap-1.5 pr-1 text-[14px] font-extrabold tracking-[-0.03em] text-ink hover:text-brand">
+          <Gift size={17} className="text-brand" aria-hidden /> 이벤트 모음
+        </Link>
+        {BENEFITS.map((b) => (
+          <Link
+            key={b.value}
+            href={`/benefit/${b.value}`}
+            className="rounded-full px-3.5 py-1.5 text-[13px] font-bold transition hover:-translate-y-0.5 hover:shadow-card"
+            style={{ background: BENEFIT_PAGES[b.value].tint, color: BENEFIT_PAGES[b.value].color }}
+          >
+            {b.label}
+          </Link>
+        ))}
       </div>
     </section>
   );

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { ChevronDown, Flame, Clock, MapPin } from "lucide-react";
-import { CATEGORIES } from "@/lib/constants";
+import { BENEFITS, CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "./CategoryIcon";
 
@@ -90,6 +90,16 @@ function NavInner() {
           return (
             <Link key={c.slug} href={`/category/${c.slug}`} className={linkCls(active)} aria-current={active ? "page" : undefined}>
               {c.name}
+              {underline(active)}
+            </Link>
+          );
+        })}
+        <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
+        {BENEFITS.map((b) => {
+          const active = pathname === `/benefit/${b.value}`;
+          return (
+            <Link key={b.value} href={`/benefit/${b.value}`} className={linkCls(active)} aria-current={active ? "page" : undefined}>
+              {b.label}
               {underline(active)}
             </Link>
           );

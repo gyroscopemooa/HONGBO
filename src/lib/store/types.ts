@@ -18,6 +18,8 @@ export interface ListQuery {
   isSeed?: boolean;
   authorId?: string;
   pinnedOnly?: boolean;
+  /** 혜택 배지: 값(event 등)이면 해당 혜택, "any"면 혜택이 하나라도 있는 글 */
+  benefit?: string;
   /** 지역 정보가 있는 글만 */
   hasRegion?: boolean;
   excludeIds?: number[];
