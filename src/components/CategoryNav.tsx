@@ -8,8 +8,8 @@ import { BENEFITS, CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "./CategoryIcon";
 
-/** 커뮤니티 · 홍보소모임을 하나로 묶은 드롭다운 (데스크톱) */
-function CommunityMenu({ pathname, items, linkCls }: { pathname: string; items: Array<[string, string]>; linkCls: (active: boolean) => string }) {
+/** 비슷한 메뉴를 하나로 묶은 드롭다운 (데스크톱) */
+function GroupMenu({ label, pathname, items, linkCls }: { label: string; pathname: string; items: Array<[string, string]>; linkCls: (active: boolean) => string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const active = items.some(([href]) => pathname.startsWith(href));
@@ -32,7 +32,7 @@ function CommunityMenu({ pathname, items, linkCls }: { pathname: string; items: 
   return (
     <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
       <button type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(true)} className={linkCls(active)}>
-        커뮤니티
+        {label}
         <ChevronDown size={14} aria-hidden className={cn("transition-transform", open && "rotate-180")} />
         {active && <span className="absolute inset-x-3 bottom-0 h-[3px] rounded-t-full bg-brand" aria-hidden />}
       </button>
@@ -53,6 +53,15 @@ function CommunityMenu({ pathname, items, linkCls }: { pathname: string; items: 
     </div>
   );
 }
+
+/** 데스크톱 카테고리 묶음 (비슷한 것끼리) */
+const CATEGORY_GROUPS = [
+  { label: "앱·웹", slugs: ["apps", "websites", "services"] },
+  { label: "가게·상품", slugs: ["offline", "products"] },
+  { label: "콘텐츠·모집", slugs: ["content", "events"] },
+  { label: "자유·한줄", slugs: ["free", "quick"] },
+] as const;
+const CATEGORY_NAME = Object.fromEntries(CATEGORIES.map((c) => [c.slug, c.name])) as Record<string, string>;
 
 function NavInner() {
   const pathname = usePathname();
@@ -79,35 +88,50 @@ function NavInner() {
 
   return (
     <nav aria-label="카테고리" className="wrap flex items-center">
-      <div className="no-scrollbar -mx-1 flex min-w-0 flex-1 items-center overflow-x-auto">
+      <div className="no-scrollbar -mx-1 flex min-w-0 flex-1 items-center overflow-x-auto md:overflow-visible">
         <Link href="/posts" className={linkCls(activeCat === "all")} aria-current={activeCat === "all" ? "page" : undefined}>
           <CategoryIcon slug="all" size={17} />
           전체보기
           {underline(activeCat === "all")}
         </Link>
-        {CATEGORIES.map((c) => {
-          const active = activeCat === c.slug;
-          return (
-            <Link key={c.slug} href={`/category/${c.slug}`} className={linkCls(active)} aria-current={active ? "page" : undefined}>
-              {c.name}
-              {underline(active)}
-            </Link>
-          );
-        })}
-        <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
-        <Link href="/benefit/exclusive" className={linkCls(pathname === "/benefit/exclusive")} aria-current={pathname === "/benefit/exclusive" ? "page" : undefined}>
-          <span className="font-extrabold text-[#b7791f]">★ 더홍보 전용</span>
-          {underline(pathname === "/benefit/exclusive")}
-        </Link>
-        {BENEFITS.map((b) => {
-          const active = pathname === `/benefit/${b.value}`;
-          return (
-            <Link key={b.value} href={`/benefit/${b.value}`} className={linkCls(active)} aria-current={active ? "page" : undefined}>
-              {b.label}
-              {underline(active)}
-            </Link>
-          );
-        })}
+        {/* 모바일: 가로 스크롤 전체 목록 */}
+        <div className="flex items-center md:hidden">
+          {CATEGORIES.map((c) => {
+            const active = activeCat === c.slug;
+            return (
+              <Link key={c.slug} href={`/category/${c.slug}`} className={linkCls(active)} aria-current={active ? "page" : undefined}>
+                {c.name}
+                {underline(active)}
+              </Link>
+            );
+          })}
+          <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
+          <Link href="/benefit/exclusive" className={linkCls(pathname === "/benefit/exclusive")}>
+            <span className="font-extrabold text-[#b7791f]">★ 더홍보 전용</span>
+            {underline(pathname === "/benefit/exclusive")}
+          </Link>
+          {BENEFITS.map((b) => {
+            const active = pathname === `/benefit/${b.value}`;
+            return (
+              <Link key={b.value} href={`/benefit/${b.value}`} className={linkCls(active)} aria-current={active ? "page" : undefined}>
+                {b.label}
+                {underline(active)}
+              </Link>
+            );
+          })}
+        </div>
+        {/* 데스크톱: 비슷한 카테고리끼리 묶은 드롭다운 */}
+        <div className="hidden items-center md:flex">
+          {CATEGORY_GROUPS.map((g) => (
+            <GroupMenu key={g.label} label={g.label} pathname={pathname} items={g.slugs.map((slug) => [`/category/${slug}`, CATEGORY_NAME[slug]] as [string, string])} linkCls={linkCls} />
+          ))}
+          <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
+          <Link href="/benefit/exclusive" className={linkCls(pathname === "/benefit/exclusive")}>
+            <span className="font-extrabold text-[#b7791f]">★ 더홍보 전용</span>
+            {underline(pathname === "/benefit/exclusive")}
+          </Link>
+          <GroupMenu label="혜택" pathname={pathname} items={[...BENEFITS.map((b) => [`/benefit/${b.value}`, b.label] as [string, string]), ["/benefit", "이벤트 모음 전체"]]} linkCls={linkCls} />
+        </div>
         <div className="flex items-center xl:hidden">
           {extra.map(([href, label]) => (
             <Link key={href} href={href} className={linkCls(pathname.startsWith(href))} aria-current={pathname.startsWith(href) ? "page" : undefined}>
@@ -122,7 +146,7 @@ function NavInner() {
         </div>
       </div>
       <div className="hidden shrink-0 items-center border-l border-line pl-2 xl:flex">
-        <CommunityMenu pathname={pathname} items={extra} linkCls={linkCls} />
+        <GroupMenu label="커뮤니티" pathname={pathname} items={extra} linkCls={linkCls} />
         <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
         <Link href="/posts?sort=popular" className={linkCls(sort === "popular")}>
           <Flame size={15} aria-hidden /> 인기글
