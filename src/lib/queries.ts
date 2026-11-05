@@ -36,7 +36,7 @@ export async function getPopularPosts(limit: number): Promise<Post[]> {
 }
 
 /** 지금 노출 중인 광고 글. 광고 테이블이 아직 없어도 홈이 깨지지 않도록 실패하면 빈 목록을 돌려줍니다. */
-export async function getLiveAdPosts(kind: "premium" | "banner"): Promise<Post[]> {
+export async function getLiveAdPosts(kind: "premium" | "banner", category?: string): Promise<Post[]> {
   try {
     const ads = await store.listAds({ kind, liveOnly: true });
     const seen = new Set<number>();
@@ -45,6 +45,7 @@ export async function getLiveAdPosts(kind: "premium" | "banner"): Promise<Post[]
     for (const [i, a] of ads.entries()) {
       const p = posts[i];
       if (!p || !isPostPublic(p) || seen.has(p.id)) continue;
+      if (category && p.category !== category) continue;
       seen.add(p.id);
       // 프리미엄 카드는 직접 정한 이미지·문구가 있으면 덮어씌웁니다(링크는 원래 글 그대로).
       list.push(kind === "premium" ? applyPremiumCreative(p, a.creative) : p);

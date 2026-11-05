@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ExclusiveStrip } from "@/components/ExclusiveStrip";
+import { TopAds } from "@/components/TopAds";
 import { ListView } from "@/components/ListView";
 import { buildHref, parseListParams, type SearchParams } from "@/lib/listing";
 
@@ -26,7 +27,14 @@ export default async function PostsPage({ searchParams }: Props) {
       params={params}
       heading={heading}
       description="앱·사이트·가게·상품·서비스… 모든 홍보를 한곳에서 둘러보세요."
-      top={params.page === 1 ? <ExclusiveStrip /> : undefined}
+      top={
+        params.page === 1 && params.sort === "latest" ? (
+          <>
+            <TopAds />
+            <ExclusiveStrip />
+          </>
+        ) : undefined
+      }
     />
   );
 }

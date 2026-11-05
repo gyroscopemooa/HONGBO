@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CategoryIcon } from "@/components/CategoryIcon";
+import { TopAds } from "@/components/TopAds";
 import { ListView } from "@/components/ListView";
 import { CATEGORY_MAP, isCategorySlug } from "@/lib/constants";
 import { buildHref, parseListParams, type SearchParams } from "@/lib/listing";
@@ -40,6 +41,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         </span>
       }
       description={c.desc}
+      top={p.page === 1 && p.sort === "latest" ? <TopAds category={slug} /> : undefined}
     />
   );
 }
