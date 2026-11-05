@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { adminApproveAd, adminAssignAd, adminDeleteAd } from "../actions";
+import { AdBanner } from "@/components/AdBanner";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, depositorName, isAdLive, won } from "@/lib/ads";
 import { store } from "@/lib/store";
-import type { Ad } from "@/lib/types";
+import type { Ad, Post } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ async function withPost(ads: Ad[]) {
   return Promise.all(ads.map(async (a) => ({ ad: a, post: await store.getPost(a.postId) })));
 }
 
-function Row({ ad, title, children }: { ad: Ad; title: string; children: React.ReactNode }) {
+function Row({ ad, title, post, children }: { ad: Ad; title: string; post?: Post | null; children: React.ReactNode }) {
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-line bg-white p-3.5">
       <div className="min-w-0 flex-1">
@@ -27,6 +28,14 @@ function Row({ ad, title, children }: { ad: Ad; title: string; children: React.R
         </p>
       </div>
       <div className="flex items-center gap-2">{children}</div>
+      {ad.kind === "banner" && post && (
+        <div className="basis-full">
+          <p className="mb-1 text-[12.5px] font-semibold text-muted">
+            배너 모양 · {ad.creative?.mode === "upload" ? "고객이 올린 완성 이미지 (내용 확인 후 승인하세요)" : ad.creative?.mode === "custom" ? "직접 만들기 (사진·문구 확인 후 승인하세요)" : "자동 제작"}
+          </p>
+          <div className="max-w-[640px]"><AdBanner post={post} creative={ad.creative} preview /></div>
+        </div>
+      )}
     </li>
   );
 }
@@ -58,7 +67,7 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
         ) : (
           <ul className="space-y-2">
             {requested.map(({ ad, post }) => (
-              <Row key={ad.id} ad={ad} title={post?.title ?? "(삭제된 글)"}>
+              <Row key={ad.id} ad={ad} post={post} title={post?.title ?? "(삭제된 글)"}>
                 <form action={adminApproveAd}>
                   <input type="hidden" name="id" value={ad.id} />
                   <button className="btn btn-primary btn-sm">승인</button>
@@ -80,7 +89,7 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
         ) : (
           <ul className="space-y-2">
             {live.map(({ ad, post }) => (
-              <Row key={ad.id} ad={ad} title={post?.title ?? "(삭제된 글)"}>
+              <Row key={ad.id} ad={ad} post={post} title={post?.title ?? "(삭제된 글)"}>
                 <form action={adminDeleteAd}>
                   <input type="hidden" name="id" value={ad.id} />
                   <ConfirmButton message="노출을 중단하고 삭제할까요?">중단</ConfirmButton>
@@ -96,7 +105,7 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
           <h2 className="mb-2 font-extrabold">기간 종료 ({ended.length})</h2>
           <ul className="space-y-2">
             {ended.map(({ ad, post }) => (
-              <Row key={ad.id} ad={ad} title={post?.title ?? "(삭제된 글)"}>
+              <Row key={ad.id} ad={ad} post={post} title={post?.title ?? "(삭제된 글)"}>
                 <form action={adminDeleteAd}>
                   <input type="hidden" name="id" value={ad.id} />
                   <ConfirmButton message="기록을 삭제할까요?">삭제</ConfirmButton>

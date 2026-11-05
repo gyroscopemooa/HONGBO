@@ -56,6 +56,7 @@ function demoAds(posts: Post[]): Ad[] {
     startsAt: now.toISOString(),
     endsAt: adEndsAt(plan, now),
     requestedBy: null,
+    creative: null,
     createdAt: now.toISOString(),
   });
   active.slice(0, AD_PREMIUM_SLOTS).forEach((p, i) => ads.push(mk(p, "premium", i % 2 ? "week" : "month", i + 1)));
@@ -541,7 +542,7 @@ export const localStore: Store = {
     );
   },
 
-  async requestAd({ postId, kind, plan, requestedBy }) {
+  async requestAd({ postId, kind, plan, requestedBy, creative }) {
     const db = load();
     const ad: Ad = {
       id: db.nextAdId++,
@@ -553,6 +554,7 @@ export const localStore: Store = {
       startsAt: null,
       endsAt: null,
       requestedBy,
+      creative: creative ?? null,
       createdAt: new Date().toISOString(),
     };
     db.ads.push(ad);

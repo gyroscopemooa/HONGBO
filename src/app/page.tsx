@@ -34,7 +34,7 @@ export default async function HomePage() {
   const used = new Set([...premiumAds, ...premiumFill].map((p) => p.id));
   const bannerAds = adBanners.slice(0, AD_BANNER_SLOTS);
   const bannerFill = latest
-    .filter((p) => p.primaryImageUrl && !used.has(p.id) && !bannerAds.some((a) => a.id === p.id))
+    .filter((p) => p.primaryImageUrl && !used.has(p.id) && !bannerAds.some((a) => a.post.id === p.id))
     .slice(0, AD_BANNER_SLOTS - bannerAds.length);
   const hasBannerRoom = bannerAds.length < AD_BANNER_SLOTS;
   const bannerCount = bannerAds.length + bannerFill.length + (hasBannerRoom ? 1 : 0);
@@ -85,9 +85,9 @@ export default async function HomePage() {
 
       <section aria-label="배너" className="wrap pt-5 sm:pt-7">
         <BannerSlider count={bannerCount} label="추천 배너">
-          {bannerAds.map((p) => (
-            <li key={`ad-${p.id}`} className="w-full shrink-0 snap-center">
-              <AdBanner post={p} />
+          {bannerAds.map(({ post, creative }) => (
+            <li key={`ad-${post.id}`} className="w-full shrink-0 snap-center">
+              <AdBanner post={post} creative={creative} />
             </li>
           ))}
           {bannerFill.map((p) => (

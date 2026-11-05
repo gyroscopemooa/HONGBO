@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Check, Crown, GalleryHorizontal } from "lucide-react";
 import { requestAdAction } from "@/app/actions/ads";
 import { AdBanner } from "@/components/AdBanner";
+import { AdRequestForm } from "@/components/AdRequestForm";
 import { AD_BANK, AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PAY_DAYS, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, adPrice, depositorName, won } from "@/lib/ads";
 import type { Ad } from "@/lib/types";
 import { getCurrentUser } from "@/lib/auth";
@@ -147,49 +148,7 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
             해주세요.
           </p>
         ) : (
-          <form action={requestAdAction} className="mt-4 space-y-5">
-            <label className="block text-[14px] font-bold text-ink-2">
-              광고할 홍보글
-              <select name="postId" required defaultValue={publicPosts[0].id} className="field mt-1.5">
-                {publicPosts.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <fieldset>
-              <legend className="mb-1.5 text-[14px] font-bold text-ink-2">상품</legend>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {(["premium", "banner"] as const).map((k, i) => (
-                  <label key={k} className="flex cursor-pointer items-center gap-2 rounded-xl border border-line px-3.5 py-3 text-[14.5px] has-[:checked]:border-brand has-[:checked]:bg-brand-soft">
-                    <input type="radio" name="kind" value={k} defaultChecked={i === 0} className="accent-[#f04f4a]" />
-                    {AD_KIND_LABEL[k]}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend className="mb-1.5 text-[14px] font-bold text-ink-2">기간</legend>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {(["week", "month"] as const).map((p, i) => (
-                  <label key={p} className="flex cursor-pointer items-center gap-2 rounded-xl border border-line px-3.5 py-3 text-[14.5px] has-[:checked]:border-brand has-[:checked]:bg-brand-soft">
-                    <input type="radio" name="plan" value={p} defaultChecked={i === 1} className="accent-[#f04f4a]" />
-                    {AD_PLANS[p].label}
-                    <span className="ml-auto text-[12.5px] text-muted">프리미엄 {won(AD_PRICES.premium[p])} · 배너 {won(AD_PRICES.banner[p])}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <ul className="space-y-1 text-[13px] text-muted">
-              <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /> 신청하면 바로 입금 계좌가 안내돼요. 입금이 확인되어 승인된 시점부터 기간이 시작돼요.</li>
-              <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /> 광고 카드에는 &quot;광고&quot; 표시가 붙어요. 운영정책에 어긋난 글은 승인되지 않을 수 있어요.</li>
-            </ul>
-            <button className="btn btn-primary btn-lg">광고 신청하기</button>
-          </form>
+          <AdRequestForm posts={publicPosts} action={requestAdAction} />
         )}
       </section>
 

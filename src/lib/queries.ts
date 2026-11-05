@@ -2,7 +2,7 @@ import "server-only";
 import { AD_PREMIUM_SLOTS, shuffle } from "./ads";
 import { LIMITS } from "./constants";
 import { store } from "./store";
-import type { Post } from "./types";
+import type { AdCreative, Post } from "./types";
 
 /**
  * 인기 정렬 방식을 결정합니다.
@@ -51,6 +51,24 @@ export async function getLiveAdPosts(kind: "premium" | "banner"): Promise<Post[]
   }
 }
 
+/** 지금 노출 중인 배너 광고 — 글과 함께 제작 정보(직접 제작/업로드)를 돌려줍니다. */
+export async function getLiveBannerAds(): Promise<Array<{ post: Post; creative: AdCreative | null }>> {
+  try {
+    const ads = await store.listAds({ kind: "banner", liveOnly: true });
+    const out: Array<{ post: Post; creative: AdCreative | null }> = [];
+    const seen = new Set<number>();
+    for (const a of ads) {
+      const p = await store.getPost(a.postId);
+      if (!p || !isPostPublic(p) || seen.has(p.id)) continue;
+      seen.add(p.id);
+      out.push({ post: p, creative: a.creative });
+    }
+    return shuffle(out);
+  } catch {
+    return [];
+  }
+}
+
 export async function getHomeData() {
   const [popular, latest, side, strip, notices, premium, adBanners] = await Promise.all([
     getPopularPosts(18),
@@ -59,7 +77,7 @@ export async function getHomeData() {
     store.listBanners({ activeOnly: true, placement: "strip" }),
     store.listNotices(5),
     getLiveAdPosts("premium"),
-    getLiveAdPosts("banner"),
+    getLiveBannerAds(),
   ]);
   return { popular, latest: latest.items, sideBanners: side, stripBanners: strip, notices, premium, adBanners };
 }

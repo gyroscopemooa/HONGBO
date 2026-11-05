@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { AD_PLANS } from "@/lib/ads";
+import { parseCreative } from "@/lib/ad-creative";
 import { getCurrentUser } from "@/lib/auth";
 import { isPostPublic } from "@/lib/queries";
 import { store } from "@/lib/store";
@@ -23,6 +24,10 @@ export async function requestAdAction(formData: FormData) {
   if (!["premium", "banner"].includes(kind)) fail("광고 상품을 선택해주세요.");
   if (!(plan in AD_PLANS)) fail("기간을 선택해주세요.");
 
+  const parsed = parseCreative(String(formData.get("creative") ?? ""), kind);
+  if (!parsed.ok) fail(parsed.error);
+  const creative = parsed.ok ? parsed.creative : null;
+
   const post = await store.getPost(postId);
   if (!post || post.authorId !== user.id) fail("내가 쓴 홍보글만 광고로 신청할 수 있어요.");
   if (!post || !isPostPublic(post)) fail("현재 공개 중인 홍보글만 신청할 수 있어요.");
@@ -33,7 +38,7 @@ export async function requestAdAction(formData: FormData) {
     if (mine.some((a) => a.postId === postId && a.kind === kind)) {
       fail("이 글은 같은 상품으로 이미 신청했거나 노출 중이에요. 아래 신청 내역을 확인해주세요.");
     }
-    adId = (await store.requestAd({ postId, kind, plan, requestedBy: user.id })).id;
+    adId = (await store.requestAd({ postId, kind, plan, requestedBy: user.id, creative })).id;
   } catch (e) {
     // redirect() 는 예외로 동작하므로 그대로 다시 던집니다.
     if (e && typeof e === "object" && "digest" in e) throw e;

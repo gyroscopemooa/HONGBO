@@ -102,6 +102,20 @@ export interface Report {
   post?: Pick<Post, "id" | "title" | "status" | "category"> | null;
 }
 
+/**
+ * 배너 광고의 제작 방식. 없으면(null) 등록한 글의 이미지·제목·소개로 자동 제작합니다.
+ * - upload: 고객이 만든 완성 배너 이미지(4:1)를 그대로 보여줌
+ * - custom: 고객이 고른 배경 사진 + 직접 쓴 문구로 서비스가 배너를 구성
+ */
+export interface AdCreative {
+  mode: "upload" | "custom";
+  imageUrl?: string;
+  title?: string;
+  subtitle?: string;
+  /** dark: 어두운 배경 + 흰 글씨 / light: 밝은 배경 + 어두운 글씨 */
+  tone?: "dark" | "light";
+}
+
 /** 유료 광고(상단 프리미엄 3칸 / 와이드 배너). 신청 → 운영자 승인(입금 확인) → 기간 동안 노출. */
 export interface Ad {
   id: number;
@@ -115,6 +129,8 @@ export interface Ad {
   startsAt: string | null;
   endsAt: string | null;
   requestedBy: string | null;
+  /** 배너 직접 제작/업로드 정보 (배너 상품만, 자동 제작이면 null) */
+  creative: AdCreative | null;
   createdAt: string;
 }
 

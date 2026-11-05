@@ -2,10 +2,19 @@
 
 /** 브라우저에서 이미지를 16:9 로 자동 크롭하고 webp 로 줄입니다. (EXIF 위치정보도 함께 제거됩니다.) */
 
-const MAX_W = 960;
-const RATIO = 16 / 9;
+const DEFAULT_MAX_W = 960;
+const DEFAULT_RATIO = 16 / 9;
 
-export async function processImage(file: Blob): Promise<Blob> {
+export interface ProcessOptions {
+  /** 가로/세로 비율 (기본 16/9). 배너는 4/1 */
+  ratio?: number;
+  /** 결과 이미지 최대 가로 px (기본 960) */
+  maxWidth?: number;
+}
+
+export async function processImage(file: Blob, opts: ProcessOptions = {}): Promise<Blob> {
+  const RATIO = opts.ratio ?? DEFAULT_RATIO;
+  const MAX_W = opts.maxWidth ?? DEFAULT_MAX_W;
   let bitmap: ImageBitmap;
   try {
     bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
@@ -51,8 +60,8 @@ export async function uploadImage(blob: Blob): Promise<string> {
 }
 
 /** 파일 선택 → 자동 크롭 → 업로드 → URL */
-export async function processAndUpload(file: Blob): Promise<string> {
+export async function processAndUpload(file: Blob, opts: ProcessOptions = {}): Promise<string> {
   if (!file.type.startsWith("image/")) throw new Error("이미지 파일만 올릴 수 있어요.");
   if (file.size > 25 * 1024 * 1024) throw new Error("원본 이미지가 너무 커요. 25MB 이하로 올려주세요.");
-  return uploadImage(await processImage(file));
+  return uploadImage(await processImage(file, opts));
 }

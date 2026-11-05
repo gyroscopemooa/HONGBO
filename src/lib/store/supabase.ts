@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CategorySlug } from "../constants";
 import { getAdminClient } from "../supabase/admin";
 import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, adEndsAt, isAdLive, nextFreeSlot } from "../ads";
-import type { Ad, Banner, EventType, Notice, Post, PostExtra, PostInput, PostStatus, Profile, Report } from "../types";
+import type { Ad, AdCreative, Banner, EventType, Notice, Post, PostExtra, PostInput, PostStatus, Profile, Report } from "../types";
 import type { EventInput, ListResult, NewReport, Stats, Store } from "./types";
 
 /** Supabase(Postgres) 저장소 — 운영 환경용 */
@@ -107,6 +107,7 @@ function toAd(r: Row): Ad {
     startsAt: (r.starts_at as string | null) ?? null,
     endsAt: (r.ends_at as string | null) ?? null,
     requestedBy: (r.requested_by as string | null) ?? null,
+    creative: (r.creative as AdCreative | null) ?? null,
     createdAt: r.created_at as string,
   };
 }
@@ -495,10 +496,11 @@ export const supabaseStore: Store = {
     return opts?.liveOnly ? list.filter((a) => isAdLive(a)) : list;
   },
 
-  async requestAd({ postId, kind, plan, requestedBy }) {
+  async requestAd({ postId, kind, plan, requestedBy, creative }) {
     const { data, error } = await sb()
       .from("ads")
-      .insert({ post_id: postId, kind, plan, status: "requested", requested_by: requestedBy })
+      // creative 컬럼은 0007 마이그레이션이 필요하므로, 직접 제작/업로드일 때만 값을 보냅니다.
+      .insert({ post_id: postId, kind, plan, status: "requested", requested_by: requestedBy, ...(creative ? { creative } : {}) })
       .select("*")
       .single();
     if (error) fail("ads.request", error);
