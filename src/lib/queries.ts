@@ -74,7 +74,22 @@ export async function getLiveBannerAds(): Promise<Array<{ post: Post; creative: 
   }
 }
 
-export async function getHomeData() {
+/** 홈 데이터는 모든 방문자에게 같으므로 서버 인스턴스 안에서 짧게(45초) 재사용해 DB 왕복을 줄입니다. 새 글은 최대 45초 늦게 보일 수 있어요. */
+const HOME_TTL_MS = 45_000;
+let homeCache: { at: number; data: ReturnType<typeof loadHomeData> } | null = null;
+
+export function getHomeData() {
+  const now = Date.now();
+  if (homeCache && now - homeCache.at < HOME_TTL_MS) return homeCache.data;
+  const data = loadHomeData();
+  homeCache = { at: now, data };
+  data.catch(() => {
+    if (homeCache?.data === data) homeCache = null;
+  });
+  return data;
+}
+
+async function loadHomeData() {
   const [popular, latest, side, strip, notices, premium, adBanners, house] = await Promise.all([
     getPopularPosts(18),
     store.listPosts({ publicOnly: true, sort: "latest", pageSize: 20 }),
