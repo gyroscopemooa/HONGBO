@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { ChevronRight, Flame, Siren } from "lucide-react";
 import { AdBanner } from "@/components/AdBanner";
 import { BannerPlaceholder, BannerSlider } from "@/components/BannerSlider";
 import { Carousel } from "@/components/Carousel";
+import { ExclusiveStrip } from "@/components/ExclusiveStrip";
 import { CategoryTiles } from "@/components/CategoryTiles";
 import { FeatureRequestBanner } from "@/components/FeatureRequestBanner";
 import { Infl09Banner } from "@/components/Infl09Banner";
@@ -111,6 +113,10 @@ export default async function HomePage() {
         <Hero infl09={{ url: infl09Url, preview: !infl09Url && process.env.NODE_ENV !== "production" }} />
       </div>
       <CategoryTiles />
+
+      <Suspense fallback={null}>
+        <ExclusiveStrip wrap />
+      </Suspense>
 
       <Carousel title="오늘의 인기 홍보" icon={<Flame className="text-brand" size={22} fill="currentColor" aria-hidden />} moreHref="/posts?sort=popular">
         {popular.slice(0, 12).map((p, i) => (
