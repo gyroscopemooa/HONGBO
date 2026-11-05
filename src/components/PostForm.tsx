@@ -11,6 +11,11 @@ import {
   CATEGORY_MAP,
   BENEFITS,
   BENEFIT_MAX,
+  EXCLUSIVE_CODE_MAX,
+  EXCLUSIVE_HOW_MAX,
+  EXCLUSIVE_METHODS,
+  EXCLUSIVE_REWARD_MAX,
+  EXCLUSIVE_SLUG,
   EXTRA_LINK_LABEL_MAX,
   EXTRA_LINK_MAX,
   EXTRA_LINK_PRESETS,
@@ -49,6 +54,13 @@ export interface FormState {
   usageType: string;
   period: string;
   benefits: string[];
+  exclusiveOn: boolean;
+  exclusiveAgree: boolean;
+  exclusiveReward: string;
+  exclusiveHow: string;
+  exclusiveMethod: string;
+  exclusiveCode: string;
+  exclusiveUrl: string;
   links: Array<{ label: string; url: string }>;
   videoUrl: string;
   price: string;
@@ -77,6 +89,13 @@ const EMPTY: FormState = {
   usageType: "",
   period: "",
   benefits: [],
+  exclusiveOn: false,
+  exclusiveAgree: false,
+  exclusiveReward: "",
+  exclusiveHow: "",
+  exclusiveMethod: "say",
+  exclusiveCode: "",
+  exclusiveUrl: "",
   links: [],
   videoUrl: "",
   price: "",
@@ -120,7 +139,14 @@ export function postToFormState(p: Post): FormState {
     snsPlatform: p.category === "content" && p.platform ? p.platform : "youtube",
     usageType: p.extra.usageType ?? "",
     period: p.extra.period ?? "",
-    benefits: p.extra.benefits ?? [],
+    benefits: (p.extra.benefits ?? []).filter((b) => b !== EXCLUSIVE_SLUG),
+    exclusiveOn: !!p.extra.exclusive,
+    exclusiveAgree: !!p.extra.exclusive,
+    exclusiveReward: p.extra.exclusive?.reward ?? "",
+    exclusiveHow: p.extra.exclusive?.how ?? "",
+    exclusiveMethod: p.extra.exclusive?.method ?? "say",
+    exclusiveCode: p.extra.exclusive?.code ?? "",
+    exclusiveUrl: p.extra.exclusive?.url ?? "",
     links: p.extra.links ?? [],
     videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
     price: p.price ?? "",
@@ -154,6 +180,13 @@ function toPayload(f: FormState) {
       usageType: f.usageType,
       period: f.period,
       benefits: f.benefits.join(","),
+      exclusiveOn: f.exclusiveOn,
+      exclusiveAgree: f.exclusiveAgree,
+      exclusiveReward: f.exclusiveReward,
+      exclusiveHow: f.exclusiveHow,
+      exclusiveMethod: f.exclusiveMethod,
+      exclusiveCode: f.exclusiveCode,
+      exclusiveUrl: f.exclusiveUrl,
       links: f.links,
       businessUrl: f.businessUrl,
       videoUrl: f.videoUrl,
@@ -233,6 +266,8 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
     if (f.title.trim().length < 2) m.push("제목");
     if (f.shortDescription.trim().length < 2) m.push("한 줄 소개");
     if (f.description.trim().length < LIMITS.descMin) m.push("상세 설명");
+    if (f.exclusiveOn && (f.exclusiveReward.trim().length < 2 || (f.exclusiveMethod === "say" && f.exclusiveHow.trim().length < 2) || (f.exclusiveMethod === "code" && !f.exclusiveCode.trim()) || (f.exclusiveMethod === "link" && !f.exclusiveUrl.trim()))) m.push("더홍보 전용 혜택 내용·받는 방법");
+    if (f.exclusiveOn && !f.exclusiveAgree) m.push("전용 이벤트 동의");
     if (f.category === "apps" && !f.playUrl.trim() && !f.appStoreUrl.trim() && !f.siteUrl.trim()) m.push("앱 링크");
     else if (f.category === "offline" && !f.mapUrl.trim() && !f.businessUrl.trim()) m.push("지도/문의 링크");
     else if (f.category && f.category !== "apps" && f.category !== "offline" && f.category !== "quick" && !f.externalUrl.trim()) m.push("링크");
@@ -324,7 +359,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
       address: null,
       mapUrl: null,
       tags: [],
-      extra: { benefits: f.benefits },
+      extra: { benefits: f.exclusiveOn ? [...f.benefits, EXCLUSIVE_SLUG] : f.benefits, ...(f.exclusiveOn ? { exclusive: { reward: f.exclusiveReward, how: f.exclusiveHow } } : {}) },
       contact: null,
       status: "active",
       adminPinned: false,
@@ -592,6 +627,88 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
               })}
             </div>
           </Field>
+          <div data-field="exclusive" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#ffe49a] via-[#f0b429] to-[#c9830a] p-[2px] shadow-[0_6px_22px_-8px_rgba(201,131,10,0.65)]">
+            <div className="rounded-[14px] bg-gradient-to-b from-[#fffdf6] to-[#fff6e0] p-4 sm:p-5">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input type="checkbox" checked={f.exclusiveOn} onChange={(e) => {
+                  set("exclusiveOn", e.target.checked);
+                  if (e.target.checked && !f.exclusiveCode && !f.exclusiveUrl && !f.exclusiveHow) set("exclusiveMethod", f.category === "apps" ? "link" : f.category === "websites" || f.category === "services" ? "code" : "say");
+                }} className="mt-1.5 size-4 accent-[#d98e04]" />
+              <span>
+                <span className="flex flex-wrap items-center gap-2 text-[16px] font-black tracking-[-0.03em] text-ink">
+                  <span className="inline-flex items-center gap-1 rounded-md bg-gradient-to-r from-[#a86a0b] via-[#e0a31a] to-[#a86a0b] px-2 py-0.5 text-[12px] font-extrabold text-white shadow-sm">★ 더홍보 전용</span>
+                  더홍보에서만 주는 특별 이벤트가 있어요
+                </span>
+                <span className="mt-0.5 block text-[12.5px] leading-relaxed text-muted">&quot;더홍보 보고 왔어요&quot; 한 분께만 드리는 혜택이 있을 때 켜주세요. 카드가 금빛으로 빛나요.</span>
+              </span>
+            </label>
+
+            {f.exclusiveOn && (
+              <div className="mt-4 space-y-4">
+                <div role="note" className="flex items-start gap-2.5 rounded-xl border border-[#f3c9a0] bg-white px-4 py-3 text-[13px] leading-relaxed text-[#7a4a05]">
+                  <CircleAlert size={17} className="mt-0.5 shrink-0" aria-hidden />
+                  <p>
+                    <b>더홍보를 보고 온 분에게만 제공하는 혜택</b>일 때만 사용하세요. 다른 곳에서도 똑같이 진행하는 <b>일반 이벤트·할인·쿠폰</b>은 전용으로 표시하지 말고 위의 <b>혜택 배지</b>와 <b>추가 링크</b>를 써주세요.
+                    일반 이벤트를 전용으로 표시하거나 혜택을 주지 않으면 <b>배지 삭제, 글 삭제, 반복 시 운영정지</b>될 수 있어요.
+                  </p>
+                </div>
+
+                <Field id="exclusiveReward" label="더홍보 전용 혜택" required error={errors.exclusiveReward} counter={{ now: f.exclusiveReward.length, max: EXCLUSIVE_REWARD_MAX }}>
+                  <input id="exclusiveReward" value={f.exclusiveReward} maxLength={EXCLUSIVE_REWARD_MAX + 10} onChange={(e) => set("exclusiveReward", e.target.value)} placeholder="예) 아메리카노 1잔 무료 · 첫 달 20% 할인 · 프리미엄 7일 체험" aria-invalid={!!errors.exclusiveReward} className="field" />
+                </Field>
+                <Field id="exclusiveMethod" label="어떻게 받나요?" required>
+                  <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="받는 방식">
+                    {EXCLUSIVE_METHODS.map((m) => (
+                      <button
+                        key={m.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={f.exclusiveMethod === m.value}
+                        onClick={() => set("exclusiveMethod", m.value)}
+                        className={cn("rounded-xl border-2 px-3 py-2.5 text-left transition", f.exclusiveMethod === m.value ? "border-[#d98e04] bg-white" : "border-line bg-white/60 hover:border-[#f0c15a]")}
+                      >
+                        <span className="block text-[14px] font-bold">{m.label}</span>
+                        <span className="mt-0.5 block text-[12px] leading-snug text-muted">{m.hint}</span>
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+                {f.exclusiveMethod === "code" && (
+                  <Field id="exclusiveCode" label="쿠폰 번호(코드)" required error={errors.exclusiveCode} hint="더홍보 전용으로 새로 만든 코드를 권장해요. 사용자가 복사해서 쓰고, 업체는 이 코드로 더홍보 유입을 확인할 수 있어요.">
+                    <input id="exclusiveCode" value={f.exclusiveCode} maxLength={EXCLUSIVE_CODE_MAX} onChange={(e) => set("exclusiveCode", e.target.value.replace(/\s/g, ""))} placeholder="예) THEHONGBO20" aria-invalid={!!errors.exclusiveCode} className="field font-mono" />
+                  </Field>
+                )}
+                {f.exclusiveMethod === "link" && (
+                  <Field id="exclusiveUrl" label="더홍보 전용 링크" required error={errors.exclusiveUrl} hint="전용 설문·이벤트 페이지·전용 가입 링크 등. 접속 시 자동으로 더홍보 유입 표시(utm_source=thehongbo)가 붙어요.">
+                    <input id="exclusiveUrl" value={f.exclusiveUrl} onChange={(e) => set("exclusiveUrl", e.target.value)} inputMode="url" placeholder="https://" aria-invalid={!!errors.exclusiveUrl} className="field" />
+                  </Field>
+                )}
+                <Field id="exclusiveHow" label={f.exclusiveMethod === "say" ? "받는 방법" : "안내 문구"} required={f.exclusiveMethod === "say"} optional={f.exclusiveMethod !== "say"} error={errors.exclusiveHow} counter={{ now: f.exclusiveHow.length, max: EXCLUSIVE_HOW_MAX }}>
+                  <input id="exclusiveHow" value={f.exclusiveHow} maxLength={EXCLUSIVE_HOW_MAX + 10} onChange={(e) => set("exclusiveHow", e.target.value)} placeholder={f.exclusiveMethod === "say" ? "예) 주문 시 '더홍보 보고 왔어요'라고 말씀하세요" : f.exclusiveMethod === "code" ? "예) 결제 화면에서 쿠폰 코드 입력란에 넣어주세요" : "예) 링크로 접속해 설문 참여 시 쿠폰 지급"} aria-invalid={!!errors.exclusiveHow} className="field" />
+                </Field>
+
+                <div data-field="exclusiveAgree">
+                  <label className="flex cursor-pointer items-start gap-2.5">
+                    <input type="checkbox" checked={f.exclusiveAgree} onChange={(e) => set("exclusiveAgree", e.target.checked)} className="mt-1 size-4 accent-[#d98e04]" />
+                    <span className="text-[13.5px] leading-relaxed text-ink-2">
+                      이 혜택은 <b>더홍보 전용</b>이며 일반 이벤트가 아님을 확인했고, 실제로 제공하지 않으면 운영정책에 따라 삭제·이용 제한될 수 있음에 동의해요.
+                    </span>
+                  </label>
+                  {errors.exclusiveAgree && <p role="alert" className="mt-1 text-[13px] font-medium text-brand-dark">{errors.exclusiveAgree}</p>}
+                </div>
+
+                <div className="rounded-xl bg-white px-4 py-3 text-[13px] leading-relaxed text-ink-2">
+                  <p className="font-bold text-ink">더홍보가 드리는 혜택</p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-5">
+                    <li>금색 <b>&quot;더홍보 전용&quot;</b> 배지와 강조 테두리가 카드에 붙어요.</li>
+                    <li>상세 페이지 상단에 전용 혜택 안내 박스가 따로 보여요.</li>
+                    <li><b>더홍보 전용 이벤트 모음</b> 페이지와 전체 이벤트 모음에 자동으로 모여요.</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+            </div>
+          </div>
           <Field
             id="links0"
             label="추가 링크"

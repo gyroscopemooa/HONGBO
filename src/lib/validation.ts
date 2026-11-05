@@ -3,6 +3,12 @@ import {
   APP_PLATFORMS,
   BENEFITS,
   BENEFIT_MAX,
+  EXCLUSIVE_CODE_MAX,
+  EXCLUSIVE_HOW_MAX,
+  EXCLUSIVE_METHODS,
+  EXCLUSIVE_REWARD_MAX,
+  type ExclusiveMethod,
+  EXCLUSIVE_SLUG,
   EXTRA_LINK_LABEL_MAX,
   EXTRA_LINK_MAX,
   CATEGORY_SLUGS,
@@ -42,6 +48,13 @@ const rawSchema = z.object({
       usageType: str(40),
       period: str(200),
       benefits: str(200),
+      exclusiveOn: z.boolean().optional(),
+      exclusiveAgree: z.boolean().optional(),
+      exclusiveReward: str(400),
+      exclusiveHow: str(400),
+      exclusiveMethod: str(20),
+      exclusiveCode: str(200),
+      exclusiveUrl: str(2100),
       businessUrl: str(2100),
       videoUrl: str(2100),
       links: z.array(z.object({ label: z.string().max(100), url: z.string().max(2100) })).max(20).default(() => []),
@@ -118,7 +131,39 @@ export function parsePostInput(raw: unknown): ParseResult {
     .split(",")
     .map((s) => s.trim())
     .filter((s) => (BENEFITS.map((b) => b.value) as string[]).includes(s));
-  if (benefitList.length) extra.benefits = Array.from(new Set(benefitList)).slice(0, BENEFIT_MAX);
+  const benefitsFinal = Array.from(new Set(benefitList)).slice(0, BENEFIT_MAX);
+
+  // --- 더홍보 전용 이벤트 ---
+  if (v.extra.exclusiveOn) {
+    const reward = (v.extra.exclusiveReward ?? "").replace(/\s+/g, " ").trim();
+    const how = (v.extra.exclusiveHow ?? "").replace(/\s+/g, " ").trim();
+    if (reward.length < 2) errors.exclusiveReward = "더홍보 전용 혜택 내용을 입력해주세요.";
+    else if (reward.length > EXCLUSIVE_REWARD_MAX) errors.exclusiveReward = `혜택 내용은 ${EXCLUSIVE_REWARD_MAX}자까지 입력할 수 있어요.`;
+    const method = (EXCLUSIVE_METHODS.map((m) => m.value) as string[]).includes(v.extra.exclusiveMethod ?? "")
+      ? (v.extra.exclusiveMethod as ExclusiveMethod)
+      : "say";
+    if (method === "say" && how.length < 2) errors.exclusiveHow = "받는 방법을 입력해주세요. (예: 주문 시 '더홍보' 라고 말씀하세요)";
+    else if (how.length > EXCLUSIVE_HOW_MAX) errors.exclusiveHow = `받는 방법은 ${EXCLUSIVE_HOW_MAX}자까지 입력할 수 있어요.`;
+    let code: string | undefined;
+    let exUrl: string | undefined;
+    if (method === "code") {
+      const c = (v.extra.exclusiveCode ?? "").trim();
+      if (!c) errors.exclusiveCode = "쿠폰 번호(코드)를 입력해주세요.";
+      else if (c.length > EXCLUSIVE_CODE_MAX || /\s/.test(c)) errors.exclusiveCode = `공백 없이 ${EXCLUSIVE_CODE_MAX}자 이내로 입력해주세요.`;
+      else code = c;
+    }
+    if (method === "link") {
+      const r = normalizeExternalUrl((v.extra.exclusiveUrl ?? "").trim());
+      if (!r.ok) errors.exclusiveUrl = r.error ?? "전용 링크를 입력해주세요.";
+      else exUrl = r.url;
+    }
+    if (!v.extra.exclusiveAgree) errors.exclusiveAgree = "전용 이벤트 안내에 동의해주세요.";
+    if (!errors.exclusiveReward && !errors.exclusiveHow && !errors.exclusiveCode && !errors.exclusiveUrl && !errors.exclusiveAgree) {
+      extra.exclusive = { reward, how, method, ...(code ? { code } : {}), ...(exUrl ? { url: exUrl } : {}) };
+      benefitsFinal.push(EXCLUSIVE_SLUG);
+    }
+  }
+  if (benefitsFinal.length) extra.benefits = benefitsFinal;
 
   // --- 추가 링크 (모든 카테고리 공통) ---
   const extraLinks: Array<{ label: string; url: string }> = [];
@@ -267,7 +312,7 @@ export function parsePostInput(raw: unknown): ParseResult {
   if (contact && contact.length > LIMITS.contactMax) errors.contact = `연락처는 ${LIMITS.contactMax}자까지 입력할 수 있어요.`;
 
   // --- 금지 키워드 ---
-  const banned = findBannedKeyword(title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "));
+  const banned = findBannedKeyword(title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "");
   if (banned) {
     errors.description = "운영정책상 등록할 수 없는 내용이 포함되어 있어요. 내용을 확인해주세요.";
   }

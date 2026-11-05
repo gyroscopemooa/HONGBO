@@ -275,11 +275,45 @@ export const BENEFIT_MAX = 2;
 
 export type BenefitSlug = (typeof BENEFITS)[number]["value"];
 
+/** 더홍보 전용 이벤트: 더홍보를 보고 온 분에게만 제공하는 혜택. benefits 배열에 이 값이 함께 저장돼 모음 페이지에 분류됩니다. */
+export const EXCLUSIVE_SLUG = "exclusive" as const;
+export const EXCLUSIVE_REWARD_MAX = 60;
+export const EXCLUSIVE_HOW_MAX = 80;
+export const EXCLUSIVE_LABEL = "더홍보 전용";
+export const EXCLUSIVE_CODE_MAX = 40;
+/** 전용 혜택 받는 방식 */
+export const EXCLUSIVE_METHODS = [
+  { value: "say", label: "말로 알리기", hint: "가게·오프라인용. 방문 시 \"더홍보 보고 왔어요\"라고 말하면 제공" },
+  { value: "code", label: "쿠폰·코드", hint: "사이트·서비스용. 쿠폰 번호를 보여주고 복사할 수 있어요" },
+  { value: "link", label: "전용 링크", hint: "앱·설문·전용 페이지용. 더홍보에서 온 방문임을 알 수 있어요" },
+] as const;
+export type ExclusiveMethod = (typeof EXCLUSIVE_METHODS)[number]["value"];
+/** 더홍보 전용 링크에 자동으로 붙는 유입 표시 */
+export function withExclusiveRef(url: string): string {
+  try {
+    const u = new URL(url);
+    if (!u.searchParams.has("utm_source")) u.searchParams.set("utm_source", "thehongbo");
+    if (!u.searchParams.has("utm_medium")) u.searchParams.set("utm_medium", "exclusive");
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 /** 혜택 모음 페이지(/benefit/[slug]) 정보 — 등록된 글의 혜택 배지로 자동 분류됩니다. */
 export const BENEFIT_PAGES: Record<
-  BenefitSlug,
+  BenefitSlug | typeof EXCLUSIVE_SLUG,
   { label: string; title: string; h1: string; desc: string; intro: string; color: string; tint: string }
 > = {
+  exclusive: {
+    label: EXCLUSIVE_LABEL,
+    title: "더홍보 전용 이벤트 - 더홍보에서만 받을 수 있는 혜택",
+    h1: "더홍보 전용 이벤트",
+    desc: "더홍보를 보고 온 분에게만 제공하는 더홍보 전용 혜택을 모았어요. 더홍보 전용 할인, 증정, 체험 이벤트를 확인하세요.",
+    intro: "다른 곳에서는 받을 수 없는, 더홍보 전용 혜택만 모았어요. 받는 방법은 각 글에서 확인하세요.",
+    color: "#b7791f",
+    tint: "#fff6e0",
+  },
   event: {
     label: "이벤트",
     title: "진행 중인 이벤트 모음 - 경품·응모·참여 이벤트 한눈에",
@@ -327,7 +361,7 @@ export const BENEFIT_PAGES: Record<
   },
 };
 
-export function isBenefitSlug(v: unknown): v is BenefitSlug {
+export function isBenefitSlug(v: unknown): v is BenefitSlug | typeof EXCLUSIVE_SLUG {
   return typeof v === "string" && v in BENEFIT_PAGES;
 }
 

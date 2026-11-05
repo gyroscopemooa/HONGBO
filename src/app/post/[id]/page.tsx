@@ -15,9 +15,10 @@ import { PostCard } from "@/components/PostCard";
 import { ReportButton } from "@/components/ReportButton";
 import { TrackEvent } from "@/components/TrackEvent";
 import { getCurrentUser } from "@/lib/auth";
-import { CATEGORY_MAP, LIMITS, PLATFORM_LABELS, benefitLabels } from "@/lib/constants";
+import { CATEGORY_MAP, LIMITS, PLATFORM_LABELS, withExclusiveRef } from "@/lib/constants";
 import { OfficialBadge } from "@/components/OfficialBadge";
 import { BenefitBadges } from "@/components/BenefitBadges";
+import { CopyCodeButton } from "@/components/CopyCodeButton";
 import { ctaLabel, platformText, secondaryLinks } from "@/lib/post-links";
 import { effectiveStatus, isPostPublic } from "@/lib/queries";
 import { store } from "@/lib/store";
@@ -139,7 +140,7 @@ export default async function PostDetailPage({ params }: Props) {
                 </span>
               )}
             </div>
-            {(post.extra.official || benefitLabels(post.extra.benefits).length > 0) && (
+            {(post.extra.official || (post.extra.benefits?.length ?? 0) > 0) && (
               <div className="mt-3 flex flex-wrap items-center gap-1">
                 <OfficialBadge value={post.extra.official} />
                 <BenefitBadges values={post.extra.benefits} />
@@ -147,6 +148,26 @@ export default async function PostDetailPage({ params }: Props) {
             )}
             <h1 className="mt-3 text-[22px] font-black leading-[1.3] tracking-[-0.04em] sm:text-[24px]">{post.title}</h1>
             <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{post.shortDescription}</p>
+
+            {post.extra.exclusive && (
+              <div className="mt-4 overflow-hidden rounded-xl bg-gradient-to-br from-[#ffe49a] via-[#f0b429] to-[#c9830a] p-[2px] shadow-[0_6px_20px_-6px_rgba(201,131,10,0.6)]">
+              <div className="rounded-[10px] bg-gradient-to-b from-[#fffdf6] to-[#fff4d6] p-3.5">
+                <p className="inline-flex items-center gap-1 rounded-md bg-gradient-to-r from-[#a86a0b] via-[#e0a31a] to-[#a86a0b] px-2 py-0.5 text-[12px] font-extrabold text-white">★ 더홍보 전용 이벤트</p>
+                <p className="mt-1 text-[15px] font-extrabold leading-snug text-ink">{post.extra.exclusive.reward}</p>
+                {post.extra.exclusive.how && (
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">
+                    <b>받는 방법</b> · {post.extra.exclusive.how}
+                  </p>
+                )}
+                {post.extra.exclusive.method === "code" && post.extra.exclusive.code && <CopyCodeButton code={post.extra.exclusive.code} />}
+                {post.extra.exclusive.method === "link" && post.extra.exclusive.url && publicNow && (
+                  <div className="mt-2.5">
+                    <ExternalCta href={withExclusiveRef(post.extra.exclusive.url)} postId={post.id} label="더홍보 전용 링크로 받기" />
+                  </div>
+                )}
+              </div>
+              </div>
+            )}
 
             {post.price && (
               <p className="mt-4 text-[26px] font-black tracking-[-0.03em] text-brand">{post.price}</p>

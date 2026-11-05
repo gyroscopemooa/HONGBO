@@ -22,7 +22,7 @@ const HUB_FAQ = [
 ];
 
 /** 혜택(이벤트·할인·쿠폰·무료·증정) 모음 페이지 공통 본문 */
-export function BenefitPage({ slug, params }: { slug?: BenefitSlug; params: ListParams }) {
+export function BenefitPage({ slug, params }: { slug?: BenefitSlug | "exclusive"; params: ListParams }) {
   const info = slug ? BENEFIT_PAGES[slug] : null;
   const base = siteUrl();
   const basePath = slug ? `/benefit/${slug}` : "/benefit";
@@ -87,6 +87,9 @@ export function BenefitPage({ slug, params }: { slug?: BenefitSlug; params: List
           <nav aria-label="혜택 종류" className="mb-4 flex flex-wrap items-center gap-2">
             <Link href="/benefit" className={chip(!slug)}>
               전체
+            </Link>
+            <Link href="/benefit/exclusive" className={cn(chip(slug === "exclusive"), slug !== "exclusive" && "!border-[#e0a31a] !text-[#8a5a0a]")}>
+              더홍보 전용
             </Link>
             {BENEFITS.map((b) => (
               <Link key={b.value} href={buildHref(`/benefit/${b.value}`, {})} className={chip(slug === b.value)}>

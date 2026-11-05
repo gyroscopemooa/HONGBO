@@ -30,7 +30,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
           <span className="absolute left-2 top-2 z-10 rounded-md bg-ink/75 px-1.5 py-0.5 text-[11px] font-bold tracking-tight text-white backdrop-blur-sm">광고</span>
         )}
         {post.extra.official && <OfficialBadge value={post.extra.official} className="absolute right-2 top-2 z-10" />}
-        {benefitLabels(post.extra.benefits).length > 0 && <BenefitBadges values={post.extra.benefits} className="absolute bottom-2 left-2 z-10" />}
+        {(post.extra.benefits?.length ?? 0) > 0 && <BenefitBadges values={post.extra.benefits} className="absolute bottom-2 left-2 z-10" />}
         {post.region && !ad && (
           <span className={cn("absolute left-2 inline-flex items-center gap-0.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[11.5px] font-bold text-ink-2 shadow-sm", rank != null ? "top-9" : "top-2")}>
             <MapPin size={11} aria-hidden />
@@ -64,7 +64,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
   );
 
   return (
-    <article className={cn("group relative h-full overflow-hidden rounded-[14px] border bg-white shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-hover", ad ? "border-[#f0b429]/70 ring-1 ring-[#f0b429]/30" : benefitLabels(post.extra.benefits).length > 0 ? "border-[#e5484d]/60 ring-1 ring-[#e5484d]/20" : "border-line")}>
+    <article className={cn("group relative h-full overflow-hidden rounded-[14px] border bg-white shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-hover", ad ? "border-[#f0b429]/70 ring-1 ring-[#f0b429]/30" : post.extra.benefits?.includes("exclusive") ? "border-2 border-[#e0a31a] shadow-[0_0_0_3px_rgba(240,180,41,0.28),0_8px_24px_-6px_rgba(201,131,10,0.55)]" : benefitLabels(post.extra.benefits).length > 0 ? "border-[#e5484d]/60 ring-1 ring-[#e5484d]/20" : "border-line")}>
       {preview ? (
         <div className="flex h-full flex-col">{inner}</div>
       ) : (
