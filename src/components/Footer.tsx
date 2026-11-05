@@ -19,6 +19,7 @@ export function Footer() {
               ["/privacy", "개인정보처리방침"],
               ["/policy", "운영정책"],
               ["/contact", "문의하기"],
+              ["/advertise", "광고 상품"],
               ["/contact#ads", "광고문의"],
             ].map(([href, label], i) => (
               <span key={href} className="flex items-center">

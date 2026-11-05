@@ -102,6 +102,22 @@ export interface Report {
   post?: Pick<Post, "id" | "title" | "status" | "category"> | null;
 }
 
+/** 유료 광고(상단 프리미엄 10칸 / 와이드 배너). 신청 → 운영자 승인(입금 확인) → 기간 동안 노출. */
+export interface Ad {
+  id: number;
+  postId: number;
+  kind: "premium" | "banner";
+  plan: "week" | "month";
+  /** requested: 신청됨(승인 대기) / active: 승인됨(기간 내에만 노출) */
+  status: "requested" | "active";
+  /** 프리미엄 칸 번호(1~10). 배너는 null */
+  slotNo: number | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  requestedBy: string | null;
+  createdAt: string;
+}
+
 export interface Banner {
   id: number;
   title: string;

@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import type { CategorySlug } from "../constants";
 import { SEED_BANNERS, SEED_NOTICES, SEED_ORDER, SEED_POSTS, seedExternalUrl, seedImageUrl } from "@/data/seed";
-import type { Banner, EventType, Notice, Post, Profile, Report } from "../types";
+import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, adEndsAt, isAdLive, nextFreeSlot } from "../ads";
+import type { Ad, Banner, EventType, Notice, Post, Profile, Report } from "../types";
 import type { EventInput, ListQuery, ListResult, NewReport, Stats, Store } from "./types";
 
 /**
@@ -25,6 +26,8 @@ interface DB {
   nextReportId: number;
   nextBannerId: number;
   nextNoticeId: number;
+  nextAdId: number;
+  ads: Ad[];
   posts: Post[];
   reports: Array<Report & { reporterAnon: string | null }>;
   banners: Banner[];
@@ -37,6 +40,28 @@ const DATA_DIR = path.join(process.cwd(), ".data");
 const DB_FILE = path.join(DATA_DIR, "db.json");
 
 const g = globalThis as unknown as { __hbDb?: { db: DB; mtime: number } };
+
+/** 로컬 미리보기용 샘플 광고 — 프리미엄 7칸 + 배너 2개 (Supabase 사용 시에는 만들어지지 않습니다) */
+function demoAds(posts: Post[]): Ad[] {
+  const now = new Date();
+  const active = posts.filter((p) => p.status === "active");
+  const ads: Ad[] = [];
+  const mk = (post: Post, kind: Ad["kind"], plan: Ad["plan"], slotNo: number | null): Ad => ({
+    id: ads.length + 1,
+    postId: post.id,
+    kind,
+    plan,
+    status: "active",
+    slotNo,
+    startsAt: now.toISOString(),
+    endsAt: adEndsAt(plan, now),
+    requestedBy: null,
+    createdAt: now.toISOString(),
+  });
+  active.slice(0, 7).forEach((p, i) => ads.push(mk(p, "premium", i % 2 ? "week" : "month", i + 1)));
+  active.slice(7, 9).forEach((p) => ads.push(mk(p, "banner", "month", null)));
+  return ads;
+}
 
 function buildSeed(): DB {
   const base = Date.now();
@@ -76,8 +101,11 @@ function buildSeed(): DB {
   });
   posts.sort((a, b) => a.id - b.id);
 
+  const ads = demoAds(posts);
   return {
     version: 1,
+    ads,
+    nextAdId: ads.length + 1,
     nextPostId: Math.max(...posts.map((p) => p.id)) + 1,
     nextReportId: 1,
     nextBannerId: SEED_BANNERS.length + 1,
@@ -115,6 +143,14 @@ function load(): DB {
     }
   } else {
     db = buildSeed();
+  }
+  if (!db.ads) {
+    // 광고 기능 도입 전에 만들어진 db.json — 빈 광고 목록 + 미리보기용 샘플을 채웁니다.
+    db.ads = demoAds(db.posts);
+    db.nextAdId = db.ads.length + 1;
+    g.__hbDb = { db, mtime };
+    save(db);
+    return db;
   }
   g.__hbDb = { db, mtime };
   if (mtime === 0) save(db);
@@ -487,6 +523,66 @@ export const localStore: Store = {
   async deleteBanner(id) {
     const db = load();
     db.banners = db.banners.filter((b) => b.id !== id);
+    save(db);
+  },
+
+  async listAds(opts) {
+    const now = Date.now();
+    return clone(
+      load()
+        .ads.filter(
+          (a) =>
+            (!opts?.kind || a.kind === opts.kind) &&
+            (!opts?.status || a.status === opts.status) &&
+            (!opts?.liveOnly || isAdLive(a, now)) &&
+            (!opts?.requestedBy || a.requestedBy === opts.requestedBy),
+        )
+        .sort((a, b) => b.id - a.id),
+    );
+  },
+
+  async requestAd({ postId, kind, plan, requestedBy }) {
+    const db = load();
+    const ad: Ad = {
+      id: db.nextAdId++,
+      postId,
+      kind,
+      plan,
+      status: "requested",
+      slotNo: null,
+      startsAt: null,
+      endsAt: null,
+      requestedBy,
+      createdAt: new Date().toISOString(),
+    };
+    db.ads.push(ad);
+    save(db);
+    return clone(ad);
+  },
+
+  async activateAd(id) {
+    const db = load();
+    const ad = db.ads.find((a) => a.id === id);
+    if (!ad) return { ok: false, error: "신청 내역을 찾을 수 없어요." };
+    const live = db.ads.filter((a) => a.id !== id && a.kind === ad.kind && isAdLive(a));
+    if (ad.kind === "premium") {
+      const slot = nextFreeSlot(live);
+      if (slot == null) return { ok: false, error: `프리미엄 ${AD_PREMIUM_SLOTS}칸이 모두 차 있어요. 기존 광고가 끝나면 승인할 수 있어요.` };
+      ad.slotNo = slot;
+    } else if (live.length >= AD_BANNER_SLOTS) {
+      return { ok: false, error: `와이드 배너 ${AD_BANNER_SLOTS}자리가 모두 차 있어요.` };
+    }
+    const now = new Date();
+    ad.status = "active";
+    ad.startsAt = now.toISOString();
+    ad.endsAt = adEndsAt(ad.plan, now);
+    save(db);
+    return { ok: true };
+  },
+
+  async deleteAd(id) {
+    const db = load();
+    db.ads = db.ads.filter((a) => a.id !== id);
     save(db);
   },
 

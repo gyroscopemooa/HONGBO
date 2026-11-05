@@ -1,4 +1,5 @@
 import "server-only";
+import { AD_PREMIUM_SLOTS, shuffle } from "./ads";
 import { LIMITS } from "./constants";
 import { store } from "./store";
 import type { Post } from "./types";
@@ -33,15 +34,34 @@ export async function getPopularPosts(limit: number): Promise<Post[]> {
   return [...scored, ...base.items.filter((p) => !seen.has(p.id))].slice(0, limit);
 }
 
+/** 지금 노출 중인 광고 글. 광고 테이블이 아직 없어도 홈이 깨지지 않도록 실패하면 빈 목록을 돌려줍니다. */
+export async function getLiveAdPosts(kind: "premium" | "banner"): Promise<Post[]> {
+  try {
+    const ads = await store.listAds({ kind, liveOnly: true });
+    const posts = await Promise.all(ads.map((a) => store.getPost(a.postId)));
+    const seen = new Set<number>();
+    const list = posts.filter((p): p is Post => {
+      if (!p || !isPostPublic(p) || seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
+    return kind === "premium" ? shuffle(list).slice(0, AD_PREMIUM_SLOTS) : shuffle(list);
+  } catch {
+    return [];
+  }
+}
+
 export async function getHomeData() {
-  const [popular, latest, side, strip, notices] = await Promise.all([
+  const [popular, latest, side, strip, notices, premium, adBanners] = await Promise.all([
     getPopularPosts(18),
     store.listPosts({ publicOnly: true, sort: "latest", pageSize: 20 }),
     store.listBanners({ activeOnly: true, placement: "side" }),
     store.listBanners({ activeOnly: true, placement: "strip" }),
     store.listNotices(5),
+    getLiveAdPosts("premium"),
+    getLiveAdPosts("banner"),
   ]);
-  return { popular, latest: latest.items, sideBanners: side, stripBanners: strip, notices };
+  return { popular, latest: latest.items, sideBanners: side, stripBanners: strip, notices, premium, adBanners };
 }
 
 export function isPostPublic(p: Pick<Post, "status" | "expiresAt">): boolean {

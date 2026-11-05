@@ -1,5 +1,5 @@
 import type { CategorySlug } from "../constants";
-import type { Banner, EventType, Notice, Post, PostInput, PostStatus, Profile, Report } from "../types";
+import type { Ad, Banner, EventType, Notice, Post, PostInput, PostStatus, Profile, Report } from "../types";
 
 export type ListSort = "latest" | "popular";
 
@@ -98,6 +98,13 @@ export interface Store {
   listNotices(limit?: number): Promise<Notice[]>;
   saveNotice(n: { id?: number; title: string; body: string; isPinned: boolean }): Promise<void>;
   deleteNotice(id: number): Promise<void>;
+
+  // ── ads ──
+  listAds(opts?: { kind?: Ad["kind"]; status?: Ad["status"]; liveOnly?: boolean; requestedBy?: string }): Promise<Ad[]>;
+  requestAd(a: { postId: number; kind: Ad["kind"]; plan: Ad["plan"]; requestedBy: string | null }): Promise<Ad>;
+  /** 승인: 지금부터 기간만큼 노출. 프리미엄은 빈 칸을 자동 배정. 자리가 없으면 error */
+  activateAd(id: number): Promise<{ ok: true } | { ok: false; error: string }>;
+  deleteAd(id: number): Promise<void>;
 
   stats(): Promise<Stats>;
 }

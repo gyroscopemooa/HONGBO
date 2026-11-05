@@ -2,7 +2,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CategorySlug } from "../constants";
 import { getAdminClient } from "../supabase/admin";
-import type { Banner, EventType, Notice, Post, PostExtra, PostInput, PostStatus, Profile, Report } from "../types";
+import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, adEndsAt, isAdLive, nextFreeSlot } from "../ads";
+import type { Ad, Banner, EventType, Notice, Post, PostExtra, PostInput, PostStatus, Profile, Report } from "../types";
 import type { EventInput, ListResult, NewReport, Stats, Store } from "./types";
 
 /** Supabase(Postgres) 저장소 — 운영 환경용 */
@@ -92,6 +93,21 @@ function toBanner(r: Row): Banner {
     theme: r.theme as Banner["theme"],
     sortOrder: Number(r.sort_order ?? 0),
     isActive: Boolean(r.is_active),
+  };
+}
+
+function toAd(r: Row): Ad {
+  return {
+    id: Number(r.id),
+    postId: Number(r.post_id),
+    kind: r.kind as Ad["kind"],
+    plan: r.plan as Ad["plan"],
+    status: r.status as Ad["status"],
+    slotNo: r.slot_no == null ? null : Number(r.slot_no),
+    startsAt: (r.starts_at as string | null) ?? null,
+    endsAt: (r.ends_at as string | null) ?? null,
+    requestedBy: (r.requested_by as string | null) ?? null,
+    createdAt: r.created_at as string,
   };
 }
 
@@ -466,6 +482,56 @@ export const supabaseStore: Store = {
   async deleteBanner(id) {
     const { error } = await sb().from("banners").delete().eq("id", id);
     if (error) fail("banners.delete", error);
+  },
+
+  async listAds(opts) {
+    let qb = sb().from("ads").select("*").order("id", { ascending: false });
+    if (opts?.kind) qb = qb.eq("kind", opts.kind);
+    if (opts?.status) qb = qb.eq("status", opts.status);
+    if (opts?.requestedBy) qb = qb.eq("requested_by", opts.requestedBy);
+    const { data, error } = await qb;
+    if (error) fail("ads.list", error);
+    const list = (data as Row[]).map(toAd);
+    return opts?.liveOnly ? list.filter((a) => isAdLive(a)) : list;
+  },
+
+  async requestAd({ postId, kind, plan, requestedBy }) {
+    const { data, error } = await sb()
+      .from("ads")
+      .insert({ post_id: postId, kind, plan, status: "requested", requested_by: requestedBy })
+      .select("*")
+      .single();
+    if (error) fail("ads.request", error);
+    return toAd(data as Row);
+  },
+
+  async activateAd(id) {
+    const { data, error } = await sb().from("ads").select("*").eq("id", id).maybeSingle();
+    if (error) fail("ads.get", error);
+    if (!data) return { ok: false, error: "신청 내역을 찾을 수 없어요." };
+    const ad = toAd(data as Row);
+    const { data: rows, error: e2 } = await sb().from("ads").select("*").eq("kind", ad.kind).eq("status", "active").neq("id", id);
+    if (e2) fail("ads.live", e2);
+    const live = (rows as Row[]).map(toAd).filter((a) => isAdLive(a));
+    let slotNo: number | null = null;
+    if (ad.kind === "premium") {
+      slotNo = nextFreeSlot(live);
+      if (slotNo == null) return { ok: false, error: `프리미엄 ${AD_PREMIUM_SLOTS}칸이 모두 차 있어요. 기존 광고가 끝나면 승인할 수 있어요.` };
+    } else if (live.length >= AD_BANNER_SLOTS) {
+      return { ok: false, error: `와이드 배너 ${AD_BANNER_SLOTS}자리가 모두 차 있어요.` };
+    }
+    const now = new Date();
+    const { error: e3 } = await sb()
+      .from("ads")
+      .update({ status: "active", slot_no: slotNo, starts_at: now.toISOString(), ends_at: adEndsAt(ad.plan, now) })
+      .eq("id", id);
+    if (e3) fail("ads.activate", e3);
+    return { ok: true };
+  },
+
+  async deleteAd(id) {
+    const { error } = await sb().from("ads").delete().eq("id", id);
+    if (error) fail("ads.delete", error);
   },
 
   async listNotices(limit) {

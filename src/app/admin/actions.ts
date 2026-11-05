@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { store } from "@/lib/store";
 import { normalizeExternalUrl } from "@/lib/url";
 import { composeNoticeTitle } from "@/lib/notice";
-import type { Banner, PostStatus } from "@/lib/types";
+import type { Ad, Banner, PostStatus } from "@/lib/types";
 
 // 모든 관리자 액션은 시작할 때 반드시 관리자 여부를 서버에서 다시 확인합니다.
 
@@ -150,4 +151,43 @@ export async function adminDeleteNotice(formData: FormData) {
   if (!id) return;
   await store.deleteNotice(id);
   refresh();
+}
+
+// ───────────── 광고 ─────────────
+
+const adsBack = (error?: string): never => redirect(error ? `/admin/ads?error=${encodeURIComponent(error)}` : "/admin/ads");
+
+export async function adminApproveAd(formData: FormData) {
+  await requireAdmin();
+  const id = int(formData.get("id"));
+  if (!id) return;
+  const r = await store.activateAd(id);
+  refresh();
+  if (!r.ok) adsBack(r.error);
+  adsBack();
+}
+
+export async function adminDeleteAd(formData: FormData) {
+  await requireAdmin();
+  const id = int(formData.get("id"));
+  if (!id) return;
+  await store.deleteAd(id);
+  refresh();
+  adsBack();
+}
+
+/** 운영자가 글 번호로 광고를 바로 지정(신청 없이 승인까지) */
+export async function adminAssignAd(formData: FormData) {
+  await requireAdmin();
+  const postId = int(formData.get("postId"));
+  const kind = String(formData.get("kind")) as Ad["kind"];
+  const plan = String(formData.get("plan")) as Ad["plan"];
+  if (!postId || !["premium", "banner"].includes(kind) || !["week", "month"].includes(plan)) return adsBack("입력값을 확인해주세요.");
+  const post = await store.getPost(postId);
+  if (!post || post.status === "deleted") return adsBack("글 번호를 찾을 수 없어요.");
+  const ad = await store.requestAd({ postId, kind, plan, requestedBy: null });
+  const r = await store.activateAd(ad.id);
+  if (!r.ok) await store.deleteAd(ad.id);
+  refresh();
+  adsBack(r.ok ? undefined : r.error);
 }

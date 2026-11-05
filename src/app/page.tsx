@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Flame, Siren } from "lucide-react";
+import { AdBanner } from "@/components/AdBanner";
 import { Carousel } from "@/components/Carousel";
 import { CategoryTiles } from "@/components/CategoryTiles";
 import { FeatureRequestBanner } from "@/components/FeatureRequestBanner";
@@ -9,6 +10,7 @@ import { HOME_FAQ, HomeFaq } from "@/components/HomeFaq";
 import { NoticeList } from "@/components/NoticeList";
 import { PostCard } from "@/components/PostCard";
 import { PostRow } from "@/components/PostRow";
+import { PremiumGrid } from "@/components/PremiumGrid";
 import { PromoBanner } from "@/components/PromoBanner";
 import { RankList } from "@/components/RankList";
 import { SITE } from "@/lib/constants";
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const { popular, latest, sideBanners, stripBanners, notices } = await getHomeData();
+  const { popular, latest, sideBanners, stripBanners, notices, premium, adBanners } = await getHomeData();
 
   const base = siteUrl();
   const jsonLd = [
@@ -67,6 +69,14 @@ export default async function HomePage() {
       <h1 className="sr-only">{SITE.name} - 앱·사이트·가게·상품을 마음껏 무료로 홍보하는 홍보 사이트</h1>
       <Hero />
       <CategoryTiles />
+
+      {adBanners[0] && (
+        <section aria-label="광고 배너" className="wrap pt-5 sm:pt-7">
+          <AdBanner post={adBanners[0]} />
+        </section>
+      )}
+
+      <PremiumGrid posts={premium} />
 
       <Carousel title="오늘의 인기 홍보" icon={<Flame className="text-brand" size={22} fill="currentColor" aria-hidden />} moreHref="/posts?sort=popular">
         {popular.slice(0, 12).map((p, i) => (
