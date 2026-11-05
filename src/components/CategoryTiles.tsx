@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BadgePercent, Gift, PartyPopper, PencilLine, Sparkles, Ticket, type LucideIcon } from "lucide-react";
+import { ArrowRight, BadgePercent, Gift, PartyPopper, PencilLine, Sparkles, Star, Ticket, type LucideIcon } from "lucide-react";
 import { BENEFITS, BENEFIT_PAGES, CATEGORIES, type CategorySlug } from "@/lib/constants";
 import { CategoryIcon } from "./CategoryIcon";
 
@@ -12,6 +12,7 @@ export function CategoryTiles() {
   const tiles: Tile[] = [
     ALL_TILE,
     ...CATEGORIES.map((c) => ({ slug: c.slug, name: c.name, color: c.color, tint: c.tint, href: `/category/${c.slug}` })),
+    { slug: "benefit-exclusive", name: "더홍보 전용", color: "#b7791f", tint: "linear-gradient(135deg,#fff3c4,#ffe08a)", href: "/benefit/exclusive", icon: <Star size={28} strokeWidth={2.1} fill="currentColor" aria-hidden /> },
     ...BENEFITS.map((b) => {
       const info = BENEFIT_PAGES[b.value];
       const Icon = BENEFIT_ICONS[b.value];
@@ -21,7 +22,7 @@ export function CategoryTiles() {
   ];
   return (
     <section aria-label="카테고리 바로가기" className="wrap grid gap-3 py-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-4 lg:py-6">
-      <ul className="grid min-w-0 grid-cols-4 gap-2 sm:grid-cols-8 sm:gap-2.5">
+      <ul className="grid min-w-0 grid-cols-4 gap-2 sm:grid-cols-9 sm:gap-2.5">
         {tiles.map((t) => (
           <li key={t.slug}>
             <Link

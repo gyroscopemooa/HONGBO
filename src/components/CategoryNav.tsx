@@ -95,6 +95,10 @@ function NavInner() {
           );
         })}
         <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
+        <Link href="/benefit/exclusive" className={linkCls(pathname === "/benefit/exclusive")} aria-current={pathname === "/benefit/exclusive" ? "page" : undefined}>
+          <span className="font-extrabold text-[#b7791f]">★ 더홍보 전용</span>
+          {underline(pathname === "/benefit/exclusive")}
+        </Link>
         {BENEFITS.map((b) => {
           const active = pathname === `/benefit/${b.value}`;
           return (
