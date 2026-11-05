@@ -70,6 +70,16 @@ const CARD_IMG: ProcessOptions = { ratio: 16 / 9, maxWidth: 960 };
 const radioCard =
   "flex cursor-pointer items-start gap-2 rounded-xl border border-line px-3.5 py-3 text-[14.5px] has-[:checked]:border-brand has-[:checked]:bg-brand-soft";
 
+/** 미리보기 고정 샘플 — 신청자의 글이 아니라 항상 TranStream 예시로 보여줍니다. */
+const SAMPLE_POST: AdBannerPost = {
+  id: 1,
+  category: "apps",
+  title: "실시간 방송 번역 앱 TranStream",
+  shortDescription: "해외 라이브·영상을 보면서 실시간 한국어 자막으로 즐겨요",
+  primaryImageUrl: null,
+  extra: {},
+};
+
 /** 미리보기용으로 최소 정보만 있는 글을 카드가 받는 형태로 맞춥니다. */
 function toPreviewPost(p: AdBannerPost, ov: { image?: string; title?: string; sub?: string }): Post {
   const old = "2000-01-01T00:00:00.000Z";
@@ -236,16 +246,16 @@ export function AdRequestForm({
           )}
 
           <div className="mt-4">
-            <p className="mb-1.5 text-[13.5px] font-bold text-ink-2">{kind === "banner" ? "배너가 이렇게 보여요" : "고정 광고 카드가 이렇게 보여요"}</p>
+            <p className="mb-1.5 text-[13.5px] font-bold text-ink-2">{kind === "banner" ? "배너가 이렇게 보여요" : "고정 광고 카드가 이렇게 보여요"} <span className="font-normal text-muted">(예시 화면)</span></p>
             {kind === "banner" ? (
               uploadMissing ? (
                 <p className="rounded-xl border border-dashed border-line bg-white px-4 py-8 text-center text-[13.5px] text-muted">배너 이미지를 올리면 여기에 미리 보여요.</p>
               ) : (
-                <AdBanner post={post} creative={creative} preview />
+                <AdBanner post={SAMPLE_POST} creative={creative} preview />
               )
             ) : (
               <div className="w-full max-w-[220px]">
-                <PostCard post={toPreviewPost(post, { image: pMode === "custom" ? cardImg : "", title: pMode === "custom" ? t : "", sub: pMode === "custom" ? s : "" })} ad preview />
+                <PostCard post={toPreviewPost(SAMPLE_POST, { image: pMode === "custom" ? cardImg : "", title: pMode === "custom" ? t : "", sub: pMode === "custom" ? s : "" })} ad preview />
               </div>
             )}
           </div>
