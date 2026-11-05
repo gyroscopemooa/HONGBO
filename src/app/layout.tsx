@@ -1,3 +1,4 @@
+import { LandingBeacon } from "@/components/LandingBeacon";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Suspense>
         <CategoryNav />
         <main id="main">{children}</main>
+        <LandingBeacon />
         <Footer />
       </body>
       <GoogleAnalytics gaId="G-GL2TZEQ2VH" />

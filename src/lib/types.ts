@@ -162,7 +162,9 @@ export type EventType =
   | "external_click"
   | "search"
   | "write_start"
-  | "write_complete";
+  | "write_complete"
+  | "landing_a"
+  | "landing_b";
 
 export interface SessionUser {
   id: string;

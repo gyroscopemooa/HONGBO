@@ -6,7 +6,7 @@ import { isPostPublic } from "@/lib/queries";
 import { store } from "@/lib/store";
 import type { EventType } from "@/lib/types";
 
-const ALLOWED: EventType[] = ["post_view", "external_click", "search", "write_start"];
+const ALLOWED: EventType[] = ["post_view", "external_click", "search", "write_start", "landing_a", "landing_b"];
 
 function sameOrigin(req: NextRequest): boolean {
   const origin = req.headers.get("origin");
