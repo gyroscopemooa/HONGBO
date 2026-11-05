@@ -6,6 +6,7 @@ import { BannerPlaceholder, BannerSlider } from "@/components/BannerSlider";
 import { Carousel } from "@/components/Carousel";
 import { CategoryTiles } from "@/components/CategoryTiles";
 import { FeatureRequestBanner } from "@/components/FeatureRequestBanner";
+import { Infl09Banner } from "@/components/Infl09Banner";
 import { Hero } from "@/components/Hero";
 import { HOME_FAQ, HomeFaq } from "@/components/HomeFaq";
 import { NoticeList } from "@/components/NoticeList";
@@ -176,6 +177,7 @@ export default async function HomePage() {
           {sideBanners[0] && <PromoBanner banner={sideBanners[0]} className="min-h-[132px]" />}
           <NoticeList notices={notices} />
           {sideBanners[1] && <PromoBanner banner={sideBanners[1]} className="min-h-[104px]" />}
+          <Infl09Banner />
           <FeatureRequestBanner />
         </aside>
       </div>
