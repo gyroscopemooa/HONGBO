@@ -21,7 +21,7 @@ export function SurveyParticipation({ postId, questions }: { postId: number; que
         <ClipboardList className="mt-0.5 shrink-0 text-[#b77b09]" size={24} aria-hidden />
         <div>
           <h2 id="hongbo-survey-title" className="text-[19px] font-black tracking-[-0.04em]">더홍보 전용 설문</h2>
-          <p className="mt-1 text-[13px] leading-relaxed text-muted">이 페이지에서 직접 참여하세요. 한 사람당 한 번만 제출할 수 있습니다. 응답은 홍보글 작성자와 관리자만 볼 수 있어요.</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-muted">이 페이지에서 직접 참여하세요. 동일 브라우저에서는 한 번만 제출할 수 있습니다. 응답은 홍보글 작성자와 관리자만 볼 수 있어요.</p>
         </div>
       </div>
       {feedback?.ok ? (
