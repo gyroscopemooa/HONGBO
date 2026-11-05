@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import Link from "next/link";
 import { ChevronRight, Flame, Siren } from "lucide-react";
 import { AdBanner } from "@/components/AdBanner";
@@ -30,7 +29,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const { popular, latest, sideBanners, stripBanners, notices, premium, adBanners } = await getHomeData();
+  const { popular, latest, sideBanners, stripBanners, notices, premium, adBanners, exclusive } = await getHomeData();
 
   // 추천 영역(앞 3자리)에 나온 글은 배너에서 제외하고, 배너 자리가 남으면 최신 글로 채웁니다.
   const premiumAds = premium.slice(0, AD_PREMIUM_SLOTS);
@@ -134,9 +133,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      <Suspense fallback={null}>
-        <ExclusiveStrip wrap />
-      </Suspense>
+      <ExclusiveStrip wrap data={exclusive} />
 
       <section aria-label="전체 홍보글" className="wrap pt-6">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">

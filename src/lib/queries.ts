@@ -91,7 +91,7 @@ export function getHomeData() {
 }
 
 async function loadHomeData() {
-  const [popular, latest, side, strip, notices, premium, adBanners, house] = await Promise.all([
+  const [popular, latest, side, strip, notices, premium, adBanners, house, exclusive] = await Promise.all([
     getPopularPosts(20),
     store.listPosts({ publicOnly: true, sort: "latest", pageSize: 20 }),
     store.listBanners({ activeOnly: true, placement: "side" }),
@@ -100,13 +100,14 @@ async function loadHomeData() {
     getLiveAdPosts("premium"),
     getLiveBannerAds(),
     store.getPost(HOUSE_AD_POST_ID).catch(() => null),
+    store.listPosts({ publicOnly: true, benefit: "exclusive", sort: "latest", page: 1, pageSize: 5 }),
   ]);
   // 운영자 고정 광고: 유료 광고가 자리를 다 채우지 않았을 때만 맨 앞에 넣습니다.
   const houseOk = house && isPostPublic(house) ? house : null;
   const premiumOut = houseOk && premium.length < AD_PREMIUM_SLOTS && !premium.some((p) => p.id === houseOk.id) ? [houseOk, ...premium] : premium;
   const bannersOut =
     houseOk && adBanners.length < AD_BANNER_SLOTS && !adBanners.some((b) => b.post.id === houseOk.id) ? [{ post: houseOk, creative: null }, ...adBanners] : adBanners;
-  return { popular, latest: latest.items, sideBanners: side, stripBanners: strip, notices, premium: premiumOut, adBanners: bannersOut };
+  return { popular, latest: latest.items, sideBanners: side, stripBanners: strip, notices, premium: premiumOut, adBanners: bannersOut, exclusive };
 }
 
 export function isPostPublic(p: Pick<Post, "status" | "expiresAt">): boolean {
