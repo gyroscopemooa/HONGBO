@@ -75,6 +75,15 @@ export async function getLiveBannerAds(): Promise<Array<{ post: Post; creative: 
   }
 }
 
+/** 전체/카테고리 목록 상단 "추천 홍보". 유료 광고가 자리를 다 채우지 않으면 운영자 고정 광고가 맨 앞에 들어갑니다(홈과 동일). */
+export async function getTopAds(category?: string): Promise<Post[]> {
+  const ads = await getLiveAdPosts("premium", category);
+  if (ads.length >= AD_PREMIUM_SLOTS) return ads;
+  const house = await store.getPost(HOUSE_AD_POST_ID).catch(() => null);
+  if (house && isPostPublic(house) && (!category || house.category === category) && !ads.some((p) => p.id === house.id)) return [house, ...ads];
+  return ads;
+}
+
 /** 홈 데이터는 모든 방문자에게 같으므로 서버 인스턴스 안에서 짧게(45초) 재사용해 DB 왕복을 줄입니다. 새 글은 최대 45초 늦게 보일 수 있어요. */
 const HOME_TTL_MS = 45_000;
 let homeCache: { at: number; data: ReturnType<typeof loadHomeData> } | null = null;

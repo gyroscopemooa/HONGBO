@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Crown } from "lucide-react";
-import { getLiveAdPosts } from "@/lib/queries";
+import { getTopAds } from "@/lib/queries";
 import { PostCard } from "./PostCard";
 
 /** 전체 홍보글·카테고리 목록 맨 위에 보이는 "추천 홍보"(유료 상단 고정). 카테고리 페이지에서는 그 카테고리의 광고만 나옵니다. */
 export async function TopAds({ category }: { category?: string }) {
-  const ads = await getLiveAdPosts("premium", category);
+  const ads = await getTopAds("premium", category);
   if (!ads.length) return null;
   return (
     <section aria-label="추천 홍보" className="mb-6">
