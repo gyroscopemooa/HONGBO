@@ -41,8 +41,9 @@ export async function getLiveAdPosts(kind: "premium" | "banner"): Promise<Post[]
     const ads = await store.listAds({ kind, liveOnly: true });
     const seen = new Set<number>();
     const list: Post[] = [];
-    for (const a of ads) {
-      const p = await store.getPost(a.postId);
+    const posts = await Promise.all(ads.map((a) => store.getPost(a.postId)));
+    for (const [i, a] of ads.entries()) {
+      const p = posts[i];
       if (!p || !isPostPublic(p) || seen.has(p.id)) continue;
       seen.add(p.id);
       // 프리미엄 카드는 직접 정한 이미지·문구가 있으면 덮어씌웁니다(링크는 원래 글 그대로).
@@ -60,8 +61,9 @@ export async function getLiveBannerAds(): Promise<Array<{ post: Post; creative: 
     const ads = await store.listAds({ kind: "banner", liveOnly: true });
     const out: Array<{ post: Post; creative: AdCreative | null }> = [];
     const seen = new Set<number>();
-    for (const a of ads) {
-      const p = await store.getPost(a.postId);
+    const posts = await Promise.all(ads.map((a) => store.getPost(a.postId)));
+    for (const [i, a] of ads.entries()) {
+      const p = posts[i];
       if (!p || !isPostPublic(p) || seen.has(p.id)) continue;
       seen.add(p.id);
       out.push({ post: p, creative: a.creative });
@@ -73,7 +75,7 @@ export async function getLiveBannerAds(): Promise<Array<{ post: Post; creative: 
 }
 
 export async function getHomeData() {
-  const [popular, latest, side, strip, notices, premium, adBanners] = await Promise.all([
+  const [popular, latest, side, strip, notices, premium, adBanners, house] = await Promise.all([
     getPopularPosts(18),
     store.listPosts({ publicOnly: true, sort: "latest", pageSize: 20 }),
     store.listBanners({ activeOnly: true, placement: "side" }),
@@ -81,9 +83,9 @@ export async function getHomeData() {
     store.listNotices(5),
     getLiveAdPosts("premium"),
     getLiveBannerAds(),
+    store.getPost(HOUSE_AD_POST_ID).catch(() => null),
   ]);
   // 운영자 고정 광고: 유료 광고가 자리를 다 채우지 않았을 때만 맨 앞에 넣습니다.
-  const house = await store.getPost(HOUSE_AD_POST_ID).catch(() => null);
   const houseOk = house && isPostPublic(house) ? house : null;
   const premiumOut = houseOk && premium.length < AD_PREMIUM_SLOTS && !premium.some((p) => p.id === houseOk.id) ? [houseOk, ...premium] : premium;
   const bannersOut =

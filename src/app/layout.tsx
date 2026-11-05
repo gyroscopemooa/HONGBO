@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
 import { CategoryNav } from "@/components/CategoryNav";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { Logo } from "@/components/Logo";
 import { SITE } from "@/lib/constants";
 import { siteUrl } from "@/lib/utils";
 
@@ -60,7 +62,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           본문 바로가기
         </a>
-        <Header />
+        {/* 로그인 확인(서버 왕복)을 기다리지 않고 본문이 먼저 보이도록, 헤더는 자리만 잡아두고 나중에 채웁니다. */}
+        <Suspense
+          fallback={
+            <header className="border-b border-line bg-white">
+              <div className="wrap flex h-[60px] items-center sm:h-[68px]">
+                <Logo size="md" />
+              </div>
+            </header>
+          }
+        >
+          <Header />
+        </Suspense>
         <CategoryNav />
         <main id="main">{children}</main>
         <Footer />

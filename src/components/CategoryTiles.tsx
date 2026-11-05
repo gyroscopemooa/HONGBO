@@ -1,18 +1,27 @@
 import Link from "next/link";
-import { ArrowRight, Gift, PencilLine } from "lucide-react";
-import { BENEFITS, BENEFIT_PAGES, CATEGORIES } from "@/lib/constants";
+import { ArrowRight, BadgePercent, Gift, PartyPopper, PencilLine, Sparkles, Ticket, type LucideIcon } from "lucide-react";
+import { BENEFITS, BENEFIT_PAGES, CATEGORIES, type CategorySlug } from "@/lib/constants";
 import { CategoryIcon } from "./CategoryIcon";
 
-const ALL_TILE = { slug: "all" as const, name: "전체", color: "#f04f4a", tint: "#fff0ef", href: "/posts" };
+const BENEFIT_ICONS: Record<string, LucideIcon> = { event: PartyPopper, discount: BadgePercent, coupon: Ticket, free: Sparkles, gift: Gift };
+
+type Tile = { slug: string; name: string; color: string; tint: string; href: string; icon?: React.ReactNode };
+const ALL_TILE: Tile = { slug: "all", name: "전체", color: "#f04f4a", tint: "#fff0ef", href: "/posts" };
 
 export function CategoryTiles() {
-  const tiles = [
+  const tiles: Tile[] = [
     ALL_TILE,
     ...CATEGORIES.map((c) => ({ slug: c.slug, name: c.name, color: c.color, tint: c.tint, href: `/category/${c.slug}` })),
+    ...BENEFITS.map((b) => {
+      const info = BENEFIT_PAGES[b.value];
+      const Icon = BENEFIT_ICONS[b.value];
+      return { slug: `benefit-${b.value}`, name: info.label, color: info.color, tint: info.tint, href: `/benefit/${b.value}`, icon: <Icon size={28} strokeWidth={2.1} aria-hidden /> };
+    }),
+    { slug: "benefit-all", name: "이벤트 모음", color: "#f04f4a", tint: "#fff0ef", href: "/benefit", icon: <Gift size={28} strokeWidth={2.1} aria-hidden /> },
   ];
   return (
     <section aria-label="카테고리 바로가기" className="wrap grid gap-3 py-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-4 lg:py-6">
-      <ul className="grid grid-cols-5 gap-2 sm:grid-cols-9 sm:gap-2.5">
+      <ul className="grid min-w-0 grid-cols-4 gap-2 sm:grid-cols-8 sm:gap-2.5">
         {tiles.map((t) => (
           <li key={t.slug}>
             <Link
@@ -21,7 +30,7 @@ export function CategoryTiles() {
               style={{ background: t.tint }}
             >
               <span className="flex size-9 items-center justify-center sm:size-10" style={{ color: t.color }}>
-                <CategoryIcon slug={t.slug} size={28} strokeWidth={2.1} />
+                {t.icon ?? <CategoryIcon slug={t.slug as CategorySlug | "all"} size={28} strokeWidth={2.1} />}
               </span>
               <span className="text-[11.5px] font-bold leading-tight tracking-[-0.03em] text-ink-2 sm:text-[12.5px]">{t.name}</span>
             </Link>
@@ -36,22 +45,6 @@ export function CategoryTiles() {
           홍보글 작성하기
           <ArrowRight size={16} aria-hidden />
         </Link>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 lg:col-span-2" aria-label="혜택 모아보기">
-        <Link href="/benefit" className="inline-flex items-center gap-1.5 pr-1 text-[14px] font-extrabold tracking-[-0.03em] text-ink hover:text-brand">
-          <Gift size={17} className="text-brand" aria-hidden /> 이벤트 모음
-        </Link>
-        {BENEFITS.map((b) => (
-          <Link
-            key={b.value}
-            href={`/benefit/${b.value}`}
-            className="rounded-full px-3.5 py-1.5 text-[13px] font-bold transition hover:-translate-y-0.5 hover:shadow-card"
-            style={{ background: BENEFIT_PAGES[b.value].tint, color: BENEFIT_PAGES[b.value].color }}
-          >
-            {b.label}
-          </Link>
-        ))}
       </div>
     </section>
   );
