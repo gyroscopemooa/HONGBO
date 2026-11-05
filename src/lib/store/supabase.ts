@@ -507,6 +507,15 @@ export const supabaseStore: Store = {
     return toAd(data as Row);
   },
 
+  async reviseAd(id, { kind, plan }) {
+    const row: Record<string, unknown> = { kind, plan };
+    const { data: cur } = await sb().from("ads").select("kind").eq("id", id).maybeSingle();
+    // creative 컬럼이 없는 환경(0007 미적용)에서도 동작하도록, 상품이 바뀔 때만 건드립니다.
+    if (cur && (cur as Row).kind !== kind) row.creative = null;
+    const { error } = await sb().from("ads").update(row).eq("id", id).eq("status", "requested");
+    if (error) fail("ads.revise", error);
+  },
+
   async activateAd(id) {
     const { data, error } = await sb().from("ads").select("*").eq("id", id).maybeSingle();
     if (error) fail("ads.get", error);

@@ -2,10 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { AD_PLANS } from "@/lib/ads";
+import { AD_KIND_LABEL, AD_PLANS, adPrice, depositorName, won } from "@/lib/ads";
 import { parseCreative } from "@/lib/ad-creative";
 import { getCurrentUser } from "@/lib/auth";
 import { isPostPublic } from "@/lib/queries";
+import { notifyAdmin } from "@/lib/notify";
 import { store } from "@/lib/store";
 import type { Ad } from "@/lib/types";
 
@@ -46,5 +47,16 @@ export async function requestAdAction(formData: FormData) {
   }
   revalidatePath("/advertise");
   revalidatePath("/admin/ads");
+  // 운영자에게 알림 메일 (설정이 없거나 실패해도 신청은 그대로 접수됩니다)
+  await notifyAdmin(`[더홍보] 광고 신청 · ${AD_KIND_LABEL[kind]} ${AD_PLANS[plan].label}`, [
+    `새 광고 신청이 들어왔어요. 입금을 확인한 뒤 관리자 > 광고에서 승인해주세요.`,
+    ``,
+    `글: #${postId} ${post?.title ?? ""}`,
+    `상품: ${AD_KIND_LABEL[kind]} · ${AD_PLANS[plan].label}`,
+    `금액: ${won(adPrice({ kind, plan }))}`,
+    `입금자명: ${depositorName(adId)}`,
+    `신청자: ${user.nickname}${user.email ? ` (${user.email})` : ""}`,
+    creative ? `배너 제작: ${creative.mode === "upload" ? "완성 이미지 업로드" : "직접 만들기"} (승인 전 확인 필요)` : "",
+  ].join(String.fromCharCode(10)));
   redirect(`/advertise?requested=${adId}`);
 }

@@ -30,7 +30,7 @@ export default function ContactPage() {
 
       <h2 id="ads">광고 문의</h2>
       <p>
-        현재 더홍보의 홍보글 등록은 모두 무료이며, 유료 광고 상품은 준비 중입니다. 제휴·광고 제안은 {email ? <a href={`mailto:${email}`}>{email}</a> : "문의 채널이 열리면 이곳에 안내해 드릴게요"}
+        홍보글 등록은 모두 무료이며, 메인 상단 고정·배너 광고는 <Link href="/advertise">광고 상품</Link> 페이지에서 신청할 수 있어요. 환불 기준은 <Link href="/policy#ads-refund">운영정책</Link>을 확인해주세요. 제휴·광고 제안은 {email ? <a href={`mailto:${email}`}>{email}</a> : "문의 채널이 열리면 이곳에 안내해 드릴게요"}
         {email ? " 로 보내주세요." : "."}
       </p>
     </LegalPage>

@@ -562,6 +562,16 @@ export const localStore: Store = {
     return clone(ad);
   },
 
+  async reviseAd(id, { kind, plan }) {
+    const db = load();
+    const ad = db.ads.find((a) => a.id === id);
+    if (!ad || ad.status !== "requested") return;
+    if (ad.kind !== kind) ad.creative = null;
+    ad.kind = kind;
+    ad.plan = plan;
+    save(db);
+  },
+
   async activateAd(id) {
     const db = load();
     const ad = db.ads.find((a) => a.id === id);

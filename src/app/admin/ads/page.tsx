@@ -36,6 +36,21 @@ function Row({ ad, title, post, children }: { ad: Ad; title: string; post?: Post
           <div className="max-w-[640px]"><AdBanner post={post} creative={ad.creative} preview /></div>
         </div>
       )}
+      {ad.kind === "premium" && ad.creative?.mode === "custom" && (
+        <div className="basis-full">
+          <p className="mb-1 text-[12.5px] font-semibold text-muted">고정 광고 · 새 이미지·문구 (내용 확인 후 승인하세요)</p>
+          <div className="flex items-start gap-3">
+            {ad.creative.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={ad.creative.imageUrl} alt="" className="aspect-video w-40 rounded-lg object-cover" />
+            )}
+            <div className="text-[13.5px]">
+              <p className="font-bold">{ad.creative.title || title}</p>
+              {ad.creative.subtitle && <p className="text-muted">{ad.creative.subtitle}</p>}
+            </div>
+          </div>
+        </div>
+      )}
     </li>
   );
 }
@@ -68,8 +83,16 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
           <ul className="space-y-2">
             {requested.map(({ ad, post }) => (
               <Row key={ad.id} ad={ad} post={post} title={post?.title ?? "(삭제된 글)"}>
-                <form action={adminApproveAd}>
+                <form action={adminApproveAd} className="flex flex-wrap items-center gap-2">
                   <input type="hidden" name="id" value={ad.id} />
+                  <select name="kind" defaultValue={ad.kind} aria-label="상품" className="field !w-auto !py-1.5 text-[13px]">
+                    <option value="premium">{AD_KIND_LABEL.premium}</option>
+                    <option value="banner">{AD_KIND_LABEL.banner}</option>
+                  </select>
+                  <select name="plan" defaultValue={ad.plan} aria-label="기간" className="field !w-auto !py-1.5 text-[13px]">
+                    <option value="week">{AD_PLANS.week.label}</option>
+                    <option value="month">{AD_PLANS.month.label}</option>
+                  </select>
                   <button className="btn btn-primary btn-sm">승인</button>
                 </form>
                 <form action={adminDeleteAd}>
@@ -116,9 +139,9 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
         </section>
       )}
 
-      <section className="rounded-2xl border border-dashed border-[#c9ced9] bg-soft/50 p-4" aria-label="직접 지정">
-        <h2 className="mb-1 font-extrabold">글 번호로 바로 지정</h2>
-        <p className="mb-3 text-[13px] text-muted">제휴·테스트용입니다. 신청 없이 바로 승인되어 지금부터 노출돼요.</p>
+      <details className="rounded-2xl border border-dashed border-[#c9ced9] bg-soft/50 p-4" aria-label="직접 지정">
+        <summary className="cursor-pointer font-extrabold">글 번호로 바로 지정 (제휴·협의 광고용)</summary>
+        <p className="mb-3 mt-2 text-[13px] text-muted">제휴·테스트용입니다. 신청 없이 바로 승인되어 지금부터 노출돼요.</p>
         <form action={adminAssignAd} className="grid gap-3 sm:grid-cols-4">
           <label className="text-xs font-semibold text-muted">
             글 번호
@@ -142,7 +165,7 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
             <button className="btn btn-primary btn-sm w-full">지정하기</button>
           </div>
         </form>
-      </section>
+      </details>
     </div>
   );
 }

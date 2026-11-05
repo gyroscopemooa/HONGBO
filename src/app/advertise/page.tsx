@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, Crown, GalleryHorizontal } from "lucide-react";
 import { requestAdAction } from "@/app/actions/ads";
-import { AdBanner } from "@/components/AdBanner";
 import { AdRequestForm } from "@/components/AdRequestForm";
 import { AD_BANK, AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PAY_DAYS, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, adPrice, depositorName, won } from "@/lib/ads";
 import type { Ad } from "@/lib/types";
@@ -35,6 +34,7 @@ function PaymentBox({ ad, title }: { ad: Ad; title?: string }) {
       </dl>
       <ul className="mt-3 space-y-1 text-[13px] leading-relaxed text-muted">
         <li>· 입금이 확인되면 승인되고, <b className="text-ink-2">승인된 시점부터 {AD_PLANS[ad.plan].label}</b> 동안 노출돼요.</li>
+        <li>· <b className="text-ink-2">승인(노출 시작) 이후에는 환불이 어려워요.</b> 승인 전 취소와 환불 기준은 <Link href="/policy#ads-refund" className="underline">운영정책</Link>에서 확인해주세요.</li>
         <li>· 확인은 운영자가 직접 하므로 시간이 걸릴 수 있어요. {AD_PAY_DAYS}일 안에 입금하지 않으면 신청이 취소될 수 있어요.</li>
       </ul>
     </div>
@@ -151,13 +151,6 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
           <AdRequestForm posts={publicPosts} action={requestAdAction} />
         )}
       </section>
-
-      {publicPosts[0] && (
-        <section className="mt-7" aria-label="배너 미리보기">
-          <h2 className="mb-2 text-[16px] font-extrabold tracking-[-0.03em]">내 글로 만들면 배너가 이렇게 보여요</h2>
-          <AdBanner post={publicPosts[0]} />
-        </section>
-      )}
 
       {myAds.length > 0 && (
         <section className="mt-7" aria-label="내 신청 내역">

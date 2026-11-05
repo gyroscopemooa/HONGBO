@@ -161,6 +161,13 @@ export async function adminApproveAd(formData: FormData) {
   await requireAdmin();
   const id = int(formData.get("id"));
   if (!id) return;
+  // 입금액에 맞춰 상품·기간을 바꿔서 승인할 수 있어요. (신청자와 협의한 경우)
+  const kind = String(formData.get("kind") ?? "") as Ad["kind"];
+  const plan = String(formData.get("plan") ?? "") as Ad["plan"];
+  if (["premium", "banner"].includes(kind) && ["week", "month"].includes(plan)) {
+    const cur = (await store.listAds()).find((a) => a.id === id);
+    if (cur && cur.status === "requested" && (cur.kind !== kind || cur.plan !== plan)) await store.reviseAd(id, { kind, plan });
+  }
   const r = await store.activateAd(id);
   refresh();
   if (!r.ok) adsBack(r.error);

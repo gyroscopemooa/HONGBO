@@ -30,10 +30,12 @@ export default async function HomePage() {
 
   // 추천 영역(앞 3자리)에 나온 글은 배너에서 제외하고, 배너 자리가 남으면 최신 글로 채웁니다.
   const premiumAds = premium.slice(0, AD_PREMIUM_SLOTS);
-  const premiumFill = latest.filter((p) => !premiumAds.some((a) => a.id === p.id)).slice(0, AD_PREMIUM_SLOTS - premiumAds.length);
+  // 최신 글로 비는 자리를 채울 때는 "다시 홍보하기(끌어올리기)"로 위로 올라온 글은 제외하고, 새로 등록한 글만 씁니다.
+  const fresh = latest.filter((p) => Math.abs(new Date(p.bumpedAt).getTime() - new Date(p.publishedAt).getTime()) < 60_000);
+  const premiumFill = fresh.filter((p) => !premiumAds.some((a) => a.id === p.id)).slice(0, AD_PREMIUM_SLOTS - premiumAds.length);
   const used = new Set([...premiumAds, ...premiumFill].map((p) => p.id));
   const bannerAds = adBanners.slice(0, AD_BANNER_SLOTS);
-  const bannerFill = latest
+  const bannerFill = fresh
     .filter((p) => p.primaryImageUrl && !used.has(p.id) && !bannerAds.some((a) => a.post.id === p.id))
     .slice(0, AD_BANNER_SLOTS - bannerAds.length);
   const hasBannerRoom = bannerAds.length < AD_BANNER_SLOTS;
@@ -103,7 +105,7 @@ export default async function HomePage() {
         </BannerSlider>
       </section>
 
-      <PremiumGrid ads={premiumAds} fill={latest} />
+      <PremiumGrid ads={premiumAds} fill={fresh} />
 
       <Carousel title="오늘의 인기 홍보" icon={<Flame className="text-brand" size={22} fill="currentColor" aria-hidden />} moreHref="/posts?sort=popular">
         {popular.slice(0, 12).map((p, i) => (

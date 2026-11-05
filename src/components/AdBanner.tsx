@@ -26,7 +26,8 @@ export function AdBanner({
   preview?: boolean;
 }) {
   const cat = CATEGORY_MAP[post.category];
-  const frame = "group relative block aspect-[2.2/1] overflow-hidden rounded-2xl bg-ink sm:aspect-[4/1]";
+  const frame =
+    "group relative isolate block aspect-[2.2/1] transform-gpu overflow-hidden rounded-[20px] bg-soft ring-1 ring-black/[0.06] sm:aspect-[4/1]";
   const badge = (
     <span className="absolute left-3 top-3 z-10 rounded-md bg-white/90 px-1.5 py-0.5 text-[11px] font-bold text-ink-2">{ad ? "광고" : "NEW"}</span>
   );

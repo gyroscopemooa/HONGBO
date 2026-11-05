@@ -1,4 +1,5 @@
 import "server-only";
+import { applyPremiumCreative } from "./ad-creative";
 import { AD_PREMIUM_SLOTS, shuffle } from "./ads";
 import { LIMITS } from "./constants";
 import { store } from "./store";
@@ -38,13 +39,15 @@ export async function getPopularPosts(limit: number): Promise<Post[]> {
 export async function getLiveAdPosts(kind: "premium" | "banner"): Promise<Post[]> {
   try {
     const ads = await store.listAds({ kind, liveOnly: true });
-    const posts = await Promise.all(ads.map((a) => store.getPost(a.postId)));
     const seen = new Set<number>();
-    const list = posts.filter((p): p is Post => {
-      if (!p || !isPostPublic(p) || seen.has(p.id)) return false;
+    const list: Post[] = [];
+    for (const a of ads) {
+      const p = await store.getPost(a.postId);
+      if (!p || !isPostPublic(p) || seen.has(p.id)) continue;
       seen.add(p.id);
-      return true;
-    });
+      // 프리미엄 카드는 직접 정한 이미지·문구가 있으면 덮어씌웁니다(링크는 원래 글 그대로).
+      list.push(kind === "premium" ? applyPremiumCreative(p, a.creative) : p);
+    }
     return kind === "premium" ? shuffle(list).slice(0, AD_PREMIUM_SLOTS) : shuffle(list);
   } catch {
     return [];
