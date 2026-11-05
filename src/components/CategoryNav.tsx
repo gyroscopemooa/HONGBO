@@ -70,7 +70,7 @@ function NavInner() {
 
   const activeCat = pathname.startsWith("/category/")
     ? pathname.split("/")[2]
-    : pathname === "/" || (pathname === "/posts" && !sort)
+    : pathname === "/posts" && !sort
       ? "all"
       : null;
 
