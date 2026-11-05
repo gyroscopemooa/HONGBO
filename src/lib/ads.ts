@@ -18,6 +18,15 @@ export const AD_PRICES: Record<Ad["kind"], Record<Ad["plan"], number>> = {
 
 export const AD_KIND_LABEL: Record<Ad["kind"], string> = { premium: "프리미엄 상단 고정", banner: "와이드 배너" };
 
+/** 입금 계좌 (신청 직후 화면과 내 신청 내역에 그대로 안내됩니다) */
+export const AD_BANK = { bank: "토스뱅크", number: "1002-4689-8286", holder: "전민수(자이로스코프)" } as const;
+/** 미입금 시 신청이 취소될 수 있는 기간(일) */
+export const AD_PAY_DAYS = 3;
+
+/** 입금자명 — 신청 번호가 붙어 입금 내역에서 바로 찾을 수 있어요. */
+export const depositorName = (adId: number) => `더홍보${adId}`;
+export const adPrice = (a: Pick<Ad, "kind" | "plan">) => AD_PRICES[a.kind][a.plan];
+
 export const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 
 export function adEndsAt(plan: Ad["plan"], from = new Date()): string {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { adminApproveAd, adminAssignAd, adminDeleteAd } from "../actions";
 import { ConfirmButton } from "@/components/ConfirmButton";
-import { AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, isAdLive, won } from "@/lib/ads";
+import { AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, depositorName, isAdLive, won } from "@/lib/ads";
 import { store } from "@/lib/store";
 import type { Ad } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -21,6 +21,7 @@ function Row({ ad, title, children }: { ad: Ad; title: string; children: React.R
         </Link>
         <p className="mt-0.5 text-[13px] text-muted">
           {AD_KIND_LABEL[ad.kind]} · {AD_PLANS[ad.plan].label} ({won(AD_PRICES[ad.kind][ad.plan])})
+          {ad.status === "requested" && <> · 입금자명 <b className="text-ink-2">{depositorName(ad.id)}</b></>}
           {ad.slotNo != null && <> · {ad.slotNo}번 칸</>}
           {ad.endsAt && <> · {formatDate(ad.endsAt)}까지</>}
         </p>
@@ -51,7 +52,7 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
       </p>
 
       <section aria-label="승인 대기">
-        <h2 className="mb-2 font-extrabold">승인 대기 ({requested.length})</h2>
+        <h2 className="mb-2 font-extrabold">입금 확인·승인 대기 ({requested.length})</h2>
         {requested.length === 0 ? (
           <p className="rounded-xl border border-dashed border-line px-4 py-6 text-center text-sm text-faint">대기 중인 신청이 없어요.</p>
         ) : (

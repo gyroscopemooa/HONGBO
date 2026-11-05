@@ -27,12 +27,13 @@ export async function requestAdAction(formData: FormData) {
   if (!post || post.authorId !== user.id) fail("내가 쓴 홍보글만 광고로 신청할 수 있어요.");
   if (!post || !isPostPublic(post)) fail("현재 공개 중인 홍보글만 신청할 수 있어요.");
 
+  let adId = 0;
   try {
     const mine = await store.listAds({ requestedBy: user.id });
     if (mine.some((a) => a.postId === postId && a.kind === kind)) {
       fail("이 글은 같은 상품으로 이미 신청했거나 노출 중이에요. 아래 신청 내역을 확인해주세요.");
     }
-    await store.requestAd({ postId, kind, plan, requestedBy: user.id });
+    adId = (await store.requestAd({ postId, kind, plan, requestedBy: user.id })).id;
   } catch (e) {
     // redirect() 는 예외로 동작하므로 그대로 다시 던집니다.
     if (e && typeof e === "object" && "digest" in e) throw e;
@@ -40,5 +41,5 @@ export async function requestAdAction(formData: FormData) {
   }
   revalidatePath("/advertise");
   revalidatePath("/admin/ads");
-  redirect("/advertise?requested=1");
+  redirect(`/advertise?requested=${adId}`);
 }

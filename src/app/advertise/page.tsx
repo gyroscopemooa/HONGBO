@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Check, Crown, GalleryHorizontal } from "lucide-react";
 import { requestAdAction } from "@/app/actions/ads";
 import { AdBanner } from "@/components/AdBanner";
-import { AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, won } from "@/lib/ads";
+import { AD_BANK, AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PAY_DAYS, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, adPrice, depositorName, won } from "@/lib/ads";
+import type { Ad } from "@/lib/types";
 import { getCurrentUser } from "@/lib/auth";
 import { contactEmail } from "@/lib/env";
 import { isPostPublic } from "@/lib/queries";
@@ -19,6 +20,25 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const MAIL_BODY = ["광고할 홍보글 주소:", "희망 상품(프리미엄/배너):", "희망 기간(1주일/1개월):", "희망 시작일:", ""].join(String.fromCharCode(10));
+
+/** 입금 안내 — 계좌, 금액, 입금자명, 승인 기준을 한 번에 보여줍니다. */
+function PaymentBox({ ad, title }: { ad: Ad; title?: string }) {
+  return (
+    <div className="rounded-2xl border border-[#0e7a63]/30 bg-[#f1fbf7] p-5">
+      <p className="text-[15px] font-extrabold text-[#0e7a63]">{title ?? "입금 안내"}</p>
+      <dl className="mt-3 space-y-2 text-[14.5px]">
+        <div className="flex gap-3"><dt className="w-20 shrink-0 text-muted">상품</dt><dd className="font-bold">{AD_KIND_LABEL[ad.kind]} · {AD_PLANS[ad.plan].label}</dd></div>
+        <div className="flex gap-3"><dt className="w-20 shrink-0 text-muted">입금 금액</dt><dd className="font-black text-brand">{won(adPrice(ad))}</dd></div>
+        <div className="flex gap-3"><dt className="w-20 shrink-0 text-muted">입금 계좌</dt><dd className="font-bold">{AD_BANK.bank} <span className="select-all tabular-nums">{AD_BANK.number}</span> ({AD_BANK.holder})</dd></div>
+        <div className="flex gap-3"><dt className="w-20 shrink-0 text-muted">입금자명</dt><dd className="font-bold"><span className="select-all">{depositorName(ad.id)}</span> <span className="font-normal text-muted">(신청 번호가 붙은 이름으로 보내주세요)</span></dd></div>
+      </dl>
+      <ul className="mt-3 space-y-1 text-[13px] leading-relaxed text-muted">
+        <li>· 입금이 확인되면 승인되고, <b className="text-ink-2">승인된 시점부터 {AD_PLANS[ad.plan].label}</b> 동안 노출돼요.</li>
+        <li>· 확인은 운영자가 직접 하므로 시간이 걸릴 수 있어요. {AD_PAY_DAYS}일 안에 입금하지 않으면 신청이 취소될 수 있어요.</li>
+      </ul>
+    </div>
+  );
+}
 
 export default async function AdvertisePage({ searchParams }: { searchParams: Promise<{ requested?: string; error?: string }> }) {
   const { requested, error } = await searchParams;
@@ -45,11 +65,18 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
         </p>
       </header>
 
-      {requested && (
-        <p role="status" className="mb-6 rounded-xl bg-[#e9f9f3] px-4 py-3 text-[14px] font-medium text-[#0e7a63]">
-          신청이 접수됐어요. 운영자가 확인 후 이메일로 입금 안내를 드리고, 입금 확인 후 승인되면 그 시점부터 기간이 시작돼요.
-        </p>
-      )}
+      {requested && (() => {
+        const ad = myAds.find((a) => String(a.id) === requested && a.status === "requested");
+        return ad ? (
+          <div className="mb-6">
+            <PaymentBox ad={ad} title="신청이 접수됐어요. 아래 계좌로 입금해주세요" />
+          </div>
+        ) : (
+          <p role="status" className="mb-6 rounded-xl bg-[#e9f9f3] px-4 py-3 text-[14px] font-medium text-[#0e7a63]">
+            신청이 접수됐어요. 아래 &quot;내 신청 내역&quot;에서 입금 안내를 확인해주세요.
+          </p>
+        );
+      })()}
       {error && (
         <p role="alert" className="mb-6 rounded-xl bg-brand-soft px-4 py-3 text-[14px] font-medium text-brand-dark">
           {error}
@@ -87,7 +114,7 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
       <section className="mt-7 rounded-2xl border border-[#f0b429]/50 bg-[#fffbee] p-5 sm:p-6" aria-label="구매 문의">
         <h2 className="text-[18px] font-extrabold tracking-[-0.03em]">구매·결제 문의는 이메일로</h2>
         <p className="mt-1.5 text-[14.5px] leading-relaxed text-ink-2">
-          아래에서 신청하시면 운영자가 확인 후 이메일로 입금 계좌와 일정을 안내드려요. 궁금한 점이나 원하는 시작일이 있다면 이메일로 보내주세요.
+          아래에서 신청하시면 바로 입금 계좌가 안내돼요. 궁금한 점이나 결제 관련 문의는 이메일로 보내주세요.
         </p>
         {email ? (
           <a
@@ -158,7 +185,7 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
             </fieldset>
 
             <ul className="space-y-1 text-[13px] text-muted">
-              <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /> 신청 후 운영자가 입금 안내를 드리고, 입금 확인 시 승인돼요. 승인 시점부터 기간이 시작돼요.</li>
+              <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /> 신청하면 바로 입금 계좌가 안내돼요. 입금이 확인되어 승인된 시점부터 기간이 시작돼요.</li>
               <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /> 광고 카드에는 &quot;광고&quot; 표시가 붙어요. 운영정책에 어긋난 글은 승인되지 않을 수 있어요.</li>
             </ul>
             <button className="btn btn-primary btn-lg">광고 신청하기</button>
@@ -184,8 +211,13 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
                   {AD_KIND_LABEL[a.kind]} · {AD_PLANS[a.plan].label}
                 </span>
                 <span className={a.status === "active" ? "font-bold text-[#0e7a63]" : "font-bold text-[#9a6b00]"}>
-                  {a.status === "active" && a.endsAt ? `${formatDate(a.endsAt)}까지 노출` : "승인 대기"}
+                  {a.status === "active" && a.endsAt ? `${formatDate(a.endsAt)}까지 노출` : "입금 확인 대기"}
                 </span>
+                {a.status === "requested" && (
+                  <div className="basis-full pt-1">
+                    <PaymentBox ad={a} title={`입금 안내 · ${titleOf(a.postId)}`} />
+                  </div>
+                )}
               </li>
             ))}
           </ul>

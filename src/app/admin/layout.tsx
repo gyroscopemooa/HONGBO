@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
   const stats = await store.stats();
+  const pendingAds = await store.listAds({ status: "requested" }).then((l) => l.length, () => 0);
   const links: Array<[string, string, number?]> = [
     ["/admin", "대시보드"],
     ["/admin/posts", "홍보글"],
@@ -18,7 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     ["/admin/reports", "신고", stats.openReports],
     ["/admin/feature-requests", "기능 요청"],
     ["/admin/users", "사용자"],
-    ["/admin/ads", "광고"],
+    ["/admin/ads", "광고", pendingAds],
     ["/admin/banners", "배너"],
     ["/admin/notices", "공지"],
   ];
