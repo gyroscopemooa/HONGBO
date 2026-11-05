@@ -7,6 +7,7 @@ import { REPORT_REASON_LABELS, LIMITS } from "@/lib/constants";
 import { postExpiryFromNow } from "@/lib/queries";
 import { rateLimit } from "@/lib/ratelimit";
 import { store } from "@/lib/store";
+import { hasSurveyResponses, surveyStorageReady } from "@/lib/survey-store";
 import { parsePostInput, type FieldErrors } from "@/lib/validation";
 
 export type ActionResult =
@@ -23,6 +24,9 @@ export async function createPostAction(raw: unknown): Promise<ActionResult> {
 
   const parsed = parsePostInput(raw);
   if (!parsed.ok) return { ok: false, message: parsed.message, errors: parsed.errors };
+  if (parsed.data.extra.exclusive?.method === "survey" && !(await surveyStorageReady())) {
+    return { ok: false, message: "더홍보 자체 설문 저장소가 아직 준비되지 않았어요. 관리자에게 문의해주세요." };
+  }
 
   // 도배 방지: 짧은 시간 연속 등록 제한
   const tenMin = new Date(Date.now() - 10 * 60_000).toISOString();
@@ -59,6 +63,13 @@ export async function updatePostAction(id: number, raw: unknown): Promise<Action
 
   const parsed = parsePostInput(raw);
   if (!parsed.ok) return { ok: false, message: parsed.message, errors: parsed.errors };
+
+  if (post.extra.exclusive?.method === "survey" && await hasSurveyResponses(id)) {
+    if (parsed.data.extra.exclusive?.method !== "survey" ||
+      JSON.stringify(post.extra.exclusive.survey ?? []) !== JSON.stringify(parsed.data.extra.exclusive.survey ?? [])) {
+      return { ok: false, message: "이미 응답이 제출된 설문의 질문·선택지·방식은 변경할 수 없어요. 새로운 설문은 별도 홍보글로 등록해주세요." };
+    }
+  }
 
   if (post.authorId && parsed.data.externalUrl && (await store.findActiveByUrl(post.authorId, parsed.data.externalUrl, post.id))) {
     return {
