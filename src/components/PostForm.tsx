@@ -674,17 +674,17 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
         </SectionCard>
 
         {/* 4. 이미지 */}
-        <SectionCard step={4} title="이미지를 올려주세요" desc="대표 이미지가 있으면 훨씬 더 많이 눌려요. 자동으로 16:9로 잘라드려요.">
-          <Field id="primaryImage" label="대표 이미지" error={errors.primaryImageUrl}>
+        <SectionCard step={4} title="이미지를 올려주세요" desc="대표 이미지가 있으면 훨씬 더 많이 눌려요. 대표 이미지는 목록 썸네일이라 자동으로 16:9로 잘라드려요.">
+          <Field id="primaryImage" label="대표 이미지" error={errors.primaryImageUrl} hint="목록에 보이는 썸네일이에요. 16:9(가로형) 이미지를 권장해요. 다른 비율은 가운데 기준으로 잘려요.">
             <div className="max-w-[560px]"><ImageSlot value={f.primaryImageUrl} onChange={(u) => set("primaryImageUrl", u)} alt="대표 이미지 미리보기" onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} /></div>
           </Field>
-          <Field id="extraImages" label={`추가 이미지 (최대 ${LIMITS.extraImagesMax}장)`} optional error={errors.images}>
+          <Field id="extraImages" label={`추가 이미지 (최대 ${LIMITS.extraImagesMax}장)`} optional error={errors.images} hint="자르지 않고 원본 비율 그대로 보여드려요. 큰 사진이나 세로 스크린샷도 그대로 올려도 돼요. (권장: 가로 1200px 이상)">
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               {f.images.map((url, i) => (
-                <ImageSlot key={url} size="sm" value={url} alt={`추가 이미지 ${i + 1}`} onChange={(u) => set("images", u ? f.images.map((x, idx) => (idx === i ? u : x)) : f.images.filter((_, idx) => idx !== i))} onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} />
+                <ImageSlot key={url} size="sm" keepOriginal value={url} alt={`추가 이미지 ${i + 1}`} onChange={(u) => set("images", u ? f.images.map((x, idx) => (idx === i ? u : x)) : f.images.filter((_, idx) => idx !== i))} onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} />
               ))}
               {f.images.length < LIMITS.extraImagesMax && (
-                <ImageSlot key={`new-${f.images.length}`} size="sm" value={null} alt="" onChange={(u) => u && set("images", [...f.images, u])} onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} />
+                <ImageSlot key={`new-${f.images.length}`} size="sm" keepOriginal value={null} alt="" onChange={(u) => u && set("images", [...f.images, u])} onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} />
               )}
             </div>
           </Field>

@@ -10,6 +10,8 @@ export interface ProcessOptions {
   ratio?: number;
   /** 결과 이미지 최대 가로 px (기본 960) */
   maxWidth?: number;
+  /** true 면 자르지 않고 원본 비율 그대로 (긴 변 기준 maxWidth 이하로만 축소) */
+  keepOriginal?: boolean;
 }
 
 export async function processImage(file: Blob, opts: ProcessOptions = {}): Promise<Blob> {
@@ -25,13 +27,22 @@ export async function processImage(file: Blob, opts: ProcessOptions = {}): Promi
   const a = bitmap.width / bitmap.height;
   let sw = bitmap.width;
   let sh = bitmap.height;
-  if (a > RATIO) sw = Math.round(bitmap.height * RATIO);
-  else sh = Math.round(bitmap.width / RATIO);
-  const sx = Math.round((bitmap.width - sw) / 2);
-  const sy = Math.round((bitmap.height - sh) / 2);
-
-  const tw = Math.min(MAX_W, sw);
-  const th = Math.round(tw / RATIO);
+  let tw: number;
+  let th: number;
+  let sx = 0;
+  let sy = 0;
+  if (opts.keepOriginal) {
+    const scale = Math.min(1, MAX_W / Math.max(sw, sh));
+    tw = Math.max(1, Math.round(sw * scale));
+    th = Math.max(1, Math.round(sh * scale));
+  } else {
+    if (a > RATIO) sw = Math.round(bitmap.height * RATIO);
+    else sh = Math.round(bitmap.width / RATIO);
+    sx = Math.round((bitmap.width - sw) / 2);
+    sy = Math.round((bitmap.height - sh) / 2);
+    tw = Math.min(MAX_W, sw);
+    th = Math.round(tw / RATIO);
+  }
 
   const canvas = document.createElement("canvas");
   canvas.width = tw;

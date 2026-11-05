@@ -64,6 +64,7 @@ export function ImageSlot({
   size = "lg",
   error,
   onBusyChange,
+  keepOriginal,
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
@@ -71,6 +72,8 @@ export function ImageSlot({
   size?: "lg" | "sm";
   error?: string;
   onBusyChange?: (busy: boolean) => void;
+  /** true 면 16:9 로 자르지 않고 원본 비율 유지 (추가 이미지용) */
+  keepOriginal?: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -83,7 +86,7 @@ export function ImageSlot({
     setBusy(true);
     onBusyChange?.(true);
     try {
-      onChange(await processAndUpload(file));
+      onChange(await processAndUpload(file, keepOriginal ? { keepOriginal: true, maxWidth: 1600 } : {}));
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "이미지를 올리지 못했어요.");
     } finally {
@@ -115,7 +118,7 @@ export function ImageSlot({
       >
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={value} alt={alt} className="size-full object-cover" />
+          <img src={value} alt={alt} className={cn("size-full", keepOriginal ? "object-contain" : "object-cover")} />
         ) : (
           <button
             type="button"
