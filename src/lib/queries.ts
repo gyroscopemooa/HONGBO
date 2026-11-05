@@ -1,6 +1,6 @@
 import "server-only";
 import { applyPremiumCreative } from "./ad-creative";
-import { AD_PREMIUM_SLOTS, shuffle } from "./ads";
+import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, HOUSE_AD_POST_ID, shuffle } from "./ads";
 import { LIMITS } from "./constants";
 import { store } from "./store";
 import type { AdCreative, Post } from "./types";
@@ -82,7 +82,13 @@ export async function getHomeData() {
     getLiveAdPosts("premium"),
     getLiveBannerAds(),
   ]);
-  return { popular, latest: latest.items, sideBanners: side, stripBanners: strip, notices, premium, adBanners };
+  // 운영자 고정 광고: 유료 광고가 자리를 다 채우지 않았을 때만 맨 앞에 넣습니다.
+  const house = await store.getPost(HOUSE_AD_POST_ID).catch(() => null);
+  const houseOk = house && isPostPublic(house) ? house : null;
+  const premiumOut = houseOk && premium.length < AD_PREMIUM_SLOTS && !premium.some((p) => p.id === houseOk.id) ? [houseOk, ...premium] : premium;
+  const bannersOut =
+    houseOk && adBanners.length < AD_BANNER_SLOTS && !adBanners.some((b) => b.post.id === houseOk.id) ? [{ post: houseOk, creative: null }, ...adBanners] : adBanners;
+  return { popular, latest: latest.items, sideBanners: side, stripBanners: strip, notices, premium: premiumOut, adBanners: bannersOut };
 }
 
 export function isPostPublic(p: Pick<Post, "status" | "expiresAt">): boolean {

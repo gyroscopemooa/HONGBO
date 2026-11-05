@@ -60,3 +60,9 @@ export function shuffle<T>(list: T[]): T[] {
   }
   return a;
 }
+
+/**
+ * 운영자 고정 광고 — 유료 광고 자리가 남아 있을 때 프리미엄·배너 맨 앞에 "광고"로 표시해 노출합니다.
+ * 유료 광고가 3칸을 모두 채우면 자동으로 양보합니다. 글 번호는 운영 DB 기준이며, 글이 없으면 건너뜁니다.
+ */
+export const HOUSE_AD_POST_ID = 41;
