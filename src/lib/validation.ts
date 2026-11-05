@@ -177,14 +177,14 @@ export function parsePostInput(raw: unknown): ParseResult {
         const ids = new Set<string>();
         const parsed: SurveyQuestion[] = [];
         for (const q of submitted) {
-          const title = q.title.replace(/\\s+/g, " ").trim();
+          const title = q.title.replace(/\s+/g, " ").trim();
           if (!/^[a-zA-Z0-9_-]{1,64}$/.test(q.id) || ids.has(q.id) || title.length < 2 || title.length > SURVEY_QUESTION_MAX) {
             errors.exclusiveSurvey = "각 질문은 2~100자로 작성하고, 중복되지 않는 질문 ID를 사용해주세요.";
             break;
           }
           ids.add(q.id);
           if (q.type === "choice") {
-            const options = (q.options ?? []).map((o) => o.replace(/\\s+/g, " ").trim());
+            const options = (q.options ?? []).map((o) => o.replace(/\s+/g, " ").trim());
             if (options.length < 2 || options.length > SURVEY_MAX_OPTIONS || options.some((o) => !o || o.length > SURVEY_OPTION_MAX) || new Set(options).size !== options.length) {
               errors.exclusiveSurvey = `객관식 선택지는 2~${SURVEY_MAX_OPTIONS}개, 각각 ${SURVEY_OPTION_MAX}자 이내로 서로 다르게 작성해주세요.`;
               break;
