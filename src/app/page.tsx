@@ -107,7 +107,9 @@ export default async function HomePage() {
 
       <PremiumGrid ads={premiumAds} fill={fresh} />
 
-      <Hero infl09={{ url: infl09Url, preview: !infl09Url && process.env.NODE_ENV !== "production" }} />
+      <div className="mt-8 sm:mt-10">
+        <Hero infl09={{ url: infl09Url, preview: !infl09Url && process.env.NODE_ENV !== "production" }} />
+      </div>
       <CategoryTiles />
 
       <Carousel title="오늘의 인기 홍보" icon={<Flame className="text-brand" size={22} fill="currentColor" aria-hidden />} moreHref="/posts?sort=popular">
