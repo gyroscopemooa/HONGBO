@@ -166,7 +166,7 @@ export default async function PostDetailPage({ params }: Props) {
                 )}
                 {post.extra.exclusive.method === "link" && post.extra.exclusive.url && publicNow && (
                   <div className="mt-2.5">
-                    <ExternalCta href={withExclusiveRef(post.extra.exclusive.url)} postId={post.id} label="더홍보 전용 링크로 받기" />
+                    <ExternalCta href={withExclusiveRef(post.extra.exclusive.url)} postId={post.id} label="외부 이벤트 링크 열기" />
                   </div>
                 )}
               </div>
