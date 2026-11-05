@@ -648,8 +648,8 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                 <div role="note" className="flex items-start gap-2.5 rounded-xl border border-[#f3c9a0] bg-white px-4 py-3 text-[13px] leading-relaxed text-[#7a4a05]">
                   <CircleAlert size={17} className="mt-0.5 shrink-0" aria-hidden />
                   <p>
-                    <b>더홍보를 보고 온 분에게만 제공하는 혜택</b>일 때만 사용하세요. 다른 곳에서도 똑같이 진행하는 <b>일반 이벤트·할인·쿠폰</b>은 전용으로 표시하지 말고 위의 <b>혜택 배지</b>와 <b>추가 링크</b>를 써주세요.
-                    일반 이벤트를 전용으로 표시하거나 혜택을 주지 않으면 <b>배지 삭제, 글 삭제, 반복 시 운영정지</b>될 수 있어요.
+                    <b>더홍보에서만 받을 수 있는 이벤트</b>일 때만 켜주세요. 다른 곳에서도 똑같이 하는 <b>일반 이벤트·할인·쿠폰</b>이라면 이 항목을 켜지 말고, 위의 <b>혜택 배지</b>와 <b>추가 링크</b>로 올려주세요.
+                    일반 이벤트인데 &quot;더홍보 전용&quot;으로 올리거나, 약속한 혜택을 주지 않으면 <b>배지 삭제 → 글 삭제 → 반복 시 운영정지</b> 순으로 조치될 수 있어요.
                   </p>
                 </div>
 
@@ -691,7 +691,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                   <label className="flex cursor-pointer items-start gap-2.5">
                     <input type="checkbox" checked={f.exclusiveAgree} onChange={(e) => set("exclusiveAgree", e.target.checked)} className="mt-1 size-4 accent-[#d98e04]" />
                     <span className="text-[13.5px] leading-relaxed text-ink-2">
-                      이 혜택은 <b>더홍보 전용</b>이며 일반 이벤트가 아님을 확인했고, 실제로 제공하지 않으면 운영정책에 따라 삭제·이용 제한될 수 있음에 동의해요.
+                      이 혜택은 <b>더홍보에서만 주는 전용 혜택</b>이고 일반 이벤트가 아니에요. 일반 이벤트를 전용으로 올리거나 혜택을 주지 않으면 삭제·운영정지될 수 있음에 동의해요.
                     </span>
                   </label>
                   {errors.exclusiveAgree && <p role="alert" className="mt-1 text-[13px] font-medium text-brand-dark">{errors.exclusiveAgree}</p>}
