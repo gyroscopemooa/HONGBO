@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { SITE } from "@/lib/constants";
+import { contactEmail } from "@/lib/env";
 import { Logo } from "./Logo";
 
 export function Footer() {
   const year = new Date().getFullYear();
+  const email = contactEmail();
   return (
     <footer className="mt-16 border-t border-line bg-white">
       <div className="wrap py-9">
@@ -12,6 +14,14 @@ export function Footer() {
             <Logo size="md" />
             <p className="mt-2 text-sm text-muted">{SITE.slogan}</p>
             <p className="mt-1 text-[13px] text-faint">누구나 마음껏 홍보 가능한 무료 홍보 사이트 · 마케팅 사이트</p>
+            {email && (
+              <p className="mt-2 text-[13px] text-muted">
+                문의·광고·제휴·협업{" "}
+                <a href={`mailto:${email}`} className="font-semibold text-ink-2 hover:text-brand">
+                  {email}
+                </a>
+              </p>
+            )}
           </div>
           <nav aria-label="푸터 메뉴" className="flex flex-wrap items-center gap-x-1 gap-y-2 text-sm text-ink-2">
             {[
