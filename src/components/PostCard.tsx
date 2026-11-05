@@ -11,18 +11,28 @@ import { PostImage } from "./PostImage";
 const CARD_SIZES = "(min-width:1024px) 190px, (min-width:640px) 30vw, 46vw";
 
 /** 모든 카테고리가 공유하는 홍보 카드 (대표 이미지 / 제목 / 한 줄 소개 / 카테고리 / 지역) */
-export function PostCard({ post, eager = false, preview = false, ad = false }: { post: Post; eager?: boolean; preview?: boolean; ad?: boolean }) {
+export function PostCard({ post, eager = false, preview = false, ad = false, rank }: { post: Post; eager?: boolean; preview?: boolean; ad?: boolean; rank?: number }) {
   const inner = (
     <>
       <div className="relative">
         <PostImage src={post.primaryImageUrl} alt="" category={post.category} sizes={CARD_SIZES} eager={eager} />
+        {rank != null && (
+          <span
+            className={cn(
+              "absolute left-2 top-2 z-10 rounded-md px-1.5 py-0.5 text-[12px] font-extrabold tracking-tight text-white shadow-sm",
+              rank === 1 ? "bg-[#f0a500]" : rank === 2 ? "bg-[#8a94a6]" : rank === 3 ? "bg-[#b9773a]" : "bg-ink/75",
+            )}
+          >
+            {rank}위
+          </span>
+        )}
         {ad && (
           <span className="absolute left-2 top-2 z-10 rounded-md bg-ink/75 px-1.5 py-0.5 text-[11px] font-bold tracking-tight text-white backdrop-blur-sm">광고</span>
         )}
         {post.extra.official && <OfficialBadge value={post.extra.official} className="absolute right-2 top-2 z-10" />}
         {benefitLabels(post.extra.benefits).length > 0 && <BenefitBadges values={post.extra.benefits} className="absolute bottom-2 left-2 z-10" />}
         {post.region && !ad && (
-          <span className="absolute left-2 top-2 inline-flex items-center gap-0.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[11.5px] font-bold text-ink-2 shadow-sm">
+          <span className={cn("absolute left-2 inline-flex items-center gap-0.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[11.5px] font-bold text-ink-2 shadow-sm", rank != null ? "top-9" : "top-2")}>
             <MapPin size={11} aria-hidden />
             {post.region}
           </span>

@@ -110,7 +110,7 @@ export default async function HomePage() {
       <Carousel title="오늘의 인기 홍보" icon={<Flame className="text-brand" size={22} fill="currentColor" aria-hidden />} moreHref="/posts?sort=popular">
         {popular.slice(0, 12).map((p, i) => (
           <li key={p.id}>
-            <PostCard post={p} eager={i < 6} />
+            <PostCard post={p} eager={i < 6} rank={i + 1} />
           </li>
         ))}
       </Carousel>
