@@ -64,7 +64,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
   );
 
   return (
-    <article className={cn("group relative h-full overflow-hidden rounded-[14px] border bg-white shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-hover", ad ? "border-[#f0b429]/70 ring-1 ring-[#f0b429]/30" : post.extra.benefits?.includes("exclusive") ? "border-2 border-[#e0a31a] shadow-[0_0_0_3px_rgba(240,180,41,0.28),0_8px_24px_-6px_rgba(201,131,10,0.55)]" : benefitLabels(post.extra.benefits).length > 0 ? "border-[#e5484d]/60 ring-1 ring-[#e5484d]/20" : "border-line")}>
+    <article className={cn("group relative h-full overflow-hidden rounded-[14px] border bg-white shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-hover", ad ? "border-[#f0b429]/70 ring-1 ring-[#f0b429]/30" : post.extra.benefits?.includes("exclusive") ? "border-line" : benefitLabels(post.extra.benefits).length > 0 ? "border-[#e5484d]/60 ring-1 ring-[#e5484d]/20" : "border-line")}>
       {preview ? (
         <div className="flex h-full flex-col">{inner}</div>
       ) : (

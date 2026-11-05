@@ -114,10 +114,6 @@ export default async function HomePage() {
       </div>
       <CategoryTiles />
 
-      <Suspense fallback={null}>
-        <ExclusiveStrip wrap />
-      </Suspense>
-
       <Carousel title="오늘의 인기 홍보" icon={<Flame className="text-brand" size={22} fill="currentColor" aria-hidden />} moreHref="/posts?sort=popular">
         {popular.slice(0, 12).map((p, i) => (
           <li key={p.id}>
@@ -137,6 +133,10 @@ export default async function HomePage() {
           </ul>
         </section>
       )}
+
+      <Suspense fallback={null}>
+        <ExclusiveStrip wrap />
+      </Suspense>
 
       <section aria-label="전체 홍보글" className="wrap pt-6">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
