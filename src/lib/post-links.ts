@@ -33,6 +33,7 @@ export function secondaryLinks(post: Post): PostLink[] {
     add("지도에서 보기", post.mapUrl);
     add("영업/문의 링크", post.extra.businessUrl);
   }
+  for (const l of post.extra.links ?? []) add(l.label, l.url);
   return out;
 }
 

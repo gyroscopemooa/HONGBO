@@ -3,6 +3,8 @@ import {
   APP_PLATFORMS,
   BENEFITS,
   BENEFIT_MAX,
+  EXTRA_LINK_LABEL_MAX,
+  EXTRA_LINK_MAX,
   CATEGORY_SLUGS,
   LIMITS,
   SNS_PLATFORMS,
@@ -42,8 +44,9 @@ const rawSchema = z.object({
       benefits: str(200),
       businessUrl: str(2100),
       videoUrl: str(2100),
+      links: z.array(z.object({ label: z.string().max(100), url: z.string().max(2100) })).max(20).default(() => []),
     })
-    .default({}),
+    .default({ links: [] }),
 });
 
 export type FieldErrors = Record<string, string>;
@@ -116,6 +119,35 @@ export function parsePostInput(raw: unknown): ParseResult {
     .map((s) => s.trim())
     .filter((s) => (BENEFITS.map((b) => b.value) as string[]).includes(s));
   if (benefitList.length) extra.benefits = Array.from(new Set(benefitList)).slice(0, BENEFIT_MAX);
+
+  // --- 추가 링크 (모든 카테고리 공통) ---
+  const extraLinks: Array<{ label: string; url: string }> = [];
+  v.extra.links.forEach((l, i) => {
+    const label = l.label.replace(/\s+/g, " ").trim();
+    const rawUrl = l.url.trim();
+    if (!label && !rawUrl) return; // 빈 줄은 무시
+    if (!label) {
+      errors[`links.${i}`] = "링크 제목을 입력해주세요.";
+      return;
+    }
+    if (label.length > EXTRA_LINK_LABEL_MAX) {
+      errors[`links.${i}`] = `링크 제목은 ${EXTRA_LINK_LABEL_MAX}자까지 입력할 수 있어요.`;
+      return;
+    }
+    if (!rawUrl) {
+      errors[`links.${i}`] = "링크 주소를 입력해주세요.";
+      return;
+    }
+    const r = normalizeExternalUrl(rawUrl);
+    if (!r.ok) {
+      errors[`links.${i}`] = r.error ?? "올바른 링크가 아니에요.";
+      return;
+    }
+    if (extraLinks.some((x) => x.url === r.url)) return; // 중복 주소는 한 번만
+    extraLinks.push({ label, url: r.url });
+  });
+  if (extraLinks.length > EXTRA_LINK_MAX) errors.links = `추가 링크는 최대 ${EXTRA_LINK_MAX}개까지 등록할 수 있어요.`;
+  else if (extraLinks.length) extra.links = extraLinks;
 
   let externalUrl: string | null = null;
   let mapUrl: string | null = null;
@@ -235,7 +267,7 @@ export function parsePostInput(raw: unknown): ParseResult {
   if (contact && contact.length > LIMITS.contactMax) errors.contact = `연락처는 ${LIMITS.contactMax}자까지 입력할 수 있어요.`;
 
   // --- 금지 키워드 ---
-  const banned = findBannedKeyword(title, shortDescription, description, tags.join(" "), address);
+  const banned = findBannedKeyword(title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "));
   if (banned) {
     errors.description = "운영정책상 등록할 수 없는 내용이 포함되어 있어요. 내용을 확인해주세요.";
   }

@@ -266,6 +266,11 @@ export const BENEFITS = [
   { value: "gift", label: "증정" },
 ] as const;
 export const BENEFIT_MAX = 2;
+
+/** 추가 링크(이벤트 참여, 쿠폰 받기 등) — 제목은 직접 입력하거나 빠른 선택으로 채웁니다. */
+export const EXTRA_LINK_MAX = 5;
+export const EXTRA_LINK_LABEL_MAX = 20;
+export const EXTRA_LINK_PRESETS = ["이벤트 참여", "쿠폰 받기", "예약하기", "공식 홈페이지", "카카오채널"] as const;
 export function benefitLabels(values?: string[]): string[] {
   const labels: string[] = [];
   for (const v of values ?? []) {

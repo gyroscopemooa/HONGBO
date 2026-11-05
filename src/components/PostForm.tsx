@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { CircleAlert, LoaderCircle, RotateCcw, Send } from "lucide-react";
+import { CircleAlert, LoaderCircle, Plus, RotateCcw, Send, X } from "lucide-react";
 import { createPostAction, updatePostAction } from "@/app/actions/posts";
 import {
   APP_PLATFORMS,
@@ -11,6 +11,9 @@ import {
   CATEGORY_MAP,
   BENEFITS,
   BENEFIT_MAX,
+  EXTRA_LINK_LABEL_MAX,
+  EXTRA_LINK_MAX,
+  EXTRA_LINK_PRESETS,
   LIMITS,
   REGIONS,
   SNS_PLATFORMS,
@@ -46,6 +49,7 @@ export interface FormState {
   usageType: string;
   period: string;
   benefits: string[];
+  links: Array<{ label: string; url: string }>;
   videoUrl: string;
   price: string;
   region: string;
@@ -73,6 +77,7 @@ const EMPTY: FormState = {
   usageType: "",
   period: "",
   benefits: [],
+  links: [],
   videoUrl: "",
   price: "",
   region: "",
@@ -116,6 +121,7 @@ export function postToFormState(p: Post): FormState {
     usageType: p.extra.usageType ?? "",
     period: p.extra.period ?? "",
     benefits: p.extra.benefits ?? [],
+    links: p.extra.links ?? [],
     videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
     price: p.price ?? "",
     region: p.region ?? "",
@@ -148,6 +154,7 @@ function toPayload(f: FormState) {
       usageType: f.usageType,
       period: f.period,
       benefits: f.benefits.join(","),
+      links: f.links,
       businessUrl: f.businessUrl,
       videoUrl: f.videoUrl,
     },
@@ -583,6 +590,74 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                   </button>
                 );
               })}
+            </div>
+          </Field>
+          <Field
+            id="links0"
+            label="추가 링크"
+            optional
+            error={errors.links}
+            hint={`이벤트 참여, 쿠폰 받기, 예약 등 버튼으로 보여줄 링크를 최대 ${EXTRA_LINK_MAX}개까지 추가할 수 있어요. 제목은 직접 써도 돼요.`}
+          >
+            <div className="space-y-3">
+              {f.links.map((l, i) => (
+                <div key={i} data-field={`links.${i}`}>
+                  <div className="flex items-start gap-2">
+                    <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[170px_minmax(0,1fr)]">
+                      <input
+                        id={i === 0 ? "links0" : undefined}
+                        value={l.label}
+                        maxLength={EXTRA_LINK_LABEL_MAX + 10}
+                        onChange={(e) => set("links", f.links.map((x, idx) => (idx === i ? { ...x, label: e.target.value } : x)))}
+                        placeholder="링크 제목 (예: 이벤트 참여)"
+                        aria-label={`추가 링크 ${i + 1} 제목`}
+                        aria-invalid={!!errors[`links.${i}`]}
+                        className="field"
+                      />
+                      <input
+                        value={l.url}
+                        onChange={(e) => set("links", f.links.map((x, idx) => (idx === i ? { ...x, url: e.target.value } : x)))}
+                        placeholder="https://"
+                        inputMode="url"
+                        aria-label={`추가 링크 ${i + 1} 주소`}
+                        aria-invalid={!!errors[`links.${i}`]}
+                        className="field"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`추가 링크 ${i + 1} 삭제`}
+                      onClick={() => set("links", f.links.filter((_, idx) => idx !== i))}
+                      className="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-line text-muted hover:border-brand-line hover:text-brand"
+                    >
+                      <X size={16} aria-hidden />
+                    </button>
+                  </div>
+                  {errors[`links.${i}`] && <p role="alert" className="mt-1 text-[13px] font-medium text-brand-dark">{errors[`links.${i}`]}</p>}
+                </div>
+              ))}
+              {f.links.length < EXTRA_LINK_MAX && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1 text-[13px] text-muted"><Plus size={14} aria-hidden /> 빠른 추가</span>
+                  {EXTRA_LINK_PRESETS.map((label) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => set("links", [...f.links, { label, url: "" }])}
+                      className="rounded-full border border-line bg-white px-3 py-1.5 text-[13px] font-bold text-muted transition hover:border-brand-line hover:text-brand"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => set("links", [...f.links, { label: "", url: "" }])}
+                    className="rounded-full border border-dashed border-line bg-white px-3 py-1.5 text-[13px] font-bold text-muted transition hover:border-brand-line hover:text-brand"
+                  >
+                    직접 입력
+                  </button>
+                </div>
+              )}
             </div>
           </Field>
           <Field id="description" label="상세 설명" required error={errors.description} counter={{ now: f.description.length, max: LIMITS.descMax }}>

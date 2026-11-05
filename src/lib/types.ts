@@ -3,7 +3,14 @@ import type { CategorySlug } from "./constants";
 export type PostStatus = "active" | "hidden" | "blocked" | "expired" | "deleted";
 
 /** 카테고리별로 필요한 추가 입력값. 카드에는 쓰이지 않고 상세 페이지에서만 사용합니다. */
+export interface ExtraLink {
+  label: string;
+  url: string;
+}
+
 export interface PostExtra {
+  /** 추가 링크(이벤트 참여, 쿠폰 받기 등). 상세 페이지에서 버튼으로 보여줍니다. */
+  links?: ExtraLink[];
   playUrl?: string;
   appStoreUrl?: string;
   siteUrl?: string;
