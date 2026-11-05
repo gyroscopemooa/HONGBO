@@ -87,7 +87,12 @@ export default async function MyPage() {
                   </p>
                 </div>
                 <div className="shrink-0">
-                  <OwnerActions postId={p.id} canRenew={p.status === "active" || p.status === "expired"} size="sm" redirectTo="/mypage" />
+                  <div className="flex flex-wrap items-center gap-2">
+                    {p.extra.exclusive?.method === "survey" && (
+                      <Link href={`/post/${p.id}/survey-results`} className="btn btn-outline text-[13px]">설문 결과</Link>
+                    )}
+                    <OwnerActions postId={p.id} canRenew={p.status === "active" || p.status === "expired"} size="sm" redirectTo="/mypage" />
+                  </div>
                 </div>
               </li>
             );
