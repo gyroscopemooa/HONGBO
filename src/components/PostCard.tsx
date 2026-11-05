@@ -5,6 +5,7 @@ import type { Post } from "@/lib/types";
 import { cn, formatCount, relativeTime } from "@/lib/utils";
 import { BenefitBadges } from "./BenefitBadges";
 import { CategoryBadge } from "./CategoryBadge";
+import { NewBadge } from "./NewBadge";
 import { OfficialBadge } from "./OfficialBadge";
 import { PostImage } from "./PostImage";
 
@@ -45,6 +46,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
       </div>
       <div className="flex flex-1 flex-col p-3">
         <h3 className="line-clamp-2 min-h-[2.7em] text-[14.5px] font-bold leading-[1.35] tracking-[-0.02em] text-ink group-hover:text-brand-dark">
+          <NewBadge publishedAt={post.publishedAt} className="mr-1" />
           {post.title}
         </h3>
         <p className="mt-1 line-clamp-1 text-[12.5px] text-muted">{post.shortDescription}</p>

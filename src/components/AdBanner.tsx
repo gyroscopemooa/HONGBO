@@ -4,8 +4,9 @@ import { CATEGORY_MAP } from "@/lib/constants";
 import type { AdCreative, Post } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { BenefitBadges } from "./BenefitBadges";
+import { NewBadge } from "./NewBadge";
 
-export type AdBannerPost = Pick<Post, "id" | "title" | "shortDescription" | "primaryImageUrl" | "category" | "extra">;
+export type AdBannerPost = Pick<Post, "id" | "title" | "shortDescription" | "primaryImageUrl" | "category" | "extra"> & { publishedAt?: string };
 
 /**
  * 광고 배너 — 가로 4:1(데스크톱) / 2.2:1(모바일) 비율.
@@ -69,6 +70,7 @@ export function AdBanner({
       <div className="relative flex h-full max-w-[78%] flex-col justify-center gap-1 px-4 sm:max-w-[62%] sm:px-8">
         <div className="flex items-center gap-1.5">
           <span className={cn("rounded-md px-1.5 py-0.5 text-[11.5px] font-bold backdrop-blur-sm", light ? "bg-black/10 text-ink-2" : "bg-white/20 text-white")}>{cat.name}</span>
+          {ad && post.publishedAt && <NewBadge publishedAt={post.publishedAt} />}
           <BenefitBadges values={post.extra.benefits} />
         </div>
         <p className={cn("line-clamp-2 text-[17px] font-black leading-snug tracking-[-0.04em] sm:text-[26px]", light ? "text-ink" : "text-white")}>{title}</p>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Post } from "@/lib/types";
 import { relativeTime } from "@/lib/utils";
 import { CategoryBadge } from "./CategoryBadge";
+import { NewBadge } from "./NewBadge";
 import { PostImage } from "./PostImage";
 
 /** 최신 홍보글 리스트용 한 줄 카드 */
@@ -17,6 +18,7 @@ export function PostRow({ post }: { post: Post }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <CategoryBadge slug={post.category} />
+          <NewBadge publishedAt={post.publishedAt} />
           <h3 className="truncate text-[14.5px] font-bold tracking-[-0.02em] text-ink group-hover:text-brand-dark sm:text-[15px]">
             {post.title}
           </h3>
