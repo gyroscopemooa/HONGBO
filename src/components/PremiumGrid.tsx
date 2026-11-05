@@ -4,31 +4,41 @@ import { AD_PREMIUM_SLOTS } from "@/lib/ads";
 import type { Post } from "@/lib/types";
 import { PostCard } from "./PostCard";
 
-/** 홈 최상단 프리미엄 고정 영역 — 최대 10칸을 슬라이드 없이 한눈에 보여줍니다. 빈 칸은 최대 5개까지만 "내 홍보를 여기에" 칸으로 보여줘요. */
-export function PremiumGrid({ posts }: { posts: Post[] }) {
-  const free = Math.max(AD_PREMIUM_SLOTS - posts.length, 0);
-  // 마지막 줄이 들쭉날쭉하지 않게 5칸(데스크톱 열 수) 단위로 맞추되, 안내 칸은 최대 5개
-  const pad = posts.length % 5 === 0 ? 0 : 5 - (posts.length % 5);
-  const placeholders = Math.min(free, posts.length === 0 ? 5 : pad);
+/** 맨 뒤에 남겨 두는 "내 홍보를 여기에" 안내 칸 수 */
+const PLACEHOLDERS = 2;
+
+/**
+ * 홈 상단 추천 영역 — 한 줄 5칸. 앞 3칸이 광고 자리이고, 광고가 없는 칸만 최신 홍보글이 채웁니다.
+ * 뒤 2칸은 "내 홍보를 여기에" 안내 칸입니다.
+ * 예) 광고 0개: 최신 3 + 안내 2 / 광고 1개: 광고 1 + 최신 2 + 안내 2 / 광고 3개: 광고 3 + 안내 2
+ */
+export function PremiumGrid({ ads, fill }: { ads: Post[]; fill: Post[] }) {
+  const shownAds = ads.slice(0, AD_PREMIUM_SLOTS);
+  const filler = fill.filter((p) => !shownAds.some((a) => a.id === p.id)).slice(0, AD_PREMIUM_SLOTS - shownAds.length);
+  const plus = PLACEHOLDERS;
 
   return (
-    <section aria-label="프리미엄 홍보" className="wrap pt-5 sm:pt-7">
+    <section aria-label="추천 홍보" className="wrap pt-5 sm:pt-7">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-[22px] font-extrabold tracking-[-0.04em]">
-          <Crown size={22} className="text-[#e0a100]" fill="currentColor" aria-hidden /> 프리미엄 홍보
-          <span className="rounded-md bg-[#fff4d6] px-1.5 py-0.5 text-[11.5px] font-bold text-[#9a6b00]">광고</span>
+          <Crown size={22} className="text-[#e0a100]" fill="currentColor" aria-hidden /> 추천 홍보
         </h2>
         <Link href="/advertise" className="text-[13.5px] font-medium text-muted hover:text-brand">
           상단 고정 신청하기
         </Link>
       </div>
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
-        {posts.map((p, i) => (
-          <li key={p.id}>
+        {shownAds.map((p, i) => (
+          <li key={`ad-${p.id}`}>
             <PostCard post={p} ad eager={i < 5} />
           </li>
         ))}
-        {Array.from({ length: placeholders }, (_, i) => (
+        {filler.map((p) => (
+          <li key={`new-${p.id}`}>
+            <PostCard post={p} />
+          </li>
+        ))}
+        {Array.from({ length: plus }, (_, i) => (
           <li key={`empty-${i}`}>
             <Link
               href="/advertise"

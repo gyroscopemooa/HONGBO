@@ -41,7 +41,7 @@ const DB_FILE = path.join(DATA_DIR, "db.json");
 
 const g = globalThis as unknown as { __hbDb?: { db: DB; mtime: number } };
 
-/** 로컬 미리보기용 샘플 광고 — 프리미엄 7칸 + 배너 2개 (Supabase 사용 시에는 만들어지지 않습니다) */
+/** 로컬 미리보기용 샘플 광고 — 프리미엄 3칸 + 배너 2개 (Supabase 사용 시에는 만들어지지 않습니다) */
 function demoAds(posts: Post[]): Ad[] {
   const now = new Date();
   const active = posts.filter((p) => p.status === "active");
@@ -58,8 +58,8 @@ function demoAds(posts: Post[]): Ad[] {
     requestedBy: null,
     createdAt: now.toISOString(),
   });
-  active.slice(0, 7).forEach((p, i) => ads.push(mk(p, "premium", i % 2 ? "week" : "month", i + 1)));
-  active.slice(7, 9).forEach((p) => ads.push(mk(p, "banner", "month", null)));
+  active.slice(0, AD_PREMIUM_SLOTS).forEach((p, i) => ads.push(mk(p, "premium", i % 2 ? "week" : "month", i + 1)));
+  active.slice(AD_PREMIUM_SLOTS, AD_PREMIUM_SLOTS + 2).forEach((p) => ads.push(mk(p, "banner", "month", null)));
   return ads;
 }
 

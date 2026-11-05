@@ -1,7 +1,7 @@
 import type { Ad } from "./types";
 
-/** 프리미엄 상단 칸 수 */
-export const AD_PREMIUM_SLOTS = 10;
+/** 프리미엄 상단 광고 칸 수 (처음엔 3칸만 공개) */
+export const AD_PREMIUM_SLOTS = 3;
 /** 와이드 배너 동시 노출 가능 수 (홈에서 로테이션) */
 export const AD_BANNER_SLOTS = 3;
 

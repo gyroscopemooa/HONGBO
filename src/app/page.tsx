@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Flame, Siren } from "lucide-react";
 import { AdBanner } from "@/components/AdBanner";
+import { BannerPlaceholder, BannerSlider } from "@/components/BannerSlider";
 import { Carousel } from "@/components/Carousel";
 import { CategoryTiles } from "@/components/CategoryTiles";
 import { FeatureRequestBanner } from "@/components/FeatureRequestBanner";
@@ -13,6 +14,7 @@ import { PostRow } from "@/components/PostRow";
 import { PremiumGrid } from "@/components/PremiumGrid";
 import { PromoBanner } from "@/components/PromoBanner";
 import { RankList } from "@/components/RankList";
+import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, AD_PRICES, won } from "@/lib/ads";
 import { SITE } from "@/lib/constants";
 import { getHomeData } from "@/lib/queries";
 import { siteUrl } from "@/lib/utils";
@@ -25,6 +27,17 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const { popular, latest, sideBanners, stripBanners, notices, premium, adBanners } = await getHomeData();
+
+  // 추천 영역(앞 3자리)에 나온 글은 배너에서 제외하고, 배너 자리가 남으면 최신 글로 채웁니다.
+  const premiumAds = premium.slice(0, AD_PREMIUM_SLOTS);
+  const premiumFill = latest.filter((p) => !premiumAds.some((a) => a.id === p.id)).slice(0, AD_PREMIUM_SLOTS - premiumAds.length);
+  const used = new Set([...premiumAds, ...premiumFill].map((p) => p.id));
+  const bannerAds = adBanners.slice(0, AD_BANNER_SLOTS);
+  const bannerFill = latest
+    .filter((p) => p.primaryImageUrl && !used.has(p.id) && !bannerAds.some((a) => a.id === p.id))
+    .slice(0, AD_BANNER_SLOTS - bannerAds.length);
+  const hasBannerRoom = bannerAds.length < AD_BANNER_SLOTS;
+  const bannerCount = bannerAds.length + bannerFill.length + (hasBannerRoom ? 1 : 0);
 
   const base = siteUrl();
   const jsonLd = [
@@ -70,13 +83,27 @@ export default async function HomePage() {
       <Hero />
       <CategoryTiles />
 
-      {adBanners[0] && (
-        <section aria-label="광고 배너" className="wrap pt-5 sm:pt-7">
-          <AdBanner post={adBanners[0]} />
-        </section>
-      )}
+      <section aria-label="배너" className="wrap pt-5 sm:pt-7">
+        <BannerSlider count={bannerCount} label="추천 배너">
+          {bannerAds.map((p) => (
+            <li key={`ad-${p.id}`} className="w-full shrink-0 snap-center">
+              <AdBanner post={p} />
+            </li>
+          ))}
+          {bannerFill.map((p) => (
+            <li key={`new-${p.id}`} className="w-full shrink-0 snap-center">
+              <AdBanner post={p} ad={false} />
+            </li>
+          ))}
+          {hasBannerRoom && (
+            <li className="w-full shrink-0 snap-center">
+              <BannerPlaceholder priceText={`주 ${won(AD_PRICES.banner.week)} · 월 ${won(AD_PRICES.banner.month)}`} />
+            </li>
+          )}
+        </BannerSlider>
+      </section>
 
-      <PremiumGrid posts={premium} />
+      <PremiumGrid ads={premiumAds} fill={latest} />
 
       <Carousel title="오늘의 인기 홍보" icon={<Flame className="text-brand" size={22} fill="currentColor" aria-hidden />} moreHref="/posts?sort=popular">
         {popular.slice(0, 12).map((p, i) => (

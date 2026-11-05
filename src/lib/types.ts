@@ -102,7 +102,7 @@ export interface Report {
   post?: Pick<Post, "id" | "title" | "status" | "category"> | null;
 }
 
-/** 유료 광고(상단 프리미엄 10칸 / 와이드 배너). 신청 → 운영자 승인(입금 확인) → 기간 동안 노출. */
+/** 유료 광고(상단 프리미엄 3칸 / 와이드 배너). 신청 → 운영자 승인(입금 확인) → 기간 동안 노출. */
 export interface Ad {
   id: number;
   postId: number;
