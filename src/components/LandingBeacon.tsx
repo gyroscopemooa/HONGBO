@@ -7,8 +7,10 @@ import { usePathname } from "next/navigation";
 export function LandingBeacon() {
   const pathname = usePathname();
   useEffect(() => {
+    // 사이트 밖에서 "/" 로 처음 들어온 방문만 집계합니다. (로고로 돌아온 경우 제외)
     if (pathname !== "/") return;
     try {
+      if (document.referrer && new URL(document.referrer).host === location.host) return;
       if (sessionStorage.getItem("hb_landing_sent")) return;
       const v = document.cookie.match(/(?:^|; )hb_ab=([ab])/)?.[1];
       if (!v) return;

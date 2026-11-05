@@ -20,6 +20,13 @@ function landingVariant(request: NextRequest): { variant: "a" | "b"; set: boolea
   if (BOT_RE.test(request.headers.get("user-agent") ?? "")) return { variant: "a", set: false };
   const forced = request.nextUrl.searchParams.get("ab");
   if (forced === "a" || forced === "b") return { variant: forced, set: true };
+  // 사이트 안에서 로고/홈을 눌러 온 경우는 항상 기존 홈. 테스트는 밖에서 처음 들어오는 방문에만 적용합니다.
+  try {
+    const ref = request.headers.get("referer");
+    if (ref && new URL(ref).host === request.nextUrl.host) return { variant: "a", set: false };
+  } catch {
+    /* referer 가 이상하면 무시 */
+  }
   const cur = request.cookies.get(AB_COOKIE)?.value;
   if (cur === "a" || cur === "b") return { variant: cur, set: false };
   return { variant: Math.random() < 0.5 ? "a" : "b", set: true };
