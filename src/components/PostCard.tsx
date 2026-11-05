@@ -5,7 +5,7 @@ import type { Post } from "@/lib/types";
 import { cn, formatCount, relativeTime } from "@/lib/utils";
 import { BenefitBadges } from "./BenefitBadges";
 import { CategoryBadge } from "./CategoryBadge";
-import { NewBadge } from "./NewBadge";
+import { isNewPost } from "./NewBadge";
 import { OfficialBadge } from "./OfficialBadge";
 import { PostImage } from "./PostImage";
 
@@ -17,27 +17,28 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
     <>
       <div className="relative">
         <PostImage src={post.primaryImageUrl} alt="" category={post.category} sizes={CARD_SIZES} eager={eager} />
-        {rank != null && (
-          <span
-            className={cn(
-              "absolute left-2 top-2 z-10 rounded-md px-1.5 py-0.5 text-[12px] font-extrabold tracking-tight text-white shadow-sm",
-              rank === 1 ? "bg-[#f0a500]" : rank === 2 ? "bg-[#8a94a6]" : rank === 3 ? "bg-[#b9773a]" : "bg-ink/75",
-            )}
-          >
-            {rank}위
-          </span>
-        )}
-        {ad && (
-          <span className="absolute left-2 top-2 z-10 rounded-md bg-ink/75 px-1.5 py-0.5 text-[11px] font-bold tracking-tight text-white backdrop-blur-sm">광고</span>
-        )}
+        <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
+          {rank != null && (
+            <span
+              className={cn(
+                "rounded-md px-1.5 py-0.5 text-[12px] font-extrabold tracking-tight text-white shadow-sm",
+                rank === 1 ? "bg-[#f0a500]" : rank === 2 ? "bg-[#8a94a6]" : rank === 3 ? "bg-[#b9773a]" : "bg-ink/75",
+              )}
+            >
+              {rank}위
+            </span>
+          )}
+          {ad && <span className="rounded-md bg-ink/75 px-1.5 py-0.5 text-[11px] font-bold tracking-tight text-white backdrop-blur-sm">광고</span>}
+          {isNewPost(post.publishedAt) && <span className="rounded-md bg-white/90 px-1.5 py-0.5 text-[11px] font-bold text-ink-2 shadow-sm">NEW</span>}
+          {post.region && !ad && (
+            <span className="inline-flex items-center gap-0.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[11.5px] font-bold text-ink-2 shadow-sm">
+              <MapPin size={11} aria-hidden />
+              {post.region}
+            </span>
+          )}
+        </div>
         {post.extra.official && <OfficialBadge value={post.extra.official} className="absolute right-2 top-2 z-10" />}
         {(post.extra.benefits?.length ?? 0) > 0 && <BenefitBadges values={post.extra.benefits} className="absolute bottom-2 left-2 z-10" />}
-        {post.region && !ad && (
-          <span className={cn("absolute left-2 inline-flex items-center gap-0.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[11.5px] font-bold text-ink-2 shadow-sm", rank != null ? "top-9" : "top-2")}>
-            <MapPin size={11} aria-hidden />
-            {post.region}
-          </span>
-        )}
         {post.price && (
           <span className="absolute bottom-2 right-2 rounded-md bg-ink/80 px-1.5 py-0.5 text-[11.5px] font-bold text-white backdrop-blur-sm">
             {post.price}
@@ -46,7 +47,6 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
       </div>
       <div className="flex flex-1 flex-col p-3">
         <h3 className="line-clamp-2 min-h-[2.7em] text-[14.5px] font-bold leading-[1.35] tracking-[-0.02em] text-ink group-hover:text-brand-dark">
-          <NewBadge publishedAt={post.publishedAt} className="mr-1" />
           {post.title}
         </h3>
         <p className="mt-1 line-clamp-1 text-[12.5px] text-muted">{post.shortDescription}</p>
