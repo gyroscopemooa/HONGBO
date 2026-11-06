@@ -68,6 +68,7 @@ export interface FormState {
   exclusiveUrl: string;
   surveyQuestions: SurveyQuestion[];
   surveyPayout: string;
+  surveyRewardText: string;
   links: Array<{ label: string; url: string }>;
   videoUrl: string;
   price: string;
@@ -104,7 +105,8 @@ const EMPTY: FormState = {
   exclusiveCode: "",
   exclusiveUrl: "",
   surveyQuestions: [],
-  surveyPayout: "none",
+  surveyPayout: "instant",
+  surveyRewardText: "",
   links: [],
   videoUrl: "",
   price: "",
@@ -157,7 +159,8 @@ export function postToFormState(p: Post): FormState {
     exclusiveCode: p.extra.exclusive?.code ?? "",
     exclusiveUrl: p.extra.exclusive?.url ?? "",
     surveyQuestions: p.extra.exclusive?.survey ?? [],
-    surveyPayout: p.extra.exclusive?.payout ?? "none",
+    surveyPayout: p.extra.exclusive?.payout ?? "instant",
+    surveyRewardText: p.extra.exclusive?.rewardText ?? "",
     links: p.extra.links ?? [],
     videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
     price: p.price ?? "",
@@ -200,6 +203,7 @@ function toPayload(f: FormState) {
       exclusiveUrl: f.exclusiveUrl,
       surveyQuestions: f.surveyQuestions,
       surveyPayout: f.surveyPayout,
+      surveyRewardText: f.surveyRewardText,
       links: f.links,
       businessUrl: f.businessUrl,
       videoUrl: f.videoUrl,
@@ -279,7 +283,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
     if (f.title.trim().length < 2) m.push("제목");
     if (f.shortDescription.trim().length < 2) m.push("한 줄 소개");
     if (f.description.trim().length < LIMITS.descMin) m.push("상세 설명");
-    if (f.exclusiveOn && (f.exclusiveReward.trim().length < 2 || (f.exclusiveMethod === "say" && f.exclusiveHow.trim().length < 2) || ((f.exclusiveMethod === "code" || (f.exclusiveMethod === "survey" && f.surveyPayout === "instant")) && !f.exclusiveCode.trim()) || (f.exclusiveMethod === "link" && !f.exclusiveUrl.trim()))) m.push("더홍보 전용 혜택 내용·받는 방법");
+    if (f.exclusiveOn && (f.exclusiveReward.trim().length < 2 || (f.exclusiveMethod === "say" && f.exclusiveHow.trim().length < 2) || (f.exclusiveMethod === "code" && !f.exclusiveCode.trim()) || (f.exclusiveMethod === "survey" && f.surveyPayout === "instant" && !f.surveyRewardText.trim() && !f.exclusiveUrl.trim()) || (f.exclusiveMethod === "link" && !f.exclusiveUrl.trim()))) m.push("더홍보 전용 혜택 내용·받는 방법");
     if (f.exclusiveOn && f.exclusiveMethod === "survey" && (f.surveyQuestions.length < 1 || f.surveyQuestions.length > SURVEY_MAX_QUESTIONS || f.surveyQuestions.some((q) => q.title.trim().length < 2 || (q.type === "choice" && (q.options ?? []).filter((o) => o.trim()).length < 2)))) m.push("설문 질문과 선택지");
     if (f.exclusiveOn && !f.exclusiveAgree) m.push("전용 이벤트 동의");
     if (f.category === "apps" && !f.playUrl.trim() && !f.appStoreUrl.trim() && !f.siteUrl.trim()) m.push("앱 링크");
@@ -776,9 +780,14 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                         </label>
                       ))}
                       {f.surveyPayout === "instant" && (
-                        <Field id="exclusiveCode" label="지급할 쿠폰 번호(코드)" required error={errors.exclusiveCode} hint="설문을 제출한 사람에게만 완료 화면에 보여줘요.">
-                          <input id="exclusiveCode" value={f.exclusiveCode} maxLength={EXCLUSIVE_CODE_MAX} onChange={(e) => set("exclusiveCode", e.target.value.replace(/\s/g, ""))} placeholder="예) THEHONGBO20" aria-invalid={!!errors.exclusiveCode} className="field font-mono" />
-                        </Field>
+                        <div className="space-y-3">
+                          <Field id="surveyRewardText" label="혜택 안내" optional hint="쿠폰 코드, 받는 방법 설명 등 자유롭게 적어주세요. 설문을 제출한 사람에게만 완료 화면에 보여줘요.">
+                            <textarea id="surveyRewardText" value={f.surveyRewardText} maxLength={300} rows={3} onChange={(e) => set("surveyRewardText", e.target.value)} placeholder="예) 쿠폰 코드 THEHONGBO20 · 결제 시 입력하세요" className="field resize-y" />
+                          </Field>
+                          <Field id="exclusiveUrl" label="혜택 링크" optional error={errors.exclusiveUrl} hint="혜택을 받을 페이지가 있으면 넣어주세요. 안내와 링크 중 하나는 꼭 필요해요.">
+                            <input id="exclusiveUrl" value={f.exclusiveUrl} onChange={(e) => set("exclusiveUrl", e.target.value)} placeholder="https://" aria-invalid={!!errors.exclusiveUrl} className="field" />
+                          </Field>
+                        </div>
                       )}
                       {f.surveyPayout === "draw" && <p className="text-xs leading-relaxed text-muted">참여자에게 이메일 또는 휴대폰 번호 입력란이 표시되고 수집 동의를 받아요. 연락처는 작성자와 관리자만 볼 수 있어요. 당첨자 선정과 지급은 업체 책임이에요.</p>}
                     </div>

@@ -8,8 +8,8 @@ export interface ExtraLink {
   url: string;
 }
 
-/** 설문 완료 후 혜택 지급 방식: instant=완료 화면에 코드 표시, draw=추첨(연락처 수집), none=혜택 없음 */
-export type SurveyPayout = "instant" | "draw" | "none";
+/** 설문 완료 후 혜택 지급 방식: instant=완료 화면에 안내 문구·링크 표시, draw=추첨(연락처 수집) */
+export type SurveyPayout = "instant" | "draw";
 
 /** 게시글에 포함되는 간단한 자체 설문 양식. 응답은 별도 비공개 테이블에 보관합니다. */
 export interface SurveyQuestion {
@@ -37,7 +37,7 @@ export interface PostExtra {
   /** 혜택 배지 값 (BENEFITS의 value) */
   benefits?: string[];
   /** 더홍보 전용 이벤트. reward=혜택 내용, how=받는 방법 */
-  exclusive?: { reward: string; how: string; method?: "say" | "code" | "link" | "survey"; code?: string; url?: string; survey?: SurveyQuestion[]; payout?: SurveyPayout };
+  exclusive?: { reward: string; how: string; method?: "say" | "code" | "link" | "survey"; code?: string; url?: string; survey?: SurveyQuestion[]; payout?: SurveyPayout; rewardText?: string };
   /** 운영자만 지정: official(더홍보 공식) | verified(더홍보 인증). 작성자 입력으로는 바뀌지 않음 */
   official?: "official" | "verified";
 }

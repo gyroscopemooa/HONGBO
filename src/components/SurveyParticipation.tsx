@@ -5,11 +5,11 @@ import { CheckCircle2, ClipboardList, LoaderCircle } from "lucide-react";
 import { submitSurveyAction } from "@/app/actions/survey";
 import type { SurveyPayout, SurveyQuestion } from "@/lib/types";
 
-export function SurveyParticipation({ postId, questions, payout = "none" }: { postId: number; questions: SurveyQuestion[]; payout?: SurveyPayout }) {
+export function SurveyParticipation({ postId, questions, payout }: { postId: number; questions: SurveyQuestion[]; payout?: SurveyPayout }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [contact, setContact] = useState("");
   const [agree, setAgree] = useState(false);
-  const [feedback, setFeedback] = useState<{ ok: boolean; message: string; rewardCode?: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ ok: boolean; message: string; reward?: { text?: string; url?: string } } | null>(null);
   const [pending, startTransition] = useTransition();
 
   const setAnswer = (id: string, value: string) => {
@@ -29,11 +29,14 @@ export function SurveyParticipation({ postId, questions, payout = "none" }: { po
       {feedback?.ok ? (
         <div role="status" className="rounded-xl bg-[#eef9ef] p-4 text-[14px] font-bold text-[#20723b]">
           <p className="flex items-center gap-2"><CheckCircle2 size={19} aria-hidden /> {feedback.message}</p>
-          {feedback.rewardCode && (
-            <p className="mt-3 text-[13px] font-semibold text-ink-2">
-              혜택 코드 <span className="ml-1 select-all rounded-md bg-white px-2.5 py-1 font-mono text-[15px] font-black text-ink">{feedback.rewardCode}</span>
-              <span className="mt-1.5 block text-xs font-normal text-muted">이 화면을 닫으면 다시 볼 수 없으니 지금 복사해 두세요.</span>
-            </p>
+          {feedback.reward && (
+            <div className="mt-3 rounded-lg bg-white p-3 text-[13.5px] font-semibold text-ink">
+              {feedback.reward.text && <p className="select-all whitespace-pre-wrap break-words">{feedback.reward.text}</p>}
+              {feedback.reward.url && (
+                <a href={feedback.reward.url} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-primary mt-2 w-full">혜택 링크 열기</a>
+              )}
+              <p className="mt-2 text-xs font-normal text-muted">이 화면을 닫으면 다시 볼 수 없으니 지금 확인해 두세요.</p>
+            </div>
           )}
           {payout === "draw" && <p className="mt-2 text-xs font-normal text-muted">당첨 시 입력하신 연락처로 업체가 직접 안내합니다.</p>}
         </div>

@@ -12,8 +12,8 @@ import { saveSurveyResponse, type SurveyAnswer } from "@/lib/survey-store";
 export interface SurveySubmitResult {
   ok: boolean;
   message: string;
-  /** 즉시 지급형: 제출 성공 시에만 내려주는 쿠폰 코드 */
-  rewardCode?: string;
+  /** 즉시 지급형: 제출 성공 시에만 내려주는 혜택 안내·링크 */
+  reward?: { text?: string; url?: string };
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -72,8 +72,10 @@ export async function submitSurveyAction(postId: number, raw: unknown, contact?:
     const result = await saveSurveyResponse(postId, anonId, user?.id ?? null, answers);
     if (result === "duplicate") return { ok: false, message: "이미 이 설문에 참여하셨어요. 한 번만 제출할 수 있어요." };
     revalidatePath(`/post/${postId}/survey-results`);
-    const rewardCode = exclusive.payout === "instant" ? exclusive.code : undefined;
-    return { ok: true, message: "설문 참여가 완료됐어요. 참여해 주셔서 감사합니다!", ...(rewardCode ? { rewardCode } : {}) };
+    const reward = exclusive.payout === "instant" && (exclusive.rewardText || exclusive.url)
+      ? { ...(exclusive.rewardText ? { text: exclusive.rewardText } : {}), ...(exclusive.url ? { url: exclusive.url } : {}) }
+      : undefined;
+    return { ok: true, message: "설문 참여가 완료됐어요. 참여해 주셔서 감사합니다!", ...(reward ? { reward } : {}) };
   } catch {
     return { ok: false, message: "응답을 저장하지 못했어요. 설문 설정을 확인하거나 잠시 후 다시 시도해주세요." };
   }
