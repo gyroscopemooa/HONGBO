@@ -8,7 +8,8 @@
     "AUTOPOST_ENABLED": "false",
     "USE_AI": "false",
     "MAX_POSTS_PER_DAY": "6",
-    "SITE_URL": "https://www.thehongbo.com"
+    "SITE_URL": "https://www.thehongbo.com",
+    "THREADS_EXPECTED_USERNAME": "iamthehongbo"
   },
   "observability": { "enabled": true }
 }
