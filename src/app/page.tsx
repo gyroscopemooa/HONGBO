@@ -15,11 +15,15 @@ import { PostCard } from "@/components/PostCard";
 import { PostRow } from "@/components/PostRow";
 import { PremiumGrid } from "@/components/PremiumGrid";
 import { PromoBanner } from "@/components/PromoBanner";
+import { HomeBoards } from "@/components/HomeBoards";
 import { RankList } from "@/components/RankList";
 import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, AD_PRICES, won } from "@/lib/ads";
 import { infl09ApplyUrl } from "@/lib/infl09";
 import { SITE } from "@/lib/constants";
+import { listCommunity } from "@/lib/community-store";
+import { listMeetup } from "@/lib/meetup-store";
 import { getHomeData } from "@/lib/queries";
+import { listReviews } from "@/lib/review-store";
 import { siteUrl } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -30,6 +34,12 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const { popular, latest, sideBanners, stripBanners, notices, premium, adBanners, exclusive } = await getHomeData();
+  // 하단 게시판 최신글: 어느 하나가 실패해도 홈 화면은 정상 표시합니다.
+  const [reviewBoard, communityBoard, meetupBoard] = await Promise.all([
+    listReviews({ pageSize: 5 }).catch(() => ({ items: [], total: 0 })),
+    listCommunity({ pageSize: 5 }).catch(() => ({ items: [], total: 0 })),
+    listMeetup({ pageSize: 5 }).catch(() => ({ items: [], total: 0 })),
+  ]);
 
   // 추천 영역(앞 3자리)에 나온 글은 배너에서 제외하고, 배너 자리가 남으면 최신 글로 채웁니다.
   const premiumAds = premium.slice(0, AD_PREMIUM_SLOTS);
@@ -178,7 +188,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <RankList posts={popular} limit={20} />
+        <RankList posts={popular} limit={22} />
 
         <aside aria-label="사이드" className="min-w-0 space-y-4">
           {sideBanners[0] && <PromoBanner banner={sideBanners[0]} className="min-h-[132px]" />}
@@ -188,6 +198,8 @@ export default async function HomePage() {
           <FeatureRequestBanner />
         </aside>
       </div>
+
+      <HomeBoards reviews={reviewBoard.items} community={communityBoard.items} meetup={meetupBoard.items} />
 
       <HomeFaq />
     </>
