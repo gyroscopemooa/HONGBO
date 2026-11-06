@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check, Crown, GalleryHorizontal } from "lucide-react";
+import { Crown, GalleryHorizontal } from "lucide-react";
 import { requestAdAction } from "@/app/actions/ads";
 import { AdRequestForm } from "@/components/AdRequestForm";
 import { AD_BANK, AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PAY_DAYS, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, adPrice, depositorName, won } from "@/lib/ads";

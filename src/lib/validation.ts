@@ -9,6 +9,10 @@ import {
   EXCLUSIVE_REWARD_MAX,
   type ExclusiveMethod,
   EXCLUSIVE_SLUG,
+  SURVEY_MAX_QUESTIONS,
+  SURVEY_MAX_OPTIONS,
+  SURVEY_QUESTION_MAX,
+  SURVEY_OPTION_MAX,
   EXTRA_LINK_LABEL_MAX,
   EXTRA_LINK_MAX,
   CATEGORY_SLUGS,
@@ -19,7 +23,7 @@ import {
 } from "./constants";
 import { parseYoutubeId } from "./youtube";
 import { findBannedKeyword, inferRegion, isRegion } from "./policy";
-import type { PostExtra, PostInput } from "./types";
+import type { PostExtra, PostInput, SurveyQuestion } from "./types";
 import { isAllowedImageUrl, isMapUrl, normalizeExternalUrl } from "./url";
 
 const str = (max: number) => z.string().max(max).optional().nullable();
@@ -55,6 +59,13 @@ const rawSchema = z.object({
       exclusiveMethod: str(20),
       exclusiveCode: str(200),
       exclusiveUrl: str(2100),
+      surveyQuestions: z.array(z.object({
+        id: z.string().max(64),
+        title: z.string().max(200),
+        type: z.enum(["choice", "text"]),
+        required: z.boolean(),
+        options: z.array(z.string().max(100)).max(10).optional(),
+      })).max(10).optional(),
       businessUrl: str(2100),
       videoUrl: str(2100),
       links: z.array(z.object({ label: z.string().max(100), url: z.string().max(2100) })).max(20).default(() => []),
@@ -157,9 +168,38 @@ export function parsePostInput(raw: unknown): ParseResult {
       if (!r.ok) errors.exclusiveUrl = r.error ?? "전용 링크를 입력해주세요.";
       else exUrl = r.url;
     }
+    let survey: SurveyQuestion[] | undefined;
+    if (method === "survey") {
+      const submitted = v.extra.surveyQuestions ?? [];
+      if (!submitted.length || submitted.length > SURVEY_MAX_QUESTIONS) {
+        errors.exclusiveSurvey = `설문 질문은 1~${SURVEY_MAX_QUESTIONS}개 작성해주세요.`;
+      } else {
+        const ids = new Set<string>();
+        const parsed: SurveyQuestion[] = [];
+        for (const q of submitted) {
+          const title = q.title.replace(/\s+/g, " ").trim();
+          if (!/^[a-zA-Z0-9_-]{1,64}$/.test(q.id) || ids.has(q.id) || title.length < 2 || title.length > SURVEY_QUESTION_MAX) {
+            errors.exclusiveSurvey = "각 질문은 2~100자로 작성하고, 중복되지 않는 질문 ID를 사용해주세요.";
+            break;
+          }
+          ids.add(q.id);
+          if (q.type === "choice") {
+            const options = (q.options ?? []).map((o) => o.replace(/\s+/g, " ").trim());
+            if (options.length < 2 || options.length > SURVEY_MAX_OPTIONS || options.some((o) => !o || o.length > SURVEY_OPTION_MAX) || new Set(options).size !== options.length) {
+              errors.exclusiveSurvey = `객관식 선택지는 2~${SURVEY_MAX_OPTIONS}개, 각각 ${SURVEY_OPTION_MAX}자 이내로 서로 다르게 작성해주세요.`;
+              break;
+            }
+            parsed.push({ id: q.id, title, type: "choice", required: q.required, options });
+          } else {
+            parsed.push({ id: q.id, title, type: "text", required: q.required });
+          }
+        }
+        if (!errors.exclusiveSurvey) survey = parsed;
+      }
+    }
     if (!v.extra.exclusiveAgree) errors.exclusiveAgree = "전용 이벤트 안내에 동의해주세요.";
-    if (!errors.exclusiveReward && !errors.exclusiveHow && !errors.exclusiveCode && !errors.exclusiveUrl && !errors.exclusiveAgree) {
-      extra.exclusive = { reward, how, method, ...(code ? { code } : {}), ...(exUrl ? { url: exUrl } : {}) };
+    if (!errors.exclusiveReward && !errors.exclusiveHow && !errors.exclusiveCode && !errors.exclusiveUrl && !errors.exclusiveSurvey && !errors.exclusiveAgree) {
+      extra.exclusive = { reward, how, method, ...(code ? { code } : {}), ...(exUrl ? { url: exUrl } : {}), ...(survey ? { survey } : {}) };
       benefitsFinal.push(EXCLUSIVE_SLUG);
     }
   }
@@ -247,7 +287,7 @@ export function parsePostInput(raw: unknown): ParseResult {
       break;
     }
     case "events": {
-      externalUrl = linkField("externalUrl", v.externalUrl, true);
+      externalUrl = linkField("externalUrl", v.externalUrl, !(v.extra.exclusiveOn && v.extra.exclusiveMethod === "survey"));
       const period = blankToNull(v.extra.period);
       if (period) extra.period = period.slice(0, 80);
       break;
@@ -312,12 +352,12 @@ export function parsePostInput(raw: unknown): ParseResult {
   if (contact && contact.length > LIMITS.contactMax) errors.contact = `연락처는 ${LIMITS.contactMax}자까지 입력할 수 있어요.`;
 
   // --- 금지 키워드 ---
-  const banned = findBannedKeyword(title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "");
+  const banned = findBannedKeyword(title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
   if (banned) {
     errors.description = "운영정책상 등록할 수 없는 내용이 포함되어 있어요. 내용을 확인해주세요.";
   }
 
-  const linkOptional = category === "quick";
+  const linkOptional = category === "quick" || (category === "events" && extra.exclusive?.method === "survey");
   if (Object.keys(errors).length > 0 || (!externalUrl && !linkOptional)) {
     if (!externalUrl && !linkOptional && !errors.externalUrl && !errors.playUrl && !errors.mapUrl && !errors.businessUrl) {
       errors.externalUrl = "링크를 입력해주세요.";

@@ -8,6 +8,15 @@ export interface ExtraLink {
   url: string;
 }
 
+/** 게시글에 포함되는 간단한 자체 설문 양식. 응답은 별도 비공개 테이블에 보관합니다. */
+export interface SurveyQuestion {
+  id: string;
+  title: string;
+  type: "choice" | "text";
+  required: boolean;
+  options?: string[];
+}
+
 export interface PostExtra {
   /** 추가 링크(이벤트 참여, 쿠폰 받기 등). 상세 페이지에서 버튼으로 보여줍니다. */
   links?: ExtraLink[];
@@ -25,7 +34,7 @@ export interface PostExtra {
   /** 혜택 배지 값 (BENEFITS의 value) */
   benefits?: string[];
   /** 더홍보 전용 이벤트. reward=혜택 내용, how=받는 방법 */
-  exclusive?: { reward: string; how: string; method?: "say" | "code" | "link"; code?: string; url?: string };
+  exclusive?: { reward: string; how: string; method?: "say" | "code" | "link" | "survey"; code?: string; url?: string; survey?: SurveyQuestion[] };
   /** 운영자만 지정: official(더홍보 공식) | verified(더홍보 인증). 작성자 입력으로는 바뀌지 않음 */
   official?: "official" | "verified";
 }

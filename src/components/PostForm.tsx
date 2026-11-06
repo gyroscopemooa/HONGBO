@@ -16,6 +16,10 @@ import {
   EXCLUSIVE_METHODS,
   EXCLUSIVE_REWARD_MAX,
   EXCLUSIVE_SLUG,
+  SURVEY_MAX_QUESTIONS,
+  SURVEY_MAX_OPTIONS,
+  SURVEY_QUESTION_MAX,
+  SURVEY_OPTION_MAX,
   EXTRA_LINK_LABEL_MAX,
   EXTRA_LINK_MAX,
   EXTRA_LINK_PRESETS,
@@ -28,7 +32,7 @@ import {
 } from "@/lib/constants";
 import { inferRegion } from "@/lib/policy";
 import { youtubeWatchUrl } from "@/lib/youtube";
-import type { Post } from "@/lib/types";
+import type { Post, SurveyQuestion } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "./CategoryIcon";
 import { Field, ImageSlot, LinkInput, TagInput, importRemoteImage } from "./form/parts";
@@ -61,6 +65,7 @@ export interface FormState {
   exclusiveMethod: string;
   exclusiveCode: string;
   exclusiveUrl: string;
+  surveyQuestions: SurveyQuestion[];
   links: Array<{ label: string; url: string }>;
   videoUrl: string;
   price: string;
@@ -96,6 +101,7 @@ const EMPTY: FormState = {
   exclusiveMethod: "say",
   exclusiveCode: "",
   exclusiveUrl: "",
+  surveyQuestions: [],
   links: [],
   videoUrl: "",
   price: "",
@@ -147,6 +153,7 @@ export function postToFormState(p: Post): FormState {
     exclusiveMethod: p.extra.exclusive?.method ?? "say",
     exclusiveCode: p.extra.exclusive?.code ?? "",
     exclusiveUrl: p.extra.exclusive?.url ?? "",
+    surveyQuestions: p.extra.exclusive?.survey ?? [],
     links: p.extra.links ?? [],
     videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
     price: p.price ?? "",
@@ -187,6 +194,7 @@ function toPayload(f: FormState) {
       exclusiveMethod: f.exclusiveMethod,
       exclusiveCode: f.exclusiveCode,
       exclusiveUrl: f.exclusiveUrl,
+      surveyQuestions: f.surveyQuestions,
       links: f.links,
       businessUrl: f.businessUrl,
       videoUrl: f.videoUrl,
@@ -267,10 +275,11 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
     if (f.shortDescription.trim().length < 2) m.push("한 줄 소개");
     if (f.description.trim().length < LIMITS.descMin) m.push("상세 설명");
     if (f.exclusiveOn && (f.exclusiveReward.trim().length < 2 || (f.exclusiveMethod === "say" && f.exclusiveHow.trim().length < 2) || (f.exclusiveMethod === "code" && !f.exclusiveCode.trim()) || (f.exclusiveMethod === "link" && !f.exclusiveUrl.trim()))) m.push("더홍보 전용 혜택 내용·받는 방법");
+    if (f.exclusiveOn && f.exclusiveMethod === "survey" && (f.surveyQuestions.length < 1 || f.surveyQuestions.length > SURVEY_MAX_QUESTIONS || f.surveyQuestions.some((q) => q.title.trim().length < 2 || (q.type === "choice" && (q.options ?? []).filter((o) => o.trim()).length < 2)))) m.push("설문 질문과 선택지");
     if (f.exclusiveOn && !f.exclusiveAgree) m.push("전용 이벤트 동의");
     if (f.category === "apps" && !f.playUrl.trim() && !f.appStoreUrl.trim() && !f.siteUrl.trim()) m.push("앱 링크");
     else if (f.category === "offline" && !f.mapUrl.trim() && !f.businessUrl.trim()) m.push("지도/문의 링크");
-    else if (f.category && f.category !== "apps" && f.category !== "offline" && f.category !== "quick" && !f.externalUrl.trim()) m.push("링크");
+    else if (f.category && f.category !== "apps" && f.category !== "offline" && f.category !== "quick" && !(f.category === "events" && f.exclusiveOn && f.exclusiveMethod === "survey") && !f.externalUrl.trim()) m.push("링크");
     return m;
   }, [f]);
 
@@ -657,14 +666,19 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                   <input id="exclusiveReward" value={f.exclusiveReward} maxLength={EXCLUSIVE_REWARD_MAX + 10} onChange={(e) => set("exclusiveReward", e.target.value)} placeholder="예) 아메리카노 1잔 무료 · 첫 달 20% 할인 · 프리미엄 7일 체험" aria-invalid={!!errors.exclusiveReward} className="field" />
                 </Field>
                 <Field id="exclusiveMethod" label="어떻게 받나요?" required>
-                  <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="받는 방식">
+                  <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="받는 방식">
                     {EXCLUSIVE_METHODS.map((m) => (
                       <button
                         key={m.value}
                         type="button"
                         role="radio"
                         aria-checked={f.exclusiveMethod === m.value}
-                        onClick={() => set("exclusiveMethod", m.value)}
+                        onClick={() => {
+                           set("exclusiveMethod", m.value);
+                           if (m.value === "survey" && !f.surveyQuestions.length) {
+                             set("surveyQuestions", [{ id: crypto.randomUUID(), title: "", type: "choice", required: true, options: ["", ""] }]);
+                           }
+                         }}
                         className={cn("rounded-xl border-2 px-3 py-2.5 text-left transition", f.exclusiveMethod === m.value ? "border-[#d98e04] bg-white" : "border-line bg-white/60 hover:border-[#f0c15a]")}
                       >
                         <span className="block text-[14px] font-bold">{m.label}</span>
@@ -679,12 +693,79 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                   </Field>
                 )}
                 {f.exclusiveMethod === "link" && (
-                  <Field id="exclusiveUrl" label="더홍보 전용 링크" required error={errors.exclusiveUrl} hint="전용 설문·이벤트 페이지·전용 가입 링크 등. 접속 시 자동으로 더홍보 유입 표시(utm_source=thehongbo)가 붙어요.">
+                  <Field id="exclusiveUrl" label="외부 이벤트 링크" required error={errors.exclusiveUrl} hint="외부 이벤트·신청 페이지 주소입니다. 더홍보 유입 표시(utm_source=thehongbo)를 붙이지만, 외부 페이지의 응답 결과는 수집하지 않아요.">
                     <input id="exclusiveUrl" value={f.exclusiveUrl} onChange={(e) => set("exclusiveUrl", e.target.value)} inputMode="url" placeholder="https://" aria-invalid={!!errors.exclusiveUrl} className="field" />
                   </Field>
                 )}
+                {f.exclusiveMethod === "survey" && (
+                  <div data-field="exclusiveSurvey" className="space-y-3 rounded-xl border border-[#edcd82] bg-white p-3 sm:p-4">
+                    <div>
+                      <p className="text-[14px] font-extrabold">더홍보 자체 설문 만들기</p>
+                      <p className="mt-1 text-[12.5px] leading-relaxed text-muted">방문자가 홍보글 안에서 답변해요. 결과는 작성자와 관리자만 확인할 수 있어요. 개인정보나 연락처를 요청하는 질문은 넣지 마세요.</p>
+                    </div>
+                    {f.surveyQuestions.map((q, index) => (
+                      <div key={q.id} className="space-y-2 rounded-xl border border-line bg-soft/50 p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[13px] font-extrabold">질문 {index + 1}</span>
+                          <button type="button" className="text-xs font-semibold text-muted hover:text-brand" onClick={() => set("surveyQuestions", f.surveyQuestions.filter((item) => item.id !== q.id))}>질문 삭제</button>
+                        </div>
+                        <input
+                          value={q.title}
+                          maxLength={SURVEY_QUESTION_MAX}
+                          aria-label={`설문 질문 ${index + 1}`}
+                          placeholder="예) 더홍보를 어떻게 알게 되었나요?"
+                          className="field"
+                          onChange={(e) => set("surveyQuestions", f.surveyQuestions.map((item) => item.id === q.id ? { ...item, title: e.target.value } : item))}
+                        />
+                        <div className="flex flex-wrap items-center gap-3">
+                          <select
+                            value={q.type}
+                            className="field max-w-[160px]"
+                            aria-label={`질문 ${index + 1} 답변 유형`}
+                            onChange={(e) => {
+                              const type = e.target.value as SurveyQuestion["type"];
+                              set("surveyQuestions", f.surveyQuestions.map((item) => item.id === q.id ? { ...item, type, options: type === "choice" ? (item.options?.length ? item.options : ["", ""]) : undefined } : item));
+                            }}
+                          >
+                            <option value="choice">객관식 (단일선택)</option>
+                            <option value="text">주관식 (단답형)</option>
+                          </select>
+                          <label className="flex items-center gap-1.5 text-[13px]">
+                            <input type="checkbox" checked={q.required} onChange={(e) => set("surveyQuestions", f.surveyQuestions.map((item) => item.id === q.id ? { ...item, required: e.target.checked } : item))} />
+                            필수 응답
+                          </label>
+                        </div>
+                        {q.type === "choice" && (
+                          <div className="space-y-2 pl-2">
+                            {(q.options ?? []).map((option, optIndex) => (
+                              <div key={optIndex} className="flex items-center gap-2">
+                                <span className="text-[12px] text-muted">{optIndex + 1}.</span>
+                                <input
+                                  className="field"
+                                  aria-label={`질문 ${index + 1} 선택지 ${optIndex + 1}`}
+                                  value={option}
+                                  maxLength={SURVEY_OPTION_MAX}
+                                  placeholder="선택지 입력"
+                                  onChange={(e) => set("surveyQuestions", f.surveyQuestions.map((item) => item.id === q.id ? { ...item, options: (item.options ?? []).map((o, i) => i === optIndex ? e.target.value : o) } : item))}
+                                />
+                                {(q.options ?? []).length > 2 && <button type="button" aria-label={`선택지 ${optIndex + 1} 삭제`} onClick={() => set("surveyQuestions", f.surveyQuestions.map((item) => item.id === q.id ? { ...item, options: (item.options ?? []).filter((_, i) => i !== optIndex) } : item))}><X size={16} /></button>}
+                              </div>
+                            ))}
+                            {(q.options ?? []).length < SURVEY_MAX_OPTIONS && <button type="button" className="text-[13px] font-bold text-brand" onClick={() => set("surveyQuestions", f.surveyQuestions.map((item) => item.id === q.id ? { ...item, options: [...(item.options ?? []), ""] } : item))}>+ 선택지 추가</button>}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {f.surveyQuestions.length < SURVEY_MAX_QUESTIONS && (
+                      <button type="button" className="btn btn-outline" onClick={() => set("surveyQuestions", [...f.surveyQuestions, { id: crypto.randomUUID(), title: "", type: "choice", required: true, options: ["", ""] }])}>
+                        <Plus size={15} /> 질문 추가 (최대 {SURVEY_MAX_QUESTIONS}개)
+                      </button>
+                    )}
+                    {errors.exclusiveSurvey && <p role="alert" className="text-[13px] font-medium text-brand-dark">{errors.exclusiveSurvey}</p>}
+                  </div>
+                )}
                 <Field id="exclusiveHow" label={f.exclusiveMethod === "say" ? "받는 방법" : "안내 문구"} required={f.exclusiveMethod === "say"} optional={f.exclusiveMethod !== "say"} error={errors.exclusiveHow} counter={{ now: f.exclusiveHow.length, max: EXCLUSIVE_HOW_MAX }}>
-                  <input id="exclusiveHow" value={f.exclusiveHow} maxLength={EXCLUSIVE_HOW_MAX + 10} onChange={(e) => set("exclusiveHow", e.target.value)} placeholder={f.exclusiveMethod === "say" ? "예) 주문 시 '더홍보 보고 왔어요'라고 말씀하세요" : f.exclusiveMethod === "code" ? "예) 결제 화면에서 쿠폰 코드 입력란에 넣어주세요" : "예) 링크로 접속해 설문 참여 시 쿠폰 지급"} aria-invalid={!!errors.exclusiveHow} className="field" />
+                  <input id="exclusiveHow" value={f.exclusiveHow} maxLength={EXCLUSIVE_HOW_MAX + 10} onChange={(e) => set("exclusiveHow", e.target.value)} placeholder={f.exclusiveMethod === "say" ? "예) 주문 시 '더홍보 보고 왔어요'라고 말씀하세요" : f.exclusiveMethod === "code" ? "예) 결제 화면에서 쿠폰 코드 입력란에 넣어주세요" : f.exclusiveMethod === "survey" ? "예) 설문 완료 후 업체에서 혜택을 안내합니다" : "예) 외부 링크를 누르면 이벤트 페이지로 이동합니다"} aria-invalid={!!errors.exclusiveHow} className="field" />
                 </Field>
 
                 <div data-field="exclusiveAgree">

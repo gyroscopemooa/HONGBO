@@ -14,6 +14,7 @@ function GroupMenu({ label, pathname, items, linkCls }: { label: string; pathnam
   const ref = useRef<HTMLDivElement>(null);
   const active = items.some(([href]) => pathname.startsWith(href));
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- 경로 변경 시 메뉴 닫기
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     if (!open) return;

@@ -285,9 +285,15 @@ export const EXCLUSIVE_CODE_MAX = 40;
 export const EXCLUSIVE_METHODS = [
   { value: "say", label: "말로 알리기", hint: "가게·오프라인용. 방문 시 \"더홍보 보고 왔어요\"라고 말하면 제공" },
   { value: "code", label: "쿠폰·코드", hint: "사이트·서비스용. 쿠폰 번호를 보여주고 복사할 수 있어요" },
-  { value: "link", label: "전용 링크", hint: "앱·설문·전용 페이지용. 더홍보에서 온 방문임을 알 수 있어요" },
+  { value: "link", label: "외부 링크", hint: "외부 이벤트·신청 페이지로 연결해요. 설문 응답은 더홍보에 저장되지 않아요" },
+  { value: "survey", label: "더홍보 설문", hint: "더홍보 안에서 설문을 받고, 내 홍보글에서 결과를 확인해요" },
 ] as const;
 export type ExclusiveMethod = (typeof EXCLUSIVE_METHODS)[number]["value"];
+export const SURVEY_MAX_QUESTIONS = 5;
+export const SURVEY_MAX_OPTIONS = 6;
+export const SURVEY_QUESTION_MAX = 100;
+export const SURVEY_OPTION_MAX = 60;
+export const SURVEY_ANSWER_MAX = 500;
 /** 더홍보 전용 링크에 자동으로 붙는 유입 표시 */
 export function withExclusiveRef(url: string): string {
   try {

@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NOTICE_KINDS, parseNoticeTitle, type NoticeKind } from "@/lib/notice";
 import type { Notice } from "@/lib/types";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, isWithinWeek } from "@/lib/utils";
 
 const KIND_STYLE: Record<NoticeKind, string> = {
   공지: "bg-brand-soft text-brand-dark",
@@ -19,6 +19,7 @@ export function NoticeAccordion({ notices }: { notices: Notice[] }) {
 
   useEffect(() => {
     const m = window.location.hash.match(/^#n-(\d+)$/);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 해시 앵커로 공지 열기(마운트 후에만 접근 가능)
     if (m) setOpen(Number(m[1]));
   }, []);
 
@@ -45,7 +46,7 @@ export function NoticeAccordion({ notices }: { notices: Notice[] }) {
         <ul className="divide-y divide-line rounded-2xl border border-line bg-white">
           {items.map(({ n, kind: k, title }) => {
             const isOpen = open === n.id;
-            const recent = Date.now() - new Date(n.publishedAt).getTime() < 7 * 86_400_000;
+            const recent = isWithinWeek(n.publishedAt);
             return (
               <li key={n.id} id={`n-${n.id}`} className="scroll-mt-28">
                 <button

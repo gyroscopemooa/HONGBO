@@ -65,3 +65,8 @@ export function siteUrl(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://www.thehongbo.com";
   return raw.replace(/\/+$/, "");
 }
+
+/** 최근 7일 이내 등록 여부 (렌더 순수성 규칙을 피하려고 헬퍼로 분리) */
+export function isWithinWeek(iso: string | Date): boolean {
+  return Date.now() - new Date(iso).getTime() < 7 * 86_400_000;
+}
