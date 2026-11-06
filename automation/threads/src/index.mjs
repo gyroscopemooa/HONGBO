@@ -1,7 +1,7 @@
 // Standalone Cloudflare Worker, intentionally not imported by the Next.js site.
 // Default AUTOPOST_ENABLED=false prevents publication without explicit setup.
 
-const MAX_THREADS_CHARS = 450; // conservative headroom vs Threads' 500-char cap
+const MAX_THREADS_CHARS = 430; // conservative headroom vs Threads' 500-char limit, including emoji
 const THREADS_API = "https://graph.threads.net/v1.0";
 
 function clean(value) {
@@ -28,7 +28,7 @@ function clipped(value, max) {
   const chars = Array.from(clean(value));
   let out = "";
   for (const c of chars) {
-    if (weightedLength(out + c) > max) return out.slice(0, -1) + "…";
+    if (weightedLength(out + c) > max) return Array.from(out).slice(0, -1).join("") + "…";
     out += c;
   }
   return out;
@@ -63,7 +63,7 @@ export function formatPromo(post, siteUrl, suggestedBody = "") {
   const opener = id % 5 === 0
     ? OPENERS[Math.abs(Math.floor(id / 5)) % OPENERS.length] + "\n\n"
     : "";
-  const title = "📢 " + clipped(post.title, 120) + "\n\n";
+  const title = "📢 " + clipped(cleanedPublicExcerpt(post.title), 120) + "\n\n";
   const closer = "\n\n🔎 원문 보기: " + link +
     "\n\n" + SIGNOFFS[Math.abs(id) % SIGNOFFS.length] +
     "\n무료 홍보는 더홍보에서! #더홍보";
