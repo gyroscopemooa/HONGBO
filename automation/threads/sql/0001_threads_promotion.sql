@@ -40,7 +40,6 @@ begin
   if (
     select count(*) from public.threads_promotion_jobs
     where claimed_at >= now() - interval '24 hours'
-      and status in ('processing','published')
   ) >= greatest(1, least(coalesce(p_max_daily, 6), 20)) then
     return;
   end if;
