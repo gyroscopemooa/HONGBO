@@ -7,10 +7,31 @@ const THREADS_API = "https://graph.threads.net/v1.0";
 function clean(value) {
   return String(value ?? "").replace(/\s+/g, " ").trim();
 }
+function cleanedPublicExcerpt(value) {
+  // Do not amplify private contact details or arbitrary third-party links from user-generated copy.
+  return clean(value)
+    .replace(/https?:\/\/[^\s]+/gi, "[원문 링크에서 확인]")
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[연락처는 원문 참고]")
+    .replace(/(?:\+?82[- ]?0?|0)1[016789][- ]?\d{3,4}[- ]?\d{4}/g, "[연락처는 원문 참고]");
+}
+function weightedLength(value) {
+  // Threads counts complex emoji more heavily than ordinary text. This is conservative.
+  let count = 0;
+  for (const c of String(value ?? "")) {
+    count += (/\p{Extended_Pictographic}|\p{Emoji_Modifier}|\uFE0F|\u200D/u.test(c))
+      ? new TextEncoder().encode(c).length : 1;
+  }
+  return count;
+}
 function clipped(value, max) {
   if (max <= 0) return "";
   const chars = Array.from(clean(value));
-  return chars.length > max ? chars.slice(0, Math.max(0, max - 1)).join("") + "…" : chars.join("");
+  let out = "";
+  for (const c of chars) {
+    if (weightedLength(out + c) > max) return out.slice(0, -1) + "…";
+    out += c;
+  }
+  return out;
 }
 function joinUrl(base, postId) {
   return base.replace(/\/+$/, "") + "/post/" + encodeURIComponent(String(postId));
@@ -46,12 +67,12 @@ export function formatPromo(post, siteUrl, suggestedBody = "") {
   const closer = "\n\n🔎 원문 보기: " + link +
     "\n\n" + SIGNOFFS[Math.abs(id) % SIGNOFFS.length] +
     "\n무료 홍보는 더홍보에서! #더홍보";
-  const room = Math.max(0, MAX_THREADS_CHARS - Array.from(opener + title + closer).length);
-  const source = clean(post.short_description) || clean(post.description) || "새로운 홍보 소식이 등록됐어요.";
+  const room = Math.max(0, MAX_THREADS_CHARS - weightedLength(opener + title + closer));
+  const source = cleanedPublicExcerpt(post.short_description) || cleanedPublicExcerpt(post.description) || "새로운 홍보 소식이 등록됐어요.";
   // Original source wins; AI is a supplementary, short social-friendly teaser.
   const sourceText = clipped(source, Math.min(230, room));
-  const ai = clean(suggestedBody);
-  const remaining = room - Array.from(sourceText).length - (ai ? 2 : 0);
+  const ai = cleanedPublicExcerpt(suggestedBody);
+  const remaining = room - weightedLength(sourceText) - (ai ? 2 : 0);
   const teaser = remaining > 12 && ai && ai !== sourceText
     ? "\n\n" + clipped(ai, Math.min(100, remaining))
     : "";
@@ -75,7 +96,7 @@ async function supabaseRpc(env, rpcName, body) {
 
 async function optionalAiCopy(env, post) {
   if (env.USE_AI !== "true" || !env.OPENAI_API_KEY) return "";
-  const source = [clean(post.short_description), clipped(post.description, 1400)].filter(Boolean).join("\n");
+  const source = [cleanedPublicExcerpt(post.short_description), clipped(cleanedPublicExcerpt(post.description), 1400)].filter(Boolean).join("\n");
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -102,6 +123,20 @@ async function optionalAiCopy(env, post) {
   if (!response.ok) throw new Error("AI HTTP " + response.status);
   const data = await response.json();
   return clean(data?.choices?.[0]?.message?.content);
+}
+
+async function ensureCorrectThreadsProfile(env) {
+  const response = await fetch(THREADS_API + "/me?fields=id,username", {
+    headers: { "Authorization": "Bearer " + env.THREADS_ACCESS_TOKEN },
+    signal: AbortSignal.timeout(12000)
+  });
+  if (!response.ok) throw new Error("Threads profile verification HTTP " + response.status);
+  const profile = await response.json();
+  const expected = String(env.THREADS_EXPECTED_USERNAME || "iamthehongbo").replace(/^@/, "").toLowerCase();
+  if (String(profile?.username || "").toLowerCase() !== expected) {
+    throw new Error("Threads profile mismatch; expected @" + expected +
+      ", got @" + String(profile?.username || "unknown"));
+  }
 }
 
 async function publishThreads(env, text, link) {
@@ -148,7 +183,7 @@ export async function runOnce(env) {
     catch (error) { console.warn("AI drafting failed; fallback copy used", String(error)); }
 
     draft = formatPromo(post, env.SITE_URL || "https://www.thehongbo.com", aiBody);
-    const threadId = await publishThreads(env, draft, joinUrl(env.SITE_URL || "https://www.thehongbo.com", post.post_id));
+    await ensureCorrectThreadsProfile(env);\n    const threadId = await publishThreads(env, draft, joinUrl(env.SITE_URL || "https://www.thehongbo.com", post.post_id));
     await supabaseRpc(env, "threads_finish_job", {
       p_post_id: post.post_id, p_status: "published",
       p_draft_text: draft, p_threads_id: threadId, p_error_message: null
