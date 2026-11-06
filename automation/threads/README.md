@@ -9,7 +9,9 @@
 - 10종의 서로 다른 유머 마무리 문구를 게시글 ID에 따라 순환합니다. 약 5개 중 1개는 가벼운 인사말로 시작하되 대다수는 바로 원문 소개로 시작합니다. 재시도해도 문구가 바뀌지 않습니다.
 - `USE_AI=false`면 비용 없는 원문 기반 템플릿, `USE_AI=true`면 OpenAI API로 홍보 문장을 재작성합니다.
 - 최초 시작 시각 이후의 글만 처리하고, 초기 샘플 글(`is_seed=true`)은 제외합니다.
-- 게시글별 1회만 예약하고, 24시간 최대 발행 수를 제한합니다. 애매한 API 오류는 재시도하지 않고 `review`로 남깁니다.
+- 게시글별 1회만 예약하고, 24시간 최대 발행 시도 수를 제한합니다. 애매한 API 오류는 재시도하지 않고 `review`로 남깁니다.
+- 발행 직전 공식 Threads API로 로그인된 프로필의 사용자 이름이 `@iamthehongbo`와 정확히 일치하는지 확인합니다. 개인 계정으로 연결되면 발행을 차단합니다.
+- 원문에 휴대전화 번호·이메일·외부 링크가 있으면 Threads 재게시용 요약에서는 가리고, 원문 링크로 안내합니다.
 
 ## SNS 문구 예시 (모두 가상의 게시글)
 
@@ -55,6 +57,7 @@ npx wrangler deploy
 | `AUTOPOST_ENABLED` | `false` | 모든 준비가 끝나면 `true` |
 | `THREADS_START_AT` | `2026-11-07T09:00:00+09:00` | 첫 활성화한 시점부터 시작, 과거글 일괄 재게시 방지. **실제 활성화 시각으로 설정** |
 | `SITE_URL` | `https://www.thehongbo.com` | 글 링크 |
+| `THREADS_EXPECTED_USERNAME` | `iamthehongbo` | 연결한 Threads 계정 검사 |
 | `MAX_POSTS_PER_DAY` | `6` | 하루 최대 1~20개 |
 | `USE_AI` | `false` | AI 문구 재작성 선택 |
 | `OPENAI_MODEL` | `gpt-4.1-mini` | AI 모델 선택 |
@@ -75,6 +78,10 @@ npx wrangler deploy
 3. 발행 시작 시각을 미래 현재 시각으로 입력. 실제 신규 글 하나로 검증.
 4. Worker 로그와 `select * from public.threads_promotion_jobs order by claimed_at desc;`로 확인.
 5. 실패하면 `review` 기록을 확인하고 수동 조치. 불확실한 발행을 자동 재전송하지 않습니다.
+
+## GitHub에서 사전 점검
+
+별도 패키지 설치 없이 Node 22 기준으로 `node --test automation/threads/test/*.test.mjs` 로 문구 생성 테스트를 할 수 있습니다. PR에서 자동 검사 워크플로도 준비했습니다. 실제 외부 API 호출이나 발행을 확인하는 테스트는 아닙니다.
 
 ## 현재 초안의 한계
 
