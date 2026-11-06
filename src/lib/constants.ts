@@ -128,10 +128,10 @@ export const CATEGORIES: CategoryInfo[] = [
   },
   {
     slug: "events",
-    name: "이벤트/모집",
-    short: "이벤트·모집",
+    name: "모집",
+    short: "모집",
     cta: "참여/신청하기",
-    desc: "이벤트, 체험단, 베타테스터, 팀원 모집 소식을 전하세요.",
+    desc: "체험단, 베타테스터, 팀원, 참여자 모집 소식을 전하세요.",
     color: "#e5484d",
     tint: "#ffecec",
     defaultImage: "/defaults/events.svg",

@@ -28,7 +28,7 @@ export interface PostExtra {
   siteUrl?: string;
   /** 서비스: online | offline | mixed */
   usageType?: string;
-  /** 이벤트/모집 기간 (자유 텍스트) */
+  /** 모집 기간 (자유 텍스트) */
   period?: string;
   /** 오프라인 가게: 영업/문의 링크 */
   businessUrl?: string;
