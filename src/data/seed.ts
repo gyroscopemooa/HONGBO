@@ -421,7 +421,7 @@ export const SEED_POSTS: SeedPost[] = [
     palette: 2,
   },
 
-  // ───────── 이벤트/모집 ─────────
+  // ───────── 모집 ─────────
   {
     id: 31,
     category: "events",
