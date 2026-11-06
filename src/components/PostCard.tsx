@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Eye, MapPin } from "lucide-react";
+import { Eye, MapPin, ThumbsUp } from "lucide-react";
 import { LIMITS, benefitLabels } from "@/lib/constants";
 import type { Post } from "@/lib/types";
 import { cn, formatCount, isWithinWeek, relativeTime } from "@/lib/utils";
@@ -52,14 +52,19 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
         </h3>
         <p className="mt-1 line-clamp-1 text-[12.5px] text-muted">{post.shortDescription}</p>
         <div className="mt-auto flex items-center justify-between gap-2 pt-2.5">
-          <CategoryBadge slug={post.category} />
+          <div className="flex min-w-0 items-center gap-2">
+            <CategoryBadge slug={post.category} />
+            <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-muted" aria-label={`좋아요 ${post.likeCount ?? 0}개`}>
+              <ThumbsUp size={12} aria-hidden /> {formatCount(post.likeCount ?? 0)}
+            </span>
+          </div>
           {post.viewCount >= LIMITS.showViewsFrom ? (
-            <span className="inline-flex items-center gap-1 text-xs text-faint">
+            <span className="inline-flex shrink-0 items-center gap-1 text-xs text-faint">
               <Eye size={13} aria-hidden />
               {formatCount(post.viewCount)}
             </span>
           ) : isWithinWeek(post.publishedAt) ? (
-            <span className="text-xs text-faint">{relativeTime(post.publishedAt)}</span>
+            <span className="shrink-0 text-xs text-faint">{relativeTime(post.publishedAt)}</span>
           ) : null}
         </div>
       </div>
