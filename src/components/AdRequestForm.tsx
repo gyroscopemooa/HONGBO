@@ -70,13 +70,13 @@ const CARD_IMG: ProcessOptions = { ratio: 16 / 9, maxWidth: 960 };
 const radioCard =
   "flex cursor-pointer items-start gap-2 rounded-xl border border-line px-3.5 py-3 text-[14.5px] has-[:checked]:border-brand has-[:checked]:bg-brand-soft";
 
-/** 미리보기 고정 샘플 — 신청자의 글이 아니라 항상 TranStream 예시로 보여줍니다. */
+/** 미리보기 고정 샘플 — 신청자의 글이 아니라 항상 실제 홍보글(/post/41, TranStream)을 예시로 보여줍니다. */
 const SAMPLE_POST: AdBannerPost = {
-  id: 1,
+  id: 41,
   category: "apps",
-  title: "실시간 방송 번역 앱 TranStream",
-  shortDescription: "해외 라이브·영상을 보면서 실시간 한국어 자막으로 즐겨요",
-  primaryImageUrl: null,
+  title: "해외 라이브 방송을 내 언어로, TranStream",
+  shortDescription: "실시간 자막과 번역으로 해외 라이브·스트리밍을 더 편하게 즐겨보세요.",
+  primaryImageUrl: "https://yqtqkwairbrlyifdiory.supabase.co/storage/v1/object/public/post-images/db3f5749-98e1-4ae0-8963-9be3a0abfcd8/4ab89993-14a6-4dc6-a43b-d27e0a8a0156.webp",
   extra: {},
 };
 
