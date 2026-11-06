@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BarChart3, ChevronLeft, ClipboardList } from "lucide-react";
-import { SURVEY_CONTACT_ID } from "@/lib/constants";
+import { SURVEY_CONTACT_ID, SURVEY_OTHER_LABEL, SURVEY_OTHER_PREFIX } from "@/lib/constants";
 import { requireUser } from "@/lib/auth";
 import { store } from "@/lib/store";
 import { getSurveyResults } from "@/lib/survey-store";
@@ -73,6 +73,28 @@ export default async function SurveyResultsPage({ params }: Props) {
                         </li>
                       );
                     })}
+                    {q.allowOther && (() => {
+                      const others = submitted.filter((x) => x.answer.startsWith(SURVEY_OTHER_PREFIX));
+                      const percent = submitted.length > 0 ? Math.round(others.length / submitted.length * 100) : 0;
+                      return (
+                        <li>
+                          <div className="mb-1 flex items-center justify-between gap-3 text-[13px]">
+                            <span className="min-w-0 break-words font-semibold">{SURVEY_OTHER_LABEL} (직접 입력)</span>
+                            <span className="shrink-0 tabular-nums text-muted">{others.length}명 · {percent}%</span>
+                          </div>
+                          <div className="h-2.5 overflow-hidden rounded-full bg-soft" role="img" aria-label={`기타: ${others.length}명, ${percent}%`}>
+                            <div className="h-full rounded-full bg-[#d5a028]" style={{ width: `${percent}%` }} />
+                          </div>
+                          {others.length > 0 && (
+                            <ul className="mt-2 max-h-[220px] space-y-1.5 overflow-y-auto">
+                              {others.map((x, i) => (
+                                <li key={i} className="rounded-lg bg-soft px-3 py-2 text-[13px] break-words">{x.answer.slice(SURVEY_OTHER_PREFIX.length)}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      );
+                    })()}
                   </ul>
                 ) : (
                   <ul className="max-h-[460px] space-y-2 overflow-y-auto">

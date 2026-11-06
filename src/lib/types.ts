@@ -18,6 +18,8 @@ export interface SurveyQuestion {
   type: "choice" | "text";
   required: boolean;
   options?: string[];
+  /** 객관식 마지막에 "기타(직접 입력)" 선택지를 붙이고, 고르면 입력창을 보여줍니다. */
+  allowOther?: boolean;
 }
 
 export interface PostExtra {

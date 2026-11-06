@@ -743,6 +743,12 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                             <input type="checkbox" checked={q.required} onChange={(e) => set("surveyQuestions", f.surveyQuestions.map((item) => item.id === q.id ? { ...item, required: e.target.checked } : item))} />
                             필수 응답
                           </label>
+                          {q.type === "choice" && (
+                            <label className="flex items-center gap-1.5 text-[13px]">
+                              <input type="checkbox" checked={!!q.allowOther} onChange={(e) => set("surveyQuestions", f.surveyQuestions.map((item) => item.id === q.id ? { ...item, allowOther: e.target.checked } : item))} />
+                              기타(직접 입력) 추가
+                            </label>
+                          )}
                         </div>
                         {q.type === "choice" && (
                           <div className="space-y-2 pl-2">

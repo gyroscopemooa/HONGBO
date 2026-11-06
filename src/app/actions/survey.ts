@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { ensureAnonId } from "@/lib/anon";
 import { getCurrentUser } from "@/lib/auth";
-import { SURVEY_ANSWER_MAX, SURVEY_CONTACT_ID, SURVEY_CONTACT_MAX, SURVEY_MAX_QUESTIONS } from "@/lib/constants";
+import { SURVEY_ANSWER_MAX, SURVEY_CONTACT_ID, SURVEY_CONTACT_MAX, SURVEY_MAX_QUESTIONS, SURVEY_OTHER_MAX, SURVEY_OTHER_PREFIX } from "@/lib/constants";
 import { isPostPublic } from "@/lib/queries";
 import { rateLimit } from "@/lib/ratelimit";
 import { store } from "@/lib/store";
@@ -51,7 +51,13 @@ export async function submitSurveyAction(postId: number, raw: unknown, contact?:
     const answer = value.trim();
     if (question.required && !answer) return { ok: false, message: `"${question.title}" 질문에 답변해주세요.` };
     if (question.type === "choice" && answer && !question.options?.includes(answer)) {
-      return { ok: false, message: "선택지가 변경됐어요. 새로고침 후 다시 제출해주세요." };
+      const otherMatch = question.allowOther ? answer.match(/^기타:\s*([\s\S]*)$/) : null;
+      if (!otherMatch) return { ok: false, message: "선택지가 변경됐어요. 새로고침 후 다시 제출해주세요." };
+      const otherText = otherMatch[1].replace(/\s+/g, " ").trim();
+      if (!otherText) return { ok: false, message: "기타 내용을 입력해주세요." };
+      if (otherText.length > SURVEY_OTHER_MAX) return { ok: false, message: `기타 내용은 ${SURVEY_OTHER_MAX}자 이내로 작성해주세요.` };
+      answers.push({ id: question.id, question: question.title, answer: SURVEY_OTHER_PREFIX + otherText });
+      continue;
     }
     if (answer) answers.push({ id: question.id, question: question.title, answer });
   }
