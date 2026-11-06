@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Crown, GalleryHorizontal } from "lucide-react";
+import { Crown, GalleryHorizontal, Presentation } from "lucide-react";
 import { requestAdAction } from "@/app/actions/ads";
 import { AdRequestForm } from "@/components/AdRequestForm";
+import { HeroAdRequestForm } from "@/components/HeroAdRequestForm";
+import { requestHeroAdAction } from "@/app/actions/hero-ads";
+import { HERO_AD_SLOTS, HERO_DESIGN_FEE, HERO_PLANS, HERO_PRICES, heroDepositor, heroPrice, isHeroLive, type HeroAd } from "@/lib/hero-ads";
+import { listHeroAds } from "@/lib/hero-ad-store";
 import { AD_BANK, AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PAY_DAYS, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, adPrice, depositorName, won } from "@/lib/ads";
 import type { Ad } from "@/lib/types";
 import { getCurrentUser } from "@/lib/auth";
@@ -41,15 +45,36 @@ function PaymentBox({ ad, title }: { ad: Ad; title?: string }) {
   );
 }
 
-export default async function AdvertisePage({ searchParams }: { searchParams: Promise<{ requested?: string; error?: string }> }) {
-  const { requested, error } = await searchParams;
+function HeroPaymentBox({ ad, title }: { ad: HeroAd; title?: string }) {
+  return (
+    <div className="rounded-2xl border border-[#0e7a63]/30 bg-[#f1fbf7] p-5">
+      <p className="text-[15px] font-extrabold text-[#0e7a63]">{title ?? "입금 안내"}</p>
+      <dl className="mt-3 space-y-2 text-[14.5px]">
+        <div className="flex gap-3"><dt className="w-20 shrink-0 text-muted">상품</dt><dd className="font-bold">홈 슬라이드 광고 · {HERO_PLANS[ad.plan].label}</dd></div>
+        <div className="flex gap-3"><dt className="w-20 shrink-0 text-muted">입금 금액</dt><dd className="font-black text-brand">{won(heroPrice(ad.plan))}</dd></div>
+        <div className="flex gap-3"><dt className="w-20 shrink-0 text-muted">입금 계좌</dt><dd className="font-bold">{AD_BANK.bank} <span className="select-all tabular-nums">{AD_BANK.number}</span> ({AD_BANK.holder})</dd></div>
+        <div className="flex gap-3"><dt className="w-20 shrink-0 text-muted">입금자명</dt><dd className="font-bold"><span className="select-all">{heroDepositor(ad.id)}</span> <span className="font-normal text-muted">(신청 번호가 붙은 이름으로 보내주세요)</span></dd></div>
+      </dl>
+      <ul className="mt-3 space-y-1 text-[13px] leading-relaxed text-muted">
+        <li>· 입금이 확인되면 승인되고, <b className="text-ink-2">승인된 시점부터 {HERO_PLANS[ad.plan].label}</b> 동안 노출돼요.</li>
+        {(ad.designMode === "discuss" || ad.linkMode === "discuss") && <li>· 제작·링크를 <b className="text-ink-2">협의하기로 한 신청</b>은 입금 확인 후 가입 이메일로 연락드려요. 협의가 끝나면 승인돼요.</li>}
+        <li>· <b className="text-ink-2">승인(노출 시작) 이후에는 환불이 어려워요.</b> 기준은 <Link href="/policy#ads-refund" className="underline">운영정책</Link>에서 확인해주세요. {AD_PAY_DAYS}일 안에 입금하지 않으면 신청이 취소될 수 있어요.</li>
+      </ul>
+    </div>
+  );
+}
+
+export default async function AdvertisePage({ searchParams }: { searchParams: Promise<{ requested?: string; heroRequested?: string; error?: string }> }) {
+  const { requested, heroRequested, error } = await searchParams;
   const user = await getCurrentUser();
   // 광고 테이블이 아직 준비되지 않은 환경에서도 페이지가 깨지지 않도록 실패하면 빈 값으로 대체합니다.
   const safe = async <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
-  const [liveAds, myAds, myPosts] = await Promise.all([
+  const [liveAds, myAds, myPosts, liveHero, myHero] = await Promise.all([
     safe(store.listAds({ liveOnly: true }), []),
     user ? safe(store.listAds({ requestedBy: user.id }), []) : Promise.resolve([]),
     user ? store.listPosts({ authorId: user.id, sort: "latest", pageSize: 100 }) : Promise.resolve({ items: [], total: 0 }),
+    safe(listHeroAds({ liveOnly: true }), []),
+    user ? safe(listHeroAds({ requestedBy: user.id }), []) : Promise.resolve([] as HeroAd[]),
   ]);
   const publicPosts = myPosts.items.filter((p) => isPostPublic(p));
   const premiumUsed = liveAds.filter((a) => a.kind === "premium").length;
@@ -111,6 +136,61 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
           </section>
         ))}
       </div>
+
+
+      <section id="hero-ad" className="mt-4 scroll-mt-20 rounded-2xl border border-line bg-white p-5 shadow-card sm:p-6" aria-label="홈 슬라이드 광고">
+        <h2 className="flex items-center gap-2 text-[18px] font-extrabold tracking-[-0.03em]">
+          <Presentation size={19} className="text-brand" aria-hidden />
+          홈 슬라이드 광고
+          <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[12px] font-bold text-brand-dark">NEW</span>
+        </h2>
+        <p className="mt-1.5 text-[14px] leading-relaxed text-muted">
+          메인 화면 중간의 큰 슬라이드에 내 광고가 들어가요. 홍보글이 없어도 신청할 수 있고, 지금 슬라이드처럼 <b className="text-ink-2">템플릿으로 만들거나</b>, <b className="text-ink-2">직접 만든 이미지</b>를 올리거나, <b className="text-ink-2">협의해서</b> 만들 수 있어요. 링크도 바로 연결하거나 협의 후 정할 수 있어요. 동시에 최대 {HERO_AD_SLOTS}개가 번갈아 노출돼요.
+        </p>
+        <ul className="mt-3 grid gap-1.5 text-[14.5px] sm:grid-cols-2">
+          {(["week", "month"] as const).map((plan) => (
+            <li key={plan} className="flex items-center justify-between rounded-lg bg-soft px-3 py-2">
+              <span className="font-medium text-ink-2">{HERO_PLANS[plan].label}</span>
+              <b className="tabular-nums">{won(HERO_PRICES[plan])}</b>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-[13px] text-muted">
+          현재 <b className="text-ink-2">{liveHero.length}/{HERO_AD_SLOTS}</b> 사용 중 · 디자인 제작을 맡기면 {won(HERO_DESIGN_FEE)}부터 협의해요.
+        </p>
+        {heroRequested && (() => {
+          const ad = myHero.find((a) => String(a.id) === heroRequested && a.status === "requested");
+          return ad ? (
+            <div className="mt-4"><HeroPaymentBox ad={ad} title="신청이 접수됐어요. 아래 계좌로 입금해주세요" /></div>
+          ) : (
+            <p role="status" className="mt-4 rounded-xl bg-[#e9f9f3] px-4 py-3 text-[14px] font-medium text-[#0e7a63]">신청이 접수됐어요. 아래 &quot;내 슬라이드 광고&quot;에서 입금 안내를 확인해주세요.</p>
+          );
+        })()}
+        {!user ? (
+          <p className="mt-4 text-[14.5px] text-muted">
+            <Link href="/auth?next=%2Fadvertise" className="font-bold text-brand underline">로그인</Link>한 뒤 신청해주세요.
+          </p>
+        ) : (
+          <HeroAdRequestForm action={requestHeroAdAction} />
+        )}
+        {myHero.length > 0 && (
+          <div className="mt-6" aria-label="내 슬라이드 광고">
+            <h3 className="mb-2 text-[15px] font-extrabold">내 슬라이드 광고</h3>
+            <ul className="space-y-2">
+              {myHero.map((a) => (
+                <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line px-4 py-3 text-[14px]">
+                  <span className="min-w-0 flex-1 truncate font-bold">{a.title || a.advertiser || `신청 #${a.id}`}</span>
+                  <span className="text-muted">{HERO_PLANS[a.plan].label}</span>
+                  <span className={a.status === "active" ? "font-bold text-[#0e7a63]" : "font-bold text-[#9a6b00]"}>
+                    {a.status === "active" && a.endsAt ? (isHeroLive(a) ? `${formatDate(a.endsAt)}까지 노출` : "기간 종료") : "입금 확인 대기"}
+                  </span>
+                  {a.status === "requested" && <div className="basis-full pt-1"><HeroPaymentBox ad={a} title="입금 안내" /></div>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
 
       <section className="mt-7 rounded-2xl border border-[#f0b429]/50 bg-[#fffbee] p-5 sm:p-6" aria-label="구매 문의">
         <h2 className="text-[18px] font-extrabold tracking-[-0.03em]">구매·결제 문의는 이메일로</h2>

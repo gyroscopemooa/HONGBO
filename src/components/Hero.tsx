@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { HeroAdFace, type HeroAdView } from "./HeroAdSlide";
 
 const banners = [
   {
@@ -71,9 +72,26 @@ function Infl09Slide({ url, active }: { url: string | null; active: boolean }) {
   );
 }
 
-export function Hero({ infl09 }: { infl09?: { url: string | null; preview: boolean } }) {
+/** 유료 슬라이드 광고 한 장 — 링크가 있으면 새 창으로 열고(광고 표시, nofollow), 협의 중이면 클릭되지 않아요. */
+function PaidSlide({ ad, active }: { ad: HeroAdView; active: boolean }) {
+  const cls = `absolute inset-0 overflow-hidden transition-opacity duration-700 ${active ? "z-10 opacity-100" : "pointer-events-none opacity-0"}`;
+  const style = { containerType: "inline-size" as const };
+  const label = `${ad.title ?? "광고"} (광고)`;
+  return ad.linkMode === "url" && ad.linkUrl ? (
+    <a href={ad.linkUrl} target="_blank" rel="sponsored nofollow noopener" aria-hidden={!active} tabIndex={active ? 0 : -1} aria-label={label} className={cls} style={style}>
+      <HeroAdFace ad={ad} />
+    </a>
+  ) : (
+    <div aria-hidden={!active} className={cls} style={style}>
+      <HeroAdFace ad={ad} />
+    </div>
+  );
+}
+
+export function Hero({ infl09, ads = [] }: { infl09?: { url: string | null; preview: boolean }; ads?: HeroAdView[] }) {
   const showInfl = Boolean(infl09 && (infl09.url || infl09.preview));
-  const total = banners.length + (showInfl ? 1 : 0);
+  const adCount = ads.length;
+  const total = banners.length + (showInfl ? 1 : 0) + adCount;
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -100,9 +118,12 @@ export function Hero({ infl09 }: { infl09?: { url: string | null; preview: boole
       }}
     >
       <div className="relative mx-auto aspect-[2172/724] max-w-[1440px]">
-        {showInfl && <Infl09Slide url={infl09!.url} active={current === 0} />}
+        {ads.map((ad, i) => (
+          <PaidSlide key={ad.id} ad={ad} active={current === i} />
+        ))}
+        {showInfl && <Infl09Slide url={infl09!.url} active={current === adCount} />}
         {banners.map((banner, i) => {
-          const index = i + (showInfl ? 1 : 0);
+          const index = i + adCount + (showInfl ? 1 : 0);
           const active = index === current;
 
           return (
@@ -121,7 +142,7 @@ export function Hero({ infl09 }: { infl09?: { url: string | null; preview: boole
                 alt={active ? banner.alt : ""}
                 width={2172}
                 height={724}
-                priority={i === 0 && !showInfl}
+                priority={i === 0 && !showInfl && adCount === 0}
                 className="block h-auto w-full"
               />
             </Link>
