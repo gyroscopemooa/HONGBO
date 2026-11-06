@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BarChart3, ChevronLeft, ClipboardList } from "lucide-react";
+import { SURVEY_CONTACT_ID } from "@/lib/constants";
 import { requireUser } from "@/lib/auth";
 import { store } from "@/lib/store";
 import { getSurveyResults } from "@/lib/survey-store";
@@ -35,7 +36,7 @@ export default async function SurveyResultsPage({ params }: Props) {
           <span className="pb-1 text-[14px] text-muted">명 참여</span>
         </div>
         {result.limited && <p className="mt-2 text-[12px] text-muted">표와 주관식 답변은 최근 {result.responses.length.toLocaleString()}건 기준입니다. 총 참여 인원은 전체 기준입니다.</p>}
-        <p className="mt-2 text-[12px] text-muted">설문 응답은 작성자와 더홍보 관리자에게만 공개됩니다. 응답자 신원은 표시하지 않습니다.</p>
+        <p className="mt-2 text-[12px] text-muted">설문 응답은 작성자와 더홍보 관리자에게만 공개됩니다. {post.extra.exclusive.payout === "draw" ? "추첨 안내 연락처 외에 응답자 신원은 표시하지 않습니다." : "응답자 신원은 표시하지 않습니다."}</p>
       </header>
 
       {result.total === 0 ? (
@@ -86,6 +87,26 @@ export default async function SurveyResultsPage({ params }: Props) {
               </section>
             );
           })}
+          {post.extra.exclusive.payout === "draw" && (() => {
+            const contacts = result.responses
+              .map((r) => ({ value: r.answers.find((a) => a.id === SURVEY_CONTACT_ID)?.answer ?? "", createdAt: r.createdAt }))
+              .filter((c) => c.value);
+            return (
+              <section className="rounded-2xl border border-[#edcc7d] bg-[#fffaf0] p-5 shadow-card sm:p-6">
+                <p className="text-[12px] font-bold text-[#a67408]">추첨 안내 연락처 · {contacts.length}건</p>
+                <h2 className="mt-1 mb-2 text-[17px] font-extrabold">당첨 안내용 연락처</h2>
+                <p className="mb-4 text-[12px] leading-relaxed text-muted">참여자가 당첨 안내 목적으로만 제공에 동의한 정보예요. 추첨 외 목적으로 사용하거나 제3자에게 제공하지 마세요. 당첨자 선정과 지급은 작성자가 직접 진행합니다.</p>
+                <ul className="max-h-[460px] space-y-2 overflow-y-auto">
+                  {contacts.length === 0 ? <li className="text-[13px] text-muted">아직 연락처가 없어요.</li> : contacts.map((c, i) => (
+                    <li key={i} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2.5 text-[13px]">
+                      <span className="min-w-0 select-all break-all font-mono font-semibold">{c.value}</span>
+                      <time className="shrink-0 text-[11px] text-muted" dateTime={c.createdAt}>{new Date(c.createdAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</time>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })()}
         </div>
       )}
     </div>

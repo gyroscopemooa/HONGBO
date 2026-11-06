@@ -9,7 +9,8 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { requireUser } from "@/lib/auth";
 import { effectiveStatus } from "@/lib/queries";
 import { store } from "@/lib/store";
-import { daysUntil, formatDate, relativeTime } from "@/lib/utils";
+import { LIMITS } from "@/lib/constants";
+import { daysUntil, formatCount, formatDate, relativeTime } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "내 홍보",
@@ -82,8 +83,8 @@ export default async function MyPage() {
                     <span>등록 {formatDate(p.publishedAt)} ({relativeTime(p.publishedAt)})</span>
                     {daysLeft !== null && status === "active" && <span>노출 {daysLeft}일 남음</span>}
                     {status === "expired" && <span className="font-semibold text-[#a56200]">노출 기간이 끝났어요 — 다시 홍보하기를 눌러주세요</span>}
-                    <span className="inline-flex items-center gap-1"><Eye size={13} aria-hidden /> 조회 {p.viewCount}</span>
-                    <span className="inline-flex items-center gap-1"><MousePointerClick size={13} aria-hidden /> 링크 클릭 {p.clickCount}</span>
+                    {p.viewCount >= LIMITS.showViewsFrom && <span className="inline-flex items-center gap-1"><Eye size={13} aria-hidden /> 조회 {formatCount(p.viewCount)}</span>}
+                    {p.clickCount >= LIMITS.showClicksFrom && <span className="inline-flex items-center gap-1"><MousePointerClick size={13} aria-hidden /> 링크 클릭 {formatCount(p.clickCount)}</span>}
                   </p>
                 </div>
                 <div className="shrink-0">
