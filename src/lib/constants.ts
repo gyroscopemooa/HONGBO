@@ -297,6 +297,10 @@ export const SURVEY_QUESTION_MAX = 100;
 export const SURVEY_OPTION_MAX = 60;
 export const SURVEY_ANSWER_MAX = 500;
 export const SURVEY_CONTACT_MAX = 100;
+/** "기타(직접 입력)" 선택 시 응답은 `기타: 입력내용` 형태로 저장합니다. */
+export const SURVEY_OTHER_LABEL = "기타";
+export const SURVEY_OTHER_PREFIX = "기타: ";
+export const SURVEY_OTHER_MAX = 100;
 /** 설문 응답 안에서 추첨 연락처를 구분하는 예약 ID (질문 ID는 이 값을 쓸 수 없음) */
 export const SURVEY_CONTACT_ID = "__contact";
 export const SURVEY_PAYOUTS = [

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { CheckCircle2, ClipboardList, LoaderCircle } from "lucide-react";
 import { submitSurveyAction } from "@/app/actions/survey";
+import { SURVEY_OTHER_LABEL, SURVEY_OTHER_MAX, SURVEY_OTHER_PREFIX } from "@/lib/constants";
 import type { SurveyPayout, SurveyQuestion } from "@/lib/types";
 
 export function SurveyParticipation({ postId, questions, payout }: { postId: number; questions: SurveyQuestion[]; payout?: SurveyPayout }) {
@@ -12,6 +13,7 @@ export function SurveyParticipation({ postId, questions, payout }: { postId: num
   const [feedback, setFeedback] = useState<{ ok: boolean; message: string; reward?: { text?: string; url?: string } } | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const isOther = (v?: string) => v !== undefined && v.startsWith(SURVEY_OTHER_PREFIX);
   const setAnswer = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
     setFeedback(null);
@@ -60,6 +62,17 @@ export function SurveyParticipation({ postId, questions, payout }: { postId: num
                       {option}
                     </label>
                   ))}
+                  {q.allowOther && (
+                    <div className="rounded-lg border border-line px-3 py-3 text-[14px] has-[:checked]:border-[#dab96a]">
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <input type="radio" name={`survey-${q.id}`} checked={isOther(answers[q.id])} required={q.required} onChange={() => setAnswer(q.id, SURVEY_OTHER_PREFIX)} className="accent-[#bd870c]" />
+                        {SURVEY_OTHER_LABEL} (직접 입력)
+                      </label>
+                      {isOther(answers[q.id]) && (
+                        <input type="text" autoFocus maxLength={SURVEY_OTHER_MAX} required value={(answers[q.id] ?? "").slice(SURVEY_OTHER_PREFIX.length)} onChange={(e) => setAnswer(q.id, SURVEY_OTHER_PREFIX + e.target.value)} placeholder="직접 입력해주세요" aria-label={`${q.title} 기타 내용`} className="field mt-2" />
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <textarea className="field min-h-[86px] resize-y" maxLength={500} required={q.required} value={answers[q.id] ?? ""} onChange={(e) => setAnswer(q.id, e.target.value)} placeholder="답변을 입력해주세요. (최대 500자)" />

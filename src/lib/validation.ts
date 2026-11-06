@@ -11,6 +11,7 @@ import {
   EXCLUSIVE_SLUG,
   SURVEY_MAX_QUESTIONS,
   SURVEY_CONTACT_ID,
+  SURVEY_OTHER_LABEL,
   SURVEY_MAX_OPTIONS,
   SURVEY_QUESTION_MAX,
   SURVEY_OPTION_MAX,
@@ -67,6 +68,7 @@ const rawSchema = z.object({
         title: z.string().max(200),
         type: z.enum(["choice", "text"]),
         required: z.boolean(),
+        allowOther: z.boolean().optional(),
         options: z.array(z.string().max(100)).max(10).optional(),
       })).max(10).optional(),
       businessUrl: str(2100),
@@ -207,7 +209,11 @@ export function parsePostInput(raw: unknown): ParseResult {
               errors.exclusiveSurvey = `객관식 선택지는 2~${SURVEY_MAX_OPTIONS}개, 각각 ${SURVEY_OPTION_MAX}자 이내로 서로 다르게 작성해주세요.`;
               break;
             }
-            parsed.push({ id: q.id, title, type: "choice", required: q.required, options });
+            if (q.allowOther && options.includes(SURVEY_OTHER_LABEL)) {
+              errors.exclusiveSurvey = "'기타(직접 입력)'를 켠 질문에는 선택지 이름을 '기타'로 따로 만들 수 없어요.";
+              break;
+            }
+            parsed.push({ id: q.id, title, type: "choice", required: q.required, options, ...(q.allowOther ? { allowOther: true } : {}) });
           } else {
             parsed.push({ id: q.id, title, type: "text", required: q.required });
           }
