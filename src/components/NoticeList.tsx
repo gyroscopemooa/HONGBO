@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { Notice } from "@/lib/types";
 import { parseNoticeTitle } from "@/lib/notice";
-import { formatDate } from "@/lib/utils";
+import { formatDate, isWithinWeek } from "@/lib/utils";
 
 export function NoticeList({ notices }: { notices: Notice[] }) {
   if (notices.length === 0) return null;
@@ -23,7 +23,7 @@ export function NoticeList({ notices }: { notices: Notice[] }) {
                 <span className="shrink-0 rounded bg-soft px-1 text-[11px] font-bold text-muted">{parseNoticeTitle(n.title).kind}</span>
                 <span className="truncate">{parseNoticeTitle(n.title).title}</span>
               </span>
-              {Date.now() - new Date(n.publishedAt).getTime() < 7 * 86_400_000 && (
+              {isWithinWeek(n.publishedAt) && (
                 <time dateTime={n.publishedAt} className="shrink-0 text-[12px] text-faint">
                   {formatDate(n.publishedAt)}
                 </time>

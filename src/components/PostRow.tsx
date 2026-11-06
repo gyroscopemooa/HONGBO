@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Post } from "@/lib/types";
-import { relativeTime } from "@/lib/utils";
+import { isWithinWeek, relativeTime } from "@/lib/utils";
 import { CategoryBadge } from "./CategoryBadge";
 import { NewBadge } from "./NewBadge";
 import { PostImage } from "./PostImage";
@@ -25,7 +25,7 @@ export function PostRow({ post }: { post: Post }) {
         </div>
         <p className="mt-1 truncate text-[13px] text-muted">{post.shortDescription}</p>
       </div>
-      {Date.now() - new Date(post.publishedAt).getTime() < 7 * 86_400_000 && (
+      {isWithinWeek(post.publishedAt) && (
         <time dateTime={post.publishedAt} className="shrink-0 text-xs text-faint sm:text-[12.5px]">
           {relativeTime(post.publishedAt)}
         </time>

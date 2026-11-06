@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Eye, MapPin } from "lucide-react";
 import { LIMITS, benefitLabels } from "@/lib/constants";
 import type { Post } from "@/lib/types";
-import { cn, formatCount, relativeTime } from "@/lib/utils";
+import { cn, formatCount, isWithinWeek, relativeTime } from "@/lib/utils";
 import { BenefitBadges } from "./BenefitBadges";
 import { CategoryBadge } from "./CategoryBadge";
 import { NewBadge, isNewPost } from "./NewBadge";
@@ -58,7 +58,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
               <Eye size={13} aria-hidden />
               {formatCount(post.viewCount)}
             </span>
-          ) : Date.now() - new Date(post.publishedAt).getTime() < 7 * 86_400_000 ? (
+          ) : isWithinWeek(post.publishedAt) ? (
             <span className="text-xs text-faint">{relativeTime(post.publishedAt)}</span>
           ) : null}
         </div>
