@@ -25,7 +25,7 @@ const PREMIUM_MODES: Array<{ value: PremiumMode; title: string; desc: string }> 
 ];
 
 /** 이미지 올리기 — 지정한 비율로 가운데를 맞춰 자르고 줄여서 올립니다. */
-function ImagePicker({ value, onChange, hint, opts }: { value: string; onChange: (url: string) => void; hint: string; opts: ProcessOptions }) {
+export function ImagePicker({ value, onChange, hint, opts }: { value: string; onChange: (url: string) => void; hint: string; opts: ProcessOptions }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);

@@ -17,7 +17,9 @@ import { PremiumGrid } from "@/components/PremiumGrid";
 import { PromoBanner } from "@/components/PromoBanner";
 import { HomeBoards } from "@/components/HomeBoards";
 import { RankList } from "@/components/RankList";
-import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, AD_PRICES, won } from "@/lib/ads";
+import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, AD_PRICES, shuffle, won } from "@/lib/ads";
+import { listHeroAds } from "@/lib/hero-ad-store";
+import type { HeroAdView } from "@/components/HeroAdSlide";
 import { infl09ApplyUrl } from "@/lib/infl09";
 import { SITE } from "@/lib/constants";
 import { listCommunity } from "@/lib/community-store";
@@ -35,11 +37,24 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const { popular, latest, sideBanners, stripBanners, notices, premium, adBanners, exclusive } = await getHomeData();
   // 하단 게시판 최신글: 어느 하나가 실패해도 홈 화면은 정상 표시합니다.
-  const [reviewBoard, communityBoard, meetupBoard] = await Promise.all([
+  const [reviewBoard, communityBoard, meetupBoard, heroAdRows] = await Promise.all([
     listReviews({ pageSize: 5 }).catch(() => ({ items: [], total: 0 })),
     listCommunity({ pageSize: 5 }).catch(() => ({ items: [], total: 0 })),
     listMeetup({ pageSize: 5 }).catch(() => ({ items: [], total: 0 })),
+    // 슬라이드 광고 테이블이 아직 없어도 홈은 정상 표시합니다.
+    listHeroAds({ liveOnly: true }).catch(() => []),
   ]);
+  const heroAds: HeroAdView[] = shuffle(heroAdRows).map((a) => ({
+    id: a.id,
+    designMode: a.designMode,
+    title: a.title,
+    subtitle: a.subtitle,
+    buttonText: a.buttonText,
+    theme: a.theme,
+    imageUrl: a.imageUrl,
+    linkMode: a.linkMode,
+    linkUrl: a.linkUrl,
+  }));
 
   // 추천 영역(앞 3자리)에 나온 글은 배너에서 제외하고, 배너 자리가 남으면 최신 글로 채웁니다.
   const premiumAds = premium.slice(0, AD_PREMIUM_SLOTS);
@@ -119,7 +134,7 @@ export default async function HomePage() {
       <PremiumGrid ads={premiumAds} fill={fresh} />
 
       <div className="mt-8 sm:mt-10">
-        <Hero infl09={{ url: infl09Url, preview: !infl09Url && process.env.NODE_ENV !== "production" }} />
+        <Hero ads={heroAds} infl09={{ url: infl09Url, preview: !infl09Url && process.env.NODE_ENV !== "production" }} />
       </div>
       <CategoryTiles />
 
