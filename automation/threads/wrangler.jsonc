@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "hongbo-threads-promo",
+  "main": "./src/index.mjs",
+  "compatibility_date": "2026-10-02",
+  "triggers": { "crons": ["*/10 * * * *"] },
+  "vars": {
+    "AUTOPOST_ENABLED": "false",
+    "USE_AI": "false",
+    "MAX_POSTS_PER_DAY": "6",
+    "SITE_URL": "https://www.thehongbo.com"
+  },
+  "observability": { "enabled": true }
+}
