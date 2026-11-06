@@ -77,6 +77,7 @@ function NavInner() {
 
   const extra: Array<[string, string]> = [
     ["/community", "커뮤니티"],
+    ["/reviews", "후기·리뷰"],
     ["/meetup", "홍보소모임"],
   ];
   const linkCls = (active: boolean) =>
