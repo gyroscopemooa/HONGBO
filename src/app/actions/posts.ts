@@ -67,7 +67,7 @@ export async function updatePostAction(id: number, raw: unknown): Promise<Action
   if (post.extra.exclusive?.method === "survey" && await hasSurveyResponses(id)) {
     if (parsed.data.extra.exclusive?.method !== "survey" ||
       JSON.stringify(post.extra.exclusive.survey ?? []) !== JSON.stringify(parsed.data.extra.exclusive.survey ?? []) ||
-      (post.extra.exclusive.payout ?? "none") !== (parsed.data.extra.exclusive.payout ?? "none")) {
+      (post.extra.exclusive.payout && post.extra.exclusive.payout !== parsed.data.extra.exclusive.payout)) {
       return { ok: false, message: "이미 응답이 제출된 설문의 질문·선택지·지급 방식은 변경할 수 없어요. 새로운 설문은 별도 홍보글로 등록해주세요." };
     }
   }

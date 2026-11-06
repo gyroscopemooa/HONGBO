@@ -300,9 +300,8 @@ export const SURVEY_CONTACT_MAX = 100;
 /** 설문 응답 안에서 추첨 연락처를 구분하는 예약 ID (질문 ID는 이 값을 쓸 수 없음) */
 export const SURVEY_CONTACT_ID = "__contact";
 export const SURVEY_PAYOUTS = [
-  { value: "instant", label: "즉시 지급", hint: "설문을 제출하면 완료 화면에 쿠폰 코드를 바로 보여줘요. 연락처를 받지 않아요." },
+  { value: "instant", label: "즉시 안내", hint: "설문을 제출하면 혜택 안내(쿠폰 코드·받는 방법)와 링크를 완료 화면에 바로 보여줘요. 연락처를 받지 않아요." },
   { value: "draw", label: "추첨 안내", hint: "참여자의 이메일 또는 휴대폰 번호를 받아 당첨자에게 업체가 직접 연락해요." },
-  { value: "none", label: "혜택 없음", hint: "의견 수집만 해요." },
 ] as const;
 /** 더홍보 전용 링크에 자동으로 붙는 유입 표시 */
 export function withExclusiveRef(url: string): string {

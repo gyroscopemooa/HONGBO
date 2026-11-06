@@ -61,6 +61,7 @@ const rawSchema = z.object({
       exclusiveCode: str(200),
       exclusiveUrl: str(2100),
       surveyPayout: str(20),
+      surveyRewardText: str(400),
       surveyQuestions: z.array(z.object({
         id: z.string().max(64),
         title: z.string().max(200),
@@ -159,8 +160,9 @@ export function parsePostInput(raw: unknown): ParseResult {
     else if (how.length > EXCLUSIVE_HOW_MAX) errors.exclusiveHow = `받는 방법은 ${EXCLUSIVE_HOW_MAX}자까지 입력할 수 있어요.`;
     let code: string | undefined;
     let exUrl: string | undefined;
-    const payout: SurveyPayout = method === "survey" && (v.extra.surveyPayout === "instant" || v.extra.surveyPayout === "draw") ? v.extra.surveyPayout : "none";
-    if (method === "code" || payout === "instant") {
+    const payout: SurveyPayout = v.extra.surveyPayout === "draw" ? "draw" : "instant";
+    let rewardText: string | undefined;
+    if (method === "code") {
       const c = (v.extra.exclusiveCode ?? "").trim();
       if (!c) errors.exclusiveCode = "쿠폰 번호(코드)를 입력해주세요.";
       else if (c.length > EXCLUSIVE_CODE_MAX || /\s/.test(c)) errors.exclusiveCode = `공백 없이 ${EXCLUSIVE_CODE_MAX}자 이내로 입력해주세요.`;
@@ -170,6 +172,19 @@ export function parsePostInput(raw: unknown): ParseResult {
       const r = normalizeExternalUrl((v.extra.exclusiveUrl ?? "").trim());
       if (!r.ok) errors.exclusiveUrl = r.error ?? "전용 링크를 입력해주세요.";
       else exUrl = r.url;
+    }
+    if (method === "survey" && payout === "instant") {
+      // 즉시 지급: 완료 화면에 보여줄 안내(코드·방법)와 링크 중 하나 이상
+      const text = (v.extra.surveyRewardText ?? "").replace(/[ \t]+/g, " ").trim();
+      const rawUrl = (v.extra.exclusiveUrl ?? "").trim();
+      if (text.length > 300) errors.exclusiveSurvey = "지급 안내는 300자까지 입력할 수 있어요.";
+      else if (!text && !rawUrl) errors.exclusiveSurvey = "설문 완료 후 보여줄 혜택 안내(코드·방법)나 링크 중 하나는 입력해주세요.";
+      if (text) rewardText = text;
+      if (rawUrl) {
+        const r = normalizeExternalUrl(rawUrl);
+        if (!r.ok) errors.exclusiveUrl = r.error ?? "링크를 확인해주세요.";
+        else exUrl = r.url;
+      }
     }
     let survey: SurveyQuestion[] | undefined;
     if (method === "survey") {
@@ -202,7 +217,7 @@ export function parsePostInput(raw: unknown): ParseResult {
     }
     if (!v.extra.exclusiveAgree) errors.exclusiveAgree = "전용 이벤트 안내에 동의해주세요.";
     if (!errors.exclusiveReward && !errors.exclusiveHow && !errors.exclusiveCode && !errors.exclusiveUrl && !errors.exclusiveSurvey && !errors.exclusiveAgree) {
-      extra.exclusive = { reward, how, method, ...(code ? { code } : {}), ...(exUrl ? { url: exUrl } : {}), ...(survey ? { survey, payout } : {}) };
+      extra.exclusive = { reward, how, method, ...(code ? { code } : {}), ...(exUrl ? { url: exUrl } : {}), ...(survey ? { survey, payout, ...(rewardText ? { rewardText } : {}) } : {}) };
       benefitsFinal.push(EXCLUSIVE_SLUG);
     }
   }

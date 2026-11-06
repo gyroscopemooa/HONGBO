@@ -269,7 +269,7 @@ export default async function PostDetailPage({ params }: Props) {
       </div>
 
       {publicNow && post.extra.exclusive?.method === "survey" && (post.extra.exclusive.survey?.length ?? 0) > 0 && (
-        <SurveyParticipation postId={post.id} questions={post.extra.exclusive.survey!} payout={post.extra.exclusive.payout ?? "none"} />
+        <SurveyParticipation postId={post.id} questions={post.extra.exclusive.survey!} payout={post.extra.exclusive.payout} />
       )}
 
       {related.items.length > 0 && (
