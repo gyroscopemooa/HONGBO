@@ -29,7 +29,7 @@ export function SurveyParticipation({ postId, questions }: { postId: number; que
           <CheckCircle2 size={19} aria-hidden /> {feedback.message}
         </div>
       ) : (
-        <form onSubmit={(e) => {
+        <form method="post" onSubmit={(e) => {
           e.preventDefault();
           if (pending) return;
           startTransition(async () => setFeedback(await submitSurveyAction(postId, answers)));

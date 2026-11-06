@@ -7,7 +7,7 @@ import { store } from "@/lib/store";
 import { getSurveyResults } from "@/lib/survey-store";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "설문 결과 | 더홍보", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "설문 결과", robots: { index: false, follow: false } };
 
 type Props = { params: Promise<{ id: string }> };
 
