@@ -1,0 +1,21 @@
+name: Threads promo checks
+on:
+  pull_request:
+    paths:
+      - "automation/threads/**"
+      - ".github/workflows/threads-promo-tests.yml"
+  workflow_dispatch:
+jobs:
+  safe-copy-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check worker JavaScript syntax
+        run: node --check automation/threads/src/index.mjs
+      - name: Test source-first promotional copy and disabled state
+        run: node --test automation/threads/test/*.test.mjs
