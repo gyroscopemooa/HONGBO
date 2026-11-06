@@ -17,6 +17,7 @@ import {
   EXCLUSIVE_REWARD_MAX,
   EXCLUSIVE_SLUG,
   SURVEY_MAX_QUESTIONS,
+  SURVEY_PAYOUTS,
   SURVEY_MAX_OPTIONS,
   SURVEY_QUESTION_MAX,
   SURVEY_OPTION_MAX,
@@ -66,6 +67,7 @@ export interface FormState {
   exclusiveCode: string;
   exclusiveUrl: string;
   surveyQuestions: SurveyQuestion[];
+  surveyPayout: string;
   links: Array<{ label: string; url: string }>;
   videoUrl: string;
   price: string;
@@ -102,6 +104,7 @@ const EMPTY: FormState = {
   exclusiveCode: "",
   exclusiveUrl: "",
   surveyQuestions: [],
+  surveyPayout: "none",
   links: [],
   videoUrl: "",
   price: "",
@@ -154,6 +157,7 @@ export function postToFormState(p: Post): FormState {
     exclusiveCode: p.extra.exclusive?.code ?? "",
     exclusiveUrl: p.extra.exclusive?.url ?? "",
     surveyQuestions: p.extra.exclusive?.survey ?? [],
+    surveyPayout: p.extra.exclusive?.payout ?? "none",
     links: p.extra.links ?? [],
     videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
     price: p.price ?? "",
@@ -195,6 +199,7 @@ function toPayload(f: FormState) {
       exclusiveCode: f.exclusiveCode,
       exclusiveUrl: f.exclusiveUrl,
       surveyQuestions: f.surveyQuestions,
+      surveyPayout: f.surveyPayout,
       links: f.links,
       businessUrl: f.businessUrl,
       videoUrl: f.videoUrl,
@@ -274,7 +279,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
     if (f.title.trim().length < 2) m.push("제목");
     if (f.shortDescription.trim().length < 2) m.push("한 줄 소개");
     if (f.description.trim().length < LIMITS.descMin) m.push("상세 설명");
-    if (f.exclusiveOn && (f.exclusiveReward.trim().length < 2 || (f.exclusiveMethod === "say" && f.exclusiveHow.trim().length < 2) || (f.exclusiveMethod === "code" && !f.exclusiveCode.trim()) || (f.exclusiveMethod === "link" && !f.exclusiveUrl.trim()))) m.push("더홍보 전용 혜택 내용·받는 방법");
+    if (f.exclusiveOn && (f.exclusiveReward.trim().length < 2 || (f.exclusiveMethod === "say" && f.exclusiveHow.trim().length < 2) || ((f.exclusiveMethod === "code" || (f.exclusiveMethod === "survey" && f.surveyPayout === "instant")) && !f.exclusiveCode.trim()) || (f.exclusiveMethod === "link" && !f.exclusiveUrl.trim()))) m.push("더홍보 전용 혜택 내용·받는 방법");
     if (f.exclusiveOn && f.exclusiveMethod === "survey" && (f.surveyQuestions.length < 1 || f.surveyQuestions.length > SURVEY_MAX_QUESTIONS || f.surveyQuestions.some((q) => q.title.trim().length < 2 || (q.type === "choice" && (q.options ?? []).filter((o) => o.trim()).length < 2)))) m.push("설문 질문과 선택지");
     if (f.exclusiveOn && !f.exclusiveAgree) m.push("전용 이벤트 동의");
     if (f.category === "apps" && !f.playUrl.trim() && !f.appStoreUrl.trim() && !f.siteUrl.trim()) m.push("앱 링크");
@@ -762,6 +767,21 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                       </button>
                     )}
                     {errors.exclusiveSurvey && <p role="alert" className="text-[13px] font-medium text-brand-dark">{errors.exclusiveSurvey}</p>}
+                    <div className="space-y-2 border-t border-line pt-3" role="radiogroup" aria-label="혜택 지급 방식">
+                      <p className="text-[13px] font-bold">설문 후 혜택은 어떻게 주나요?</p>
+                      {SURVEY_PAYOUTS.map((o) => (
+                        <label key={o.value} className="flex cursor-pointer items-start gap-2 rounded-lg border border-line px-3 py-2.5 text-[13.5px] has-[:checked]:border-[#dab96a] has-[:checked]:bg-[#fffaf0]">
+                          <input type="radio" name="surveyPayout" checked={f.surveyPayout === o.value} onChange={() => set("surveyPayout", o.value)} className="mt-1 accent-[#bd870c]" />
+                          <span><b>{o.label}</b><span className="block text-xs text-muted">{o.hint}</span></span>
+                        </label>
+                      ))}
+                      {f.surveyPayout === "instant" && (
+                        <Field id="exclusiveCode" label="지급할 쿠폰 번호(코드)" required error={errors.exclusiveCode} hint="설문을 제출한 사람에게만 완료 화면에 보여줘요.">
+                          <input id="exclusiveCode" value={f.exclusiveCode} maxLength={EXCLUSIVE_CODE_MAX} onChange={(e) => set("exclusiveCode", e.target.value.replace(/\s/g, ""))} placeholder="예) THEHONGBO20" aria-invalid={!!errors.exclusiveCode} className="field font-mono" />
+                        </Field>
+                      )}
+                      {f.surveyPayout === "draw" && <p className="text-xs leading-relaxed text-muted">참여자에게 이메일 또는 휴대폰 번호 입력란이 표시되고 수집 동의를 받아요. 연락처는 작성자와 관리자만 볼 수 있어요. 당첨자 선정과 지급은 업체 책임이에요.</p>}
+                    </div>
                   </div>
                 )}
                 <Field id="exclusiveHow" label={f.exclusiveMethod === "say" ? "받는 방법" : "안내 문구"} required={f.exclusiveMethod === "say"} optional={f.exclusiveMethod !== "say"} error={errors.exclusiveHow} counter={{ now: f.exclusiveHow.length, max: EXCLUSIVE_HOW_MAX }}>

@@ -3,11 +3,13 @@
 import { useState, useTransition } from "react";
 import { CheckCircle2, ClipboardList, LoaderCircle } from "lucide-react";
 import { submitSurveyAction } from "@/app/actions/survey";
-import type { SurveyQuestion } from "@/lib/types";
+import type { SurveyPayout, SurveyQuestion } from "@/lib/types";
 
-export function SurveyParticipation({ postId, questions }: { postId: number; questions: SurveyQuestion[] }) {
+export function SurveyParticipation({ postId, questions, payout = "none" }: { postId: number; questions: SurveyQuestion[]; payout?: SurveyPayout }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [feedback, setFeedback] = useState<{ ok: boolean; message: string } | null>(null);
+  const [contact, setContact] = useState("");
+  const [agree, setAgree] = useState(false);
+  const [feedback, setFeedback] = useState<{ ok: boolean; message: string; rewardCode?: string } | null>(null);
   const [pending, startTransition] = useTransition();
 
   const setAnswer = (id: string, value: string) => {
@@ -25,14 +27,21 @@ export function SurveyParticipation({ postId, questions }: { postId: number; que
         </div>
       </div>
       {feedback?.ok ? (
-        <div role="status" className="flex items-center gap-2 rounded-xl bg-[#eef9ef] p-4 text-[14px] font-bold text-[#20723b]">
-          <CheckCircle2 size={19} aria-hidden /> {feedback.message}
+        <div role="status" className="rounded-xl bg-[#eef9ef] p-4 text-[14px] font-bold text-[#20723b]">
+          <p className="flex items-center gap-2"><CheckCircle2 size={19} aria-hidden /> {feedback.message}</p>
+          {feedback.rewardCode && (
+            <p className="mt-3 text-[13px] font-semibold text-ink-2">
+              혜택 코드 <span className="ml-1 select-all rounded-md bg-white px-2.5 py-1 font-mono text-[15px] font-black text-ink">{feedback.rewardCode}</span>
+              <span className="mt-1.5 block text-xs font-normal text-muted">이 화면을 닫으면 다시 볼 수 없으니 지금 복사해 두세요.</span>
+            </p>
+          )}
+          {payout === "draw" && <p className="mt-2 text-xs font-normal text-muted">당첨 시 입력하신 연락처로 업체가 직접 안내합니다.</p>}
         </div>
       ) : (
         <form method="post" onSubmit={(e) => {
           e.preventDefault();
           if (pending) return;
-          startTransition(async () => setFeedback(await submitSurveyAction(postId, answers)));
+          startTransition(async () => setFeedback(await submitSurveyAction(postId, answers, payout === "draw" ? { value: contact, agree } : undefined)));
         }} className="space-y-5">
           {questions.map((q, index) => (
             <fieldset key={q.id} className="space-y-2.5">
@@ -54,6 +63,16 @@ export function SurveyParticipation({ postId, questions }: { postId: number; que
               )}
             </fieldset>
           ))}
+          {payout === "draw" && (
+            <fieldset className="space-y-2.5 rounded-xl bg-[#fffaf0] p-3.5">
+              <legend className="text-[14px] font-bold text-ink">추첨 안내 연락처<span className="ml-1 text-brand-dark" aria-label="필수">*</span></legend>
+              <input type="text" inputMode="email" autoComplete="off" required maxLength={100} value={contact} onChange={(e) => { setContact(e.target.value); setFeedback(null); }} className="field" placeholder="이메일 또는 휴대폰 번호 (예: 010-1234-5678)" />
+              <label className="flex cursor-pointer items-start gap-2 text-[12.5px] leading-relaxed text-ink-2">
+                <input type="checkbox" required checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 accent-[#bd870c]" />
+                당첨 안내 목적으로 연락처를 수집하여 이 홍보글 작성자에게 제공하는 데 동의합니다. 당첨자 선정과 혜택 지급은 작성자(업체)가 직접 하며 더홍보는 관여하지 않습니다.
+              </label>
+            </fieldset>
+          )}
           {feedback && !feedback.ok && <p role="alert" className="text-[13px] font-semibold text-brand-dark">{feedback.message}</p>}
           <button type="submit" disabled={pending} className="btn btn-primary w-full disabled:opacity-60">
             {pending && <LoaderCircle size={16} className="animate-spin" aria-hidden />}

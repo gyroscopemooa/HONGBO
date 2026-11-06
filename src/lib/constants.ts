@@ -258,6 +258,8 @@ export const LIMITS = {
   autoPopularMinEvents: 300,
   /** 카드에 조회수를 표시하는 최소 실제 조회수 */
   showViewsFrom: 1000,
+  /** 링크 클릭 수는 이 값 이상일 때만 작성자 화면에 표시 (적은 숫자가 위축 요인이 되지 않도록) */
+  showClicksFrom: 100,
   uploadMaxBytes: 4 * 1024 * 1024,
 };
 
@@ -294,6 +296,14 @@ export const SURVEY_MAX_OPTIONS = 6;
 export const SURVEY_QUESTION_MAX = 100;
 export const SURVEY_OPTION_MAX = 60;
 export const SURVEY_ANSWER_MAX = 500;
+export const SURVEY_CONTACT_MAX = 100;
+/** 설문 응답 안에서 추첨 연락처를 구분하는 예약 ID (질문 ID는 이 값을 쓸 수 없음) */
+export const SURVEY_CONTACT_ID = "__contact";
+export const SURVEY_PAYOUTS = [
+  { value: "instant", label: "즉시 지급", hint: "설문을 제출하면 완료 화면에 쿠폰 코드를 바로 보여줘요. 연락처를 받지 않아요." },
+  { value: "draw", label: "추첨 안내", hint: "참여자의 이메일 또는 휴대폰 번호를 받아 당첨자에게 업체가 직접 연락해요." },
+  { value: "none", label: "혜택 없음", hint: "의견 수집만 해요." },
+] as const;
 /** 더홍보 전용 링크에 자동으로 붙는 유입 표시 */
 export function withExclusiveRef(url: string): string {
   try {

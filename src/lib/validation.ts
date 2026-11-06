@@ -10,6 +10,7 @@ import {
   type ExclusiveMethod,
   EXCLUSIVE_SLUG,
   SURVEY_MAX_QUESTIONS,
+  SURVEY_CONTACT_ID,
   SURVEY_MAX_OPTIONS,
   SURVEY_QUESTION_MAX,
   SURVEY_OPTION_MAX,
@@ -23,7 +24,7 @@ import {
 } from "./constants";
 import { parseYoutubeId } from "./youtube";
 import { findBannedKeyword, inferRegion, isRegion } from "./policy";
-import type { PostExtra, PostInput, SurveyQuestion } from "./types";
+import type { PostExtra, PostInput, SurveyPayout, SurveyQuestion } from "./types";
 import { isAllowedImageUrl, isMapUrl, normalizeExternalUrl } from "./url";
 
 const str = (max: number) => z.string().max(max).optional().nullable();
@@ -59,6 +60,7 @@ const rawSchema = z.object({
       exclusiveMethod: str(20),
       exclusiveCode: str(200),
       exclusiveUrl: str(2100),
+      surveyPayout: str(20),
       surveyQuestions: z.array(z.object({
         id: z.string().max(64),
         title: z.string().max(200),
@@ -157,7 +159,8 @@ export function parsePostInput(raw: unknown): ParseResult {
     else if (how.length > EXCLUSIVE_HOW_MAX) errors.exclusiveHow = `받는 방법은 ${EXCLUSIVE_HOW_MAX}자까지 입력할 수 있어요.`;
     let code: string | undefined;
     let exUrl: string | undefined;
-    if (method === "code") {
+    const payout: SurveyPayout = method === "survey" && (v.extra.surveyPayout === "instant" || v.extra.surveyPayout === "draw") ? v.extra.surveyPayout : "none";
+    if (method === "code" || payout === "instant") {
       const c = (v.extra.exclusiveCode ?? "").trim();
       if (!c) errors.exclusiveCode = "쿠폰 번호(코드)를 입력해주세요.";
       else if (c.length > EXCLUSIVE_CODE_MAX || /\s/.test(c)) errors.exclusiveCode = `공백 없이 ${EXCLUSIVE_CODE_MAX}자 이내로 입력해주세요.`;
@@ -178,7 +181,7 @@ export function parsePostInput(raw: unknown): ParseResult {
         const parsed: SurveyQuestion[] = [];
         for (const q of submitted) {
           const title = q.title.replace(/\s+/g, " ").trim();
-          if (!/^[a-zA-Z0-9_-]{1,64}$/.test(q.id) || ids.has(q.id) || title.length < 2 || title.length > SURVEY_QUESTION_MAX) {
+          if (!/^[a-zA-Z0-9_-]{1,64}$/.test(q.id) || q.id === SURVEY_CONTACT_ID || ids.has(q.id) || title.length < 2 || title.length > SURVEY_QUESTION_MAX) {
             errors.exclusiveSurvey = "각 질문은 2~100자로 작성하고, 중복되지 않는 질문 ID를 사용해주세요.";
             break;
           }
@@ -199,7 +202,7 @@ export function parsePostInput(raw: unknown): ParseResult {
     }
     if (!v.extra.exclusiveAgree) errors.exclusiveAgree = "전용 이벤트 안내에 동의해주세요.";
     if (!errors.exclusiveReward && !errors.exclusiveHow && !errors.exclusiveCode && !errors.exclusiveUrl && !errors.exclusiveSurvey && !errors.exclusiveAgree) {
-      extra.exclusive = { reward, how, method, ...(code ? { code } : {}), ...(exUrl ? { url: exUrl } : {}), ...(survey ? { survey } : {}) };
+      extra.exclusive = { reward, how, method, ...(code ? { code } : {}), ...(exUrl ? { url: exUrl } : {}), ...(survey ? { survey, payout } : {}) };
       benefitsFinal.push(EXCLUSIVE_SLUG);
     }
   }

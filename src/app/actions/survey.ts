@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { ensureAnonId } from "@/lib/anon";
 import { getCurrentUser } from "@/lib/auth";
-import { SURVEY_ANSWER_MAX, SURVEY_MAX_QUESTIONS } from "@/lib/constants";
+import { SURVEY_ANSWER_MAX, SURVEY_CONTACT_ID, SURVEY_CONTACT_MAX, SURVEY_MAX_QUESTIONS } from "@/lib/constants";
 import { isPostPublic } from "@/lib/queries";
 import { rateLimit } from "@/lib/ratelimit";
 import { store } from "@/lib/store";
@@ -12,10 +12,15 @@ import { saveSurveyResponse, type SurveyAnswer } from "@/lib/survey-store";
 export interface SurveySubmitResult {
   ok: boolean;
   message: string;
+  /** 즉시 지급형: 제출 성공 시에만 내려주는 쿠폰 코드 */
+  rewardCode?: string;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const PHONE_RE = /^0\d{1,2}-?\d{3,4}-?\d{4}$/;
+
 /** 로그인하지 않아도 참여 가능. 질문 정의는 반드시 서버에 저장된 게시글에서 읽습니다. */
-export async function submitSurveyAction(postId: number, raw: unknown): Promise<SurveySubmitResult> {
+export async function submitSurveyAction(postId: number, raw: unknown, contact?: { value: string; agree: boolean }): Promise<SurveySubmitResult> {
   if (!Number.isSafeInteger(postId) || postId <= 0) return { ok: false, message: "잘못된 설문 주소예요." };
   const post = await store.getPost(postId);
   const exclusive = post?.extra.exclusive;
@@ -51,6 +56,15 @@ export async function submitSurveyAction(postId: number, raw: unknown): Promise<
     if (answer) answers.push({ id: question.id, question: question.title, answer });
   }
 
+  if (exclusive.payout === "draw") {
+    const value = typeof contact?.value === "string" ? contact.value.trim() : "";
+    if (!value || value.length > SURVEY_CONTACT_MAX || !(EMAIL_RE.test(value) || PHONE_RE.test(value))) {
+      return { ok: false, message: "추첨 안내를 받을 이메일 또는 휴대폰 번호를 올바르게 입력해주세요." };
+    }
+    if (contact?.agree !== true) return { ok: false, message: "연락처 수집·제공에 동의해주세요." };
+    answers.push({ id: SURVEY_CONTACT_ID, question: "연락처(추첨 안내용)", answer: value });
+  }
+
   const anonId = await ensureAnonId();
   if (!rateLimit(`survey:${anonId}`, 5, 60_000)) return { ok: false, message: "잠시 후 다시 시도해주세요." };
 
@@ -58,7 +72,8 @@ export async function submitSurveyAction(postId: number, raw: unknown): Promise<
     const result = await saveSurveyResponse(postId, anonId, user?.id ?? null, answers);
     if (result === "duplicate") return { ok: false, message: "이미 이 설문에 참여하셨어요. 한 번만 제출할 수 있어요." };
     revalidatePath(`/post/${postId}/survey-results`);
-    return { ok: true, message: "설문 참여가 완료됐어요. 참여해 주셔서 감사합니다!" };
+    const rewardCode = exclusive.payout === "instant" ? exclusive.code : undefined;
+    return { ok: true, message: "설문 참여가 완료됐어요. 참여해 주셔서 감사합니다!", ...(rewardCode ? { rewardCode } : {}) };
   } catch {
     return { ok: false, message: "응답을 저장하지 못했어요. 설문 설정을 확인하거나 잠시 후 다시 시도해주세요." };
   }
