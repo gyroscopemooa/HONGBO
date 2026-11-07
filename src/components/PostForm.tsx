@@ -243,7 +243,7 @@ function SectionCard({ step, title, desc, children }: { step: number; title: str
   );
 }
 
-export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post }) {
+export function PostForm({ mode, post, canManageConsent = false, initialThreadsConsent = null }: { mode: "create" | "edit"; post?: Post; canManageConsent?: boolean; initialThreadsConsent?: boolean | null }) {
   const router = useRouter();
   const [f, setF] = useState<FormState>(() => (post ? postToFormState(post) : EMPTY));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -251,7 +251,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
   const [pending, start] = useTransition();
   const [busyCount, setBusyCount] = useState(0);
   const [confirmNoImage, setConfirmNoImage] = useState(false);
-  const [threadsConsent, setThreadsConsent] = useState(true);
+  const [threadsConsent, setThreadsConsent] = useState(mode === "create" ? true : initialThreadsConsent ?? false);
   const [showPromotionDetails, setShowPromotionDetails] = useState(true);
   const [restored, setRestored] = useState(false);
   const loaded = useRef(false);
@@ -358,7 +358,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
     }
     setConfirmNoImage(false);
     start(async () => {
-      const r = mode === "edit" && post ? await updatePostAction(post.id, toPayload(f)) : await createPostAction({ ...toPayload(f), threadsConsent });
+      const r = mode === "edit" && post ? await updatePostAction(post.id, { ...toPayload(f), ...(canManageConsent && initialThreadsConsent !== null && threadsConsent !== initialThreadsConsent ? { threadsConsent } : {}) }) : await createPostAction({ ...toPayload(f), threadsConsent });
       if (r.ok) {
         if (r.message) window.alert(r.message);
         try {
@@ -1036,12 +1036,14 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
         )}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-        {mode === "create" && <div className="min-w-0 flex-1 text-base">
+        {(mode === "create" || canManageConsent) && <div className="min-w-0 flex-1 text-base">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <label className="flex min-h-[50px] cursor-pointer items-center gap-2.5 font-semibold"><input type="checkbox" className="h-5 w-5 shrink-0 accent-brand" checked={threadsConsent} onChange={e => setThreadsConsent(e.target.checked)} />
+            <label className="flex min-h-[50px] cursor-pointer items-center gap-2.5 font-semibold"><input type="checkbox" className="h-5 w-5 shrink-0 accent-brand" checked={threadsConsent} disabled={mode === "edit" && initialThreadsConsent === null} onChange={e => setThreadsConsent(e.target.checked)} />
               <span>[선택] 추가로 더 홍보해드릴까요?</span></label>
             <button type="button" aria-expanded={showPromotionDetails} aria-controls="promotion-consent-details" onClick={() => setShowPromotionDetails(v => !v)} className="py-2 text-muted underline underline-offset-2">{showPromotionDetails ? "접기" : "자세히"}</button>
           </div>
+          {mode === "edit" && initialThreadsConsent === null && <p role="status" className="text-sm text-muted">현재 동의 상태를 불러올 수 없어 변경할 수 없습니다. 운영 사이트에서 다시 확인해주세요.</p>}
+          {mode === "edit" && <p className="text-sm text-muted">체크를 변경한 뒤 수정 완료를 눌러 저장하세요. 동의를 철회해도 이미 외부에 게시된 내용은 자동 삭제되지 않습니다.</p>}
           <div id="promotion-consent-details" hidden={!showPromotionDetails} className="mt-1 space-y-1.5 text-sm leading-relaxed text-muted">
             <p>더홍보가 공식 Threads와 유튜브 등 다른 플랫폼에서도 대신 홍보해드립니다. 체크하시면 이 글의 제목·소개·본문 일부와 원문 링크를 외부 플랫폼에 공개 홍보하는 데 동의합니다. 선정된 글에 한해 진행되며, 모든 글이 홍보되는 것은 아닙니다.</p>
             <p><Link href="/policy#threads" className="underline">공식 SNS 홍보 운영정책</Link></p>

@@ -51,7 +51,7 @@ export async function createPostAction(raw: unknown): Promise<ActionResult> {
   let message: string | undefined;
   if (raw && typeof raw === "object" && "threadsConsent" in raw && raw.threadsConsent === true) {
     try { await setThreadsConsent(post.id, user.id, true); }
-    catch { message = "글은 등록됐지만 SNS 홍보 동의 처리에 실패했습니다. 글 상세의 공식 Threads 홍보 동의에서 다시 확인해주세요."; }
+    catch { message = "글은 등록됐지만 SNS 홍보 동의 처리에 실패했습니다. 글 수정 화면에서 SNS 홍보 동의 상태를 다시 확인해주세요."; }
   }
   await store.recordEvent({ type: "write_complete", postId: post.id, userId: user.id });
   revalidatePath("/", "layout");
@@ -87,10 +87,17 @@ export async function updatePostAction(id: number, raw: unknown): Promise<Action
   }
 
   await store.updatePost(id, parsed.data);
-  // Existing explicit v2 consent only; no new consent is inferred from an edit.
-  try { await screenThreadsPost(id); } catch { /* Changed source hashes remain ineligible. */ }
+  let message: string | undefined;
+  const requestedConsent = raw && typeof raw === "object" && "threadsConsent" in raw ? raw.threadsConsent : undefined;
+  if (typeof requestedConsent === "boolean" && post.authorId === user.id && !post.isSeed) {
+    try { await setThreadsConsent(id, user.id, requestedConsent); }
+    catch { message = "글 수정은 저장됐지만 SNS 홍보 동의 변경에 실패했습니다. 수정 화면에서 동의 상태를 다시 확인해주세요."; }
+  } else {
+    // Editing without an explicit owner consent change must not grant consent.
+    try { await screenThreadsPost(id); } catch { /* Changed source hashes remain ineligible. */ }
+  }
   revalidatePath("/", "layout");
-  return { ok: true, id };
+  return { ok: true, id, message };
 }
 
 /** 홍보글 삭제 (작성자 본인) — 화면에서 숨기는 소프트 삭제 */
