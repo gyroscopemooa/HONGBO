@@ -253,7 +253,6 @@ export default async function PostDetailPage({ params }: Props) {
               <div className="mt-4 rounded-xl bg-soft p-3">
                 <p className="mb-2 text-xs font-semibold text-muted">{isOwner ? "내가 쓴 글" : "관리자 메뉴"}</p>
                 <OwnerActions postId={post.id} canRenew={isOwner} size="sm" redirectTo={isOwner ? "/mypage" : "/admin/posts"} />
-                {isOwner && !post.isSeed && <Link href={`/post/${post.id}/threads`} className="btn btn-outline btn-sm">공식 Threads 홍보 동의 관리</Link>}
                 {isOwner && publicNow && <BadgeKit postId={post.id} origin={siteUrl()} />}
                 {post.extra.exclusive?.method === "survey" && (
                   <Link href={`/post/${post.id}/survey-results`} className="mt-2 inline-flex items-center rounded-lg border border-[#e6c77a] bg-white px-3 py-2 text-[13px] font-bold text-[#8a6105] hover:bg-[#fff7e0]">
