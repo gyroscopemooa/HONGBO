@@ -19,6 +19,7 @@ export default async function AppealPage({ params }: { params: Promise<{ id: str
     <h1 className="text-2xl font-bold">홍보글 이의제기</h1><p>{post.title}</p>
     <section className="rounded-xl border border-line p-4"><h2 className="font-bold">숨김·차단 사유</h2><p className="whitespace-pre-wrap">{item?.reason || DEFAULT_MODERATION_REASON}</p></section>
     <p className="font-semibold">{!restricted ? "현재 공개 가능 상태입니다." : APPEAL_STATES[item?.state ?? "restricted"]}</p>
+    {restricted && <section className="rounded-xl bg-soft p-4"><h2 className="font-bold">정책에 맞는 홍보 방법</h2><p>먼저 안내된 사유에 맞게 내용을 보완하고 복원 검토를 요청해주세요. 운영정책을 충족하고 게시 제한이 해제된 뒤에는 실제로 제공 가능한 무료·할인·증정 등 혜택 이벤트를 진행하거나 <Link className="underline" href="/advertise">유료 광고 기능</Link>을 활용해 홍보해주세요. 이벤트 진행이나 유료 광고 이용으로 숨김·차단이 해제되지는 않으며, 모든 홍보에는 동일한 <Link className="underline" href="/policy">운영정책</Link>이 적용됩니다.</p></section>}
     {item?.response && <section className="rounded-xl bg-soft p-4"><h2 className="font-bold">관리자 안내</h2><p className="whitespace-pre-wrap">{item.response}</p></section>}
     {secondStage && <p><Link className="btn btn-primary" href={`/restoration?post=${id}`}>복원 신청하기</Link></p>}
     {restricted && !secondStage && <p>먼저 <Link className="underline" href={`/post/${id}/edit`}>홍보글을 수정</Link>한 뒤 바꾼 내용과 복원 요청 사유를 작성해주세요. 계정 제한으로 수정할 수 없다면 아래에 수정 원고를 함께 적어주세요. 수정이나 신청만으로 글이 공개되지는 않습니다.</p>}

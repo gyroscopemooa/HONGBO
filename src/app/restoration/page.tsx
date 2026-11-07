@@ -20,7 +20,7 @@ export default async function RestorationPage({ searchParams }: { searchParams: 
     <p><Link href={postId ? `/appeals/${postId}` : "/mypage"}>조치 사유 및 검토 결과 확인</Link></p>
     {postId && <p><b>신청 대상 게시글 번호: {postId}</b> — 신청서에도 같은 번호를 기재해주세요.</p>}
     <p><a href="/downloads/hongbo-restoration-form.pdf" download className="btn btn-primary !text-white !no-underline">신청서 PDF 다운로드</a> <a href="/downloads/hongbo-restoration-form.docx" download className="btn btn-outline !text-ink !no-underline">작성용 Word 다운로드</a></p>
-    <p>자필 작성은 필수가 아닙니다. Word로 작성한 뒤 PDF로 저장하거나 PDF 편집 프로그램으로 입력한 후, 완성된 PDF를 이메일로 보내주세요. 입력 공간이 부족하면 별지를 추가할 수 있습니다. 다운로드나 메일 작성 버튼만으로 접수되지는 않습니다.</p>
+    <p>PDF에는 설명 아래 자유롭게 적을 수 있는 빈 공간이 있습니다. 출력해서 작성한 뒤 모든 작성 페이지를 스캔하여 PDF로 보내실 수 있습니다. 자필 작성은 필수가 아니며 Word로 작성한 뒤 PDF로 저장하거나 PDF 편집 프로그램으로 입력해도 됩니다. 공간이 부족하면 별도 종이에 항목 번호를 적어 첨부해주세요. 다운로드나 메일 작성 버튼만으로 접수되지는 않습니다.</p>
     <h2>1. 작성 및 제출 순서</h2>
     <ol>
       <li><Link href="/policy">운영정책</Link>과 안내받은 제한 사유를 확인합니다. 사유를 안내받지 못했다면 먼저 지원 메일로 문의해주세요.</li>
@@ -28,16 +28,8 @@ export default async function RestorationPage({ searchParams }: { searchParams: 
       <li>신청서의 기본 정보, 제한 사유, 서비스 설명, 보완 내역, 증빙 목록, 재발 방지 계획, 확인란을 모두 작성합니다.</li>
       <li>파일명을 ‘복원신청_게시글번호_서비스명.pdf’로 저장하고, 아래 지원 메일에 직접 첨부하여 발송합니다. 2차 접수는 이메일로 진행하며 사이트에서 다시 이의제기를 제출하지 않습니다.</li>
     </ol>
-    <h2>2. 항목별 작성 분량</h2>
-    <ul>
-      <li>제한 사유 이해 및 소명: 300~1,000자</li>
-      <li>서비스 목적·실제 기능·이용 과정: 500~1,500자</li>
-      <li>가입·결제·혜택 조건 및 운영 정보: 300~1,000자</li>
-      <li>제한 사유별 수정 전후와 보완 내용: 500~2,000자</li>
-      <li>복원 후 게시할 홍보글 원고: 300~1,500자</li>
-      <li>재발 방지 계획 및 복원 요청 이유: 300~1,000자</li>
-    </ul>
-    <p>공백 포함, 각 답변 본문 기준입니다. 제목·안내문·주소·증빙 목록은 글자 수에서 제외합니다. 해당하지 않는 세부 항목은 ‘해당 없음’과 이유를 기재하고, 각 서술 항목의 분량은 충족해주세요. 반복 문장으로 분량만 채우거나 확인되지 않은 사실을 작성하면 보완을 요청할 수 있습니다.</p>
+    <h2>2. 작성 안내</h2>
+    <p>글자 수 제한이나 글자 수 기입은 없습니다. 제한 사유에 대한 설명, 서비스 내용, 보완한 사항과 복원 요청 이유를 확인에 필요한 만큼 자유롭게 작성해주세요. 해당하지 않는 항목은 ‘해당 없음’으로 표시하고, 확인되지 않은 사실은 적지 마세요.</p>
     <h2>3. 작성한 신청서 보내기</h2>
     <p>받는 주소: <a href={`mailto:${email}`}><b>{email}</b></a><br />메일 제목: {subject}</p>
     <p><a href={mailto} className="btn btn-primary !text-white !no-underline">지원 메일로 신청서 보내기</a></p>

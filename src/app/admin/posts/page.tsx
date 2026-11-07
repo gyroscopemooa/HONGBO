@@ -93,8 +93,8 @@ export default async function AdminPosts({ searchParams }: Props) {
         {items.map((p) => {
           const st = effectiveStatus(p);
           return (
-            <li key={p.id} className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-3.5 shadow-card lg:flex-row lg:items-center">
-              <Link href={`/post/${p.id}`} className="block w-full shrink-0 overflow-hidden rounded-lg lg:w-[120px]">
+            <li key={p.id} className="grid min-w-0 grid-cols-1 gap-3 rounded-2xl border border-line bg-white p-3.5 shadow-card sm:grid-cols-[120px_minmax(0,1fr)] sm:items-start">
+              <Link href={`/post/${p.id}`} className="block w-full overflow-hidden rounded-lg">
                 <PostImage src={p.primaryImageUrl} alt="" category={p.category} sizes="120px" />
               </Link>
               <div className="min-w-0 flex-1">
@@ -107,17 +107,17 @@ export default async function AdminPosts({ searchParams }: Props) {
                       <Pin size={11} aria-hidden /> 메인 고정{p.curatedRank ? ` #${p.curatedRank}` : ""}
                     </span>
                   )}
-                  <span className="text-xs text-faint">#{p.id}</span>
+                  <span className="whitespace-nowrap text-xs text-faint">#{p.id}</span>
                 </div>
                 <Link href={`/post/${p.id}`} className="mt-1 block truncate font-bold hover:text-brand-dark">
                   {p.title}
                 </Link>
-                <p className="mt-0.5 text-xs text-faint">
+                <p className="mt-0.5 text-xs leading-relaxed text-faint">
                   {formatDate(p.publishedAt)} · 조회 {p.viewCount} · 클릭 {p.clickCount}
                   {p.authorId ? ` · 작성자 ${p.authorId.slice(0, 8)}` : " · 운영자"}
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+              <div className="flex min-w-0 flex-wrap items-end gap-3 border-t border-line pt-3 sm:col-span-2">
                 <form action={adminSetOfficial} className="flex items-center gap-1.5 rounded-lg bg-soft px-2 py-1.5">
                   <input type="hidden" name="id" value={p.id} />
                   <select name="official" defaultValue={p.extra.official ?? ""} aria-label="더홍보 표시" className="h-8 rounded-md border border-line bg-white px-2 text-sm">
@@ -144,7 +144,7 @@ export default async function AdminPosts({ searchParams }: Props) {
                   <button className="btn btn-outline btn-sm !px-2.5">저장</button>
                 </form>
                 {p.status === "active" ? (
-                  <form action={adminSetPostStatus}>
+                  <form action={adminSetPostStatus} className="w-full min-w-0 sm:w-72">
                     <input type="hidden" name="id" value={p.id} />
                     <input type="hidden" name="status" value="hidden" />
                     <label className="block text-xs">작성자에게 표시할 사유<textarea name="reason" className="field mb-2" required maxLength={2000} defaultValue="내부 운영정책에 의한 숨김 및 차단" /></label>
@@ -164,7 +164,7 @@ export default async function AdminPosts({ searchParams }: Props) {
                   )
                 )}
                 {p.status !== "blocked" && p.status !== "deleted" && !p.isSeed && (
-                  <form action={adminSetPostStatus}>
+                  <form action={adminSetPostStatus} className="w-full min-w-0 sm:w-72">
                     <input type="hidden" name="id" value={p.id} />
                     <input type="hidden" name="status" value="blocked" />
                     <label className="block text-xs">작성자에게 표시할 사유<textarea name="reason" className="field mb-2" required maxLength={2000} defaultValue="내부 운영정책에 의한 숨김 및 차단" /></label>
