@@ -1,4 +1,5 @@
 // Manual-only brand posts: never imported by the scheduled publishing Worker.
+import { appendPromoHashtags } from './copy.mjs';
 export const QUESTIONS = [
   '여러분은 만드는 일과 알리는 일 중 뭐가 더 어렵나요?',
   '만든 서비스 처음 알릴 때, 어디서부터 시작하셨나요?',
@@ -25,8 +26,8 @@ export function formatSelfPromo(index = 0) {
   const n = Math.abs(Math.trunc(index)) || 0;
   return {
     topic: ['무료홍보', '온라인홍보', '서비스홍보'][n % 3],
-    text: OPENERS[n % OPENERS.length] + '\n\n' +
+    text: appendPromoHashtags(OPENERS[n % OPENERS.length] + '\n\n' +
       '더홍보는 앱, 웹사이트, 서비스, 가게 등을 소개할 수 있는 무료 홍보 사이트입니다.\n만든 건 있는데 알릴 곳을 찾고 있다면, 더홍보에 소개글 하나 남겨보세요.\n\n' +
-      'https://www.thehongbo.com\n\n#더홍보\n\n' + QUESTIONS[n % QUESTIONS.length],
+      'https://www.thehongbo.com', { title: '더홍보 앱 웹사이트 서비스 소개' }, `brand:${n}`) + '\n\n' + QUESTIONS[n % QUESTIONS.length],
   };
 }

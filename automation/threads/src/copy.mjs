@@ -1,7 +1,17 @@
 // Standalone Cloudflare Worker, intentionally not imported by the Next.js site.
 // Default AUTOPOST_ENABLED=false prevents publication without explicit setup.
 
-const MAX_THREADS_CHARS = 430; // conservative headroom vs Threads' 500-char limit, including emoji
+import { promoHashtags } from './hashtags.mjs';
+const MAX_THREADS_CHARS = 430; // Reserve remaining space for optional hashtags.
+
+export function appendPromoHashtags(text, post, seed) {
+  let result = text;
+  for (const tag of promoHashtags(post, seed)) {
+    const next = result + (result === text ? '\n\n' : ' ') + tag;
+    if (weightedLength(next) <= 500) result = next;
+  }
+  return result;
+}
 
 
 function clean(value) {
@@ -88,7 +98,7 @@ export function formatPromo(post, siteUrl, suggestedBody = "", context = {}) {
   const title = "" + clipped(cleanedPublicExcerpt(post.title), 120) + "\n\n";
   const closer = "\n\n원문 보기: " + link +
     "\n\n" + SIGNOFFS[Math.abs(id) % SIGNOFFS.length] +
-    "\n무료 홍보는 더홍보에서! #더홍보";
+    "\n무료 홍보는 더홍보에서!";
   const room = Math.max(0, MAX_THREADS_CHARS - weightedLength(opener + title + closer));
   const source = cleanedPublicExcerpt(post.short_description) || cleanedPublicExcerpt(post.description) || "새로운 홍보 소식이 등록됐어요.";
   // Original source wins; AI is a supplementary, short social-friendly teaser.
@@ -98,5 +108,5 @@ export function formatPromo(post, siteUrl, suggestedBody = "", context = {}) {
   const teaser = remaining > 12 && ai && ai !== sourceText
     ? "\n\n" + clipped(ai, Math.min(100, remaining))
     : "";
-  return opener + title + sourceText + teaser + closer;
+  return appendPromoHashtags(opener + title + sourceText + teaser + closer, post);
 }
