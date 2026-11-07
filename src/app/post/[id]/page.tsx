@@ -10,6 +10,9 @@ import { SurveyParticipation } from "@/components/SurveyParticipation";
 import { YoutubeEmbed } from "@/components/YoutubeEmbed";
 import { BadgeKit } from "@/components/BadgeKit";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { LikeButton } from "@/components/LikeButton";
+import { getLikeCount, isLiked } from "@/lib/likes-store";
+import { supabaseConfigured } from "@/lib/env";
 import { isFavorite } from "@/lib/favorites-store";
 import { OwnerActions } from "@/components/OwnerActions";
 import { PostCard } from "@/components/PostCard";
@@ -64,7 +67,13 @@ export default async function PostDetailPage({ params }: Props) {
 
   const isOwner = !!user && post.authorId === user.id;
   const canManage = isOwner || !!user?.isAdmin;
-  const favorited = user ? await isFavorite(user.id, post.id).catch(() => false) : false;
+  const [favorited, liked] = user
+    ? await Promise.all([
+        isFavorite(user.id, post.id).catch(() => false),
+        isLiked(user.id, post.id).catch(() => false),
+      ])
+    : [false, false];
+  const likeCount = supabaseConfigured() ? (post.likeCount ?? 0) : await getLikeCount(post.id);
   const publicNow = isPostPublic(post);
   if (!publicNow && !canManage) notFound();
 
@@ -225,6 +234,7 @@ export default async function PostDetailPage({ params }: Props) {
             <div className="mt-3 flex flex-wrap items-start gap-x-4 gap-y-2 [&_a]:whitespace-nowrap [&_button]:whitespace-nowrap">
               <CopyLinkButton path={`/post/${post.id}`} />
               <FavoriteButton postId={post.id} initial={favorited} loggedIn={!!user} />
+              <LikeButton postId={post.id} initial={liked} initialCount={likeCount} loggedIn={!!user} />
               <ReportButton postId={post.id} />
             </div>
 

@@ -45,6 +45,7 @@ function toPost(r: Row): Post {
     isSeed: Boolean(r.is_seed),
     viewCount: Number(r.view_count ?? 0),
     clickCount: Number(r.click_count ?? 0),
+    likeCount: Number(r.like_count ?? 0),
     publishedAt: r.published_at as string,
     bumpedAt: r.bumped_at as string,
     updatedAt: r.updated_at as string,
