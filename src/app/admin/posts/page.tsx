@@ -147,6 +147,7 @@ export default async function AdminPosts({ searchParams }: Props) {
                   <form action={adminSetPostStatus}>
                     <input type="hidden" name="id" value={p.id} />
                     <input type="hidden" name="status" value="hidden" />
+                    <label className="block text-xs">작성자에게 표시할 사유<textarea name="reason" className="field mb-2" required maxLength={2000} defaultValue="내부 운영정책에 의한 숨김 및 차단" /></label>
                     <button className="btn btn-outline btn-sm">
                       <EyeOff size={14} aria-hidden /> 숨김
                     </button>
@@ -166,6 +167,7 @@ export default async function AdminPosts({ searchParams }: Props) {
                   <form action={adminSetPostStatus}>
                     <input type="hidden" name="id" value={p.id} />
                     <input type="hidden" name="status" value="blocked" />
+                    <label className="block text-xs">작성자에게 표시할 사유<textarea name="reason" className="field mb-2" required maxLength={2000} defaultValue="내부 운영정책에 의한 숨김 및 차단" /></label>
                     <button className="btn btn-outline btn-sm" title="작성자가 다시 공개할 수 없는 차단 상태로 바꿉니다">
                       <ShieldBan size={14} aria-hidden /> 차단
                     </button>

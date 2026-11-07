@@ -234,6 +234,8 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
   const [pending, start] = useTransition();
   const [busyCount, setBusyCount] = useState(0);
   const [confirmNoImage, setConfirmNoImage] = useState(false);
+  const [threadsConsent, setThreadsConsent] = useState(true);
+  const [showPromotionDetails, setShowPromotionDetails] = useState(true);
   const [restored, setRestored] = useState(false);
   const loaded = useRef(false);
 
@@ -339,8 +341,9 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
     }
     setConfirmNoImage(false);
     start(async () => {
-      const r = mode === "edit" && post ? await updatePostAction(post.id, toPayload(f)) : await createPostAction(toPayload(f));
+      const r = mode === "edit" && post ? await updatePostAction(post.id, toPayload(f)) : await createPostAction({ ...toPayload(f), threadsConsent });
       if (r.ok) {
+        if (r.message) window.alert(r.message);
         try {
           if (mode === "create") localStorage.removeItem(DRAFT_KEY);
         } catch {
@@ -987,14 +990,27 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
           </div>
         )}
 
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Link href={mode === "edit" && post ? `/post/${post.id}` : "/"} className="btn btn-outline btn-lg">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        {mode === "create" && <div className="min-w-0 flex-1 text-base">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <label className="flex min-h-[50px] cursor-pointer items-center gap-2.5 font-semibold"><input type="checkbox" className="h-5 w-5 shrink-0 accent-brand" checked={threadsConsent} onChange={e => setThreadsConsent(e.target.checked)} />
+              <span>[선택] 추가로 더 홍보해드릴까요?</span></label>
+            <button type="button" aria-expanded={showPromotionDetails} aria-controls="promotion-consent-details" onClick={() => setShowPromotionDetails(v => !v)} className="py-2 text-muted underline underline-offset-2">{showPromotionDetails ? "접기" : "자세히"}</button>
+          </div>
+          <div id="promotion-consent-details" hidden={!showPromotionDetails} className="mt-1 space-y-1.5 text-sm leading-relaxed text-muted">
+            <p>더홍보가 공식 Threads와 유튜브 등 다른 플랫폼에서도 대신 홍보해드립니다. 체크하시면 이 글의 제목·소개·본문 일부와 원문 링크를 외부 플랫폼에 공개 홍보하는 데 동의합니다. 선정된 글에 한해 진행되며, 모든 글이 홍보되는 것은 아닙니다.</p>
+            <p><Link href="/policy#threads" className="underline">공식 SNS 홍보 운영정책</Link></p>
+          </div>
+        </div>}
+        <div className="flex shrink-0 items-center justify-end gap-2 sm:ml-auto">
+          <Link href={mode === "edit" && post ? `/post/${post.id}` : "/"} className="btn btn-outline btn-lg shrink-0">
             취소
           </Link>
           <button type="submit" disabled={pending || busyCount > 0} className="btn btn-primary btn-lg sm:min-w-[200px]">
             {pending ? <LoaderCircle size={18} className="animate-spin" aria-hidden /> : <Send size={17} aria-hidden />}
             {pending ? "등록 중…" : mode === "edit" ? "수정 완료" : "홍보글 등록하기"}
           </button>
+        </div>
         </div>
       </div>
 

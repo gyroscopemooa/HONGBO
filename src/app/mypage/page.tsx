@@ -7,6 +7,7 @@ import { OwnerActions } from "@/components/OwnerActions";
 import { PostImage } from "@/components/PostImage";
 import { StatusBadge } from "@/components/StatusBadge";
 import { requireUser } from "@/lib/auth";
+import { getAppealStates } from "@/lib/post-appeals";
 import { effectiveStatus } from "@/lib/queries";
 import { store } from "@/lib/store";
 import { LIMITS } from "@/lib/constants";
@@ -21,6 +22,7 @@ export default async function MyPage() {
   const user = await requireUser("/mypage");
   const { items } = await store.listPosts({ authorId: user.id, sort: "latest", pageSize: 100 });
   const posts = items.filter((p) => p.status !== "deleted");
+  const appealStates = await getAppealStates(posts.filter(p => ["hidden", "blocked"].includes(p.status)).map(p => p.id));
 
   return (
     <div className="wrap py-6 sm:py-9">
@@ -49,6 +51,7 @@ export default async function MyPage() {
       {user.status === "blocked" && (
         <p role="alert" className="mb-6 rounded-xl bg-brand-soft px-4 py-3 text-[14px] font-medium text-brand-dark">
           작성이 제한된 계정이에요. 자세한 내용은 문의하기로 연락해주세요.
+          <Link href="/restoration" className="btn btn-outline ml-3">복원 신청하기</Link>
         </p>
       )}
 
@@ -89,6 +92,7 @@ export default async function MyPage() {
                 </div>
                 <div className="shrink-0">
                   <div className="flex flex-wrap items-center gap-2">
+                    {(p.status === "hidden" || p.status === "blocked") && <Link href={["pdf_requested", "rejected"].includes(appealStates[p.id]) ? `/restoration?post=${p.id}` : `/appeals/${p.id}`} className="btn btn-outline text-[13px]">{["pdf_requested", "rejected"].includes(appealStates[p.id]) ? "복원 신청하기" : "이의제기 · 처리 상태"}</Link>}
                     {p.extra.exclusive?.method === "survey" && (
                       <Link href={`/post/${p.id}/survey-results`} className="btn btn-outline text-[13px]">설문 결과</Link>
                     )}

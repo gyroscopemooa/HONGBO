@@ -9,6 +9,7 @@ import { rateLimit } from "@/lib/ratelimit";
 import { store } from "@/lib/store";
 import { hasSurveyResponses, surveyStorageReady } from "@/lib/survey-store";
 import { parsePostInput, type FieldErrors } from "@/lib/validation";
+import { setThreadsConsent, screenThreadsPost } from "@/lib/threads-consent";
 
 export type ActionResult =
   | { ok: true; id?: number; message?: string }
@@ -47,9 +48,14 @@ export async function createPostAction(raw: unknown): Promise<ActionResult> {
   }
 
   const post = await store.createPost(user.id, parsed.data, postExpiryFromNow());
+  let message: string | undefined;
+  if (raw && typeof raw === "object" && "threadsConsent" in raw && raw.threadsConsent === true) {
+    try { await setThreadsConsent(post.id, user.id, true); }
+    catch { message = "글은 등록됐지만 SNS 홍보 동의 처리에 실패했습니다. 글 상세의 공식 Threads 홍보 동의에서 다시 확인해주세요."; }
+  }
   await store.recordEvent({ type: "write_complete", postId: post.id, userId: user.id });
   revalidatePath("/", "layout");
-  return { ok: true, id: post.id };
+  return { ok: true, id: post.id, message };
 }
 
 /** 홍보글 수정 (작성자 본인 또는 관리자) */
@@ -81,6 +87,8 @@ export async function updatePostAction(id: number, raw: unknown): Promise<Action
   }
 
   await store.updatePost(id, parsed.data);
+  // Existing explicit v2 consent only; no new consent is inferred from an edit.
+  try { await screenThreadsPost(id); } catch { /* Changed source hashes remain ineligible. */ }
   revalidatePath("/", "layout");
   return { ok: true, id };
 }
