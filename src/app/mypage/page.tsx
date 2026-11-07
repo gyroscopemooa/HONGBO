@@ -91,12 +91,12 @@ export default async function MyPage() {
                   </p>
                 </div>
                 <div className="shrink-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {(p.status === "hidden" || p.status === "blocked") && <Link href={["pdf_requested", "rejected"].includes(appealStates[p.id]) ? `/restoration?post=${p.id}` : `/appeals/${p.id}`} className="btn btn-outline text-[13px]">{["pdf_requested", "rejected"].includes(appealStates[p.id]) ? "복원 신청하기" : "이의제기 · 처리 상태"}</Link>}
+                  <div className="flex flex-wrap items-center gap-1.5 [&>.btn]:min-h-9 [&>.btn]:px-2.5! [&>.contents>.btn]:min-h-9 [&>.contents>.btn]:px-2.5!">
+                    {(p.status === "hidden" || p.status === "blocked") && <Link href={["pdf_requested", "rejected"].includes(appealStates[p.id]) ? `/restoration?post=${p.id}` : `/appeals/${p.id}`} className="btn btn-outline btn-sm" aria-label={["pdf_requested", "rejected"].includes(appealStates[p.id]) ? "복원 신청하기" : "이의제기 및 처리 상태 확인"}>{["pdf_requested", "rejected"].includes(appealStates[p.id]) ? "복원 신청" : "이의제기·상태"}</Link>}
                     {p.extra.exclusive?.method === "survey" && (
                       <Link href={`/post/${p.id}/survey-results`} className="btn btn-outline text-[13px]">설문 결과</Link>
                     )}
-                    <OwnerActions postId={p.id} canRenew={p.status === "active" || p.status === "expired"} size="sm" redirectTo="/mypage" />
+                    <OwnerActions postId={p.id} canRenew={p.status === "active" || p.status === "expired"} size="sm" redirectTo="/mypage" inline />
                   </div>
                 </div>
               </li>

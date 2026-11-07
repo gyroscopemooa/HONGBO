@@ -13,11 +13,13 @@ export function OwnerActions({
   canRenew = false,
   size = "md",
   redirectTo = "/mypage",
+  inline = false,
 }: {
   postId: number;
   canRenew?: boolean;
   size?: "sm" | "md";
   redirectTo?: string;
+  inline?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -26,7 +28,7 @@ export function OwnerActions({
   const sm = size === "sm" ? "btn-sm" : "";
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className={inline ? "contents" : "flex flex-wrap items-center gap-2"}>
       <Link href={`/post/${postId}/edit`} className={`btn btn-outline ${sm}`}>
         <Pencil size={14} aria-hidden /> 수정
       </Link>
@@ -35,6 +37,7 @@ export function OwnerActions({
           type="button"
           disabled={pending}
           className={`btn btn-outline ${sm}`}
+          aria-label="다시 홍보하기"
           onClick={() =>
             start(async () => {
               const r = await renewPostAction(postId);
@@ -43,7 +46,7 @@ export function OwnerActions({
             })
           }
         >
-          <RefreshCw size={14} aria-hidden /> 다시 홍보하기
+          <RefreshCw size={14} aria-hidden /> {size === "sm" ? "다시 홍보" : "다시 홍보하기"}
         </button>
       )}
       <button type="button" className={`btn btn-danger ${sm}`} onClick={() => setOpen(true)}>

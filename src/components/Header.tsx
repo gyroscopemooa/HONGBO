@@ -49,12 +49,12 @@ export async function Header() {
           {user ? (
             <>
               {user.isAdmin && (
-                <Link href="/admin" className="btn btn-ghost btn-sm hidden sm:inline-flex">
+                <Link href="/admin" className="btn btn-ghost btn-sm hidden! sm:inline-flex!">
                   <ShieldCheck size={16} aria-hidden />
                   관리
                 </Link>
               )}
-              <Link href="/mypage" className="btn btn-ghost btn-sm hidden sm:inline-flex">
+              <Link href="/mypage" className="btn btn-ghost btn-sm hidden! sm:inline-flex!">
                 내 홍보
               </Link>
               <Link href="/mypage" aria-label="내 홍보" className="flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-soft sm:hidden">
@@ -69,7 +69,7 @@ export async function Header() {
             </>
           ) : (
             <>
-              <Link href="/auth" className="btn btn-ghost btn-sm hidden sm:inline-flex">
+              <Link href="/auth" className="btn btn-ghost btn-sm hidden! sm:inline-flex!">
                 <LogIn size={15} aria-hidden />
                 로그인
               </Link>
