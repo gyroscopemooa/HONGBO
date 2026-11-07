@@ -6,6 +6,7 @@ import { CategoryBadge } from "@/components/CategoryBadge";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { ExternalCta } from "@/components/ExternalCta";
 import { Gallery } from "@/components/Gallery";
+import { getAppealStates } from "@/lib/post-appeals";
 import { SurveyParticipation } from "@/components/SurveyParticipation";
 import { YoutubeEmbed } from "@/components/YoutubeEmbed";
 import { BadgeKit } from "@/components/BadgeKit";
@@ -76,6 +77,8 @@ export default async function PostDetailPage({ params }: Props) {
   const likeCount = supabaseConfigured() ? (post.likeCount ?? 0) : await getLikeCount(post.id);
   const publicNow = isPostPublic(post);
   if (!publicNow && !canManage) notFound();
+  const appealState = isOwner && ["hidden", "blocked"].includes(post.status) ? (await getAppealStates([post.id]))[post.id] : undefined;
+  const secondStage = ["pdf_requested", "rejected"].includes(appealState ?? "");
 
   const cat = CATEGORY_MAP[post.category];
   const status = effectiveStatus(post);
@@ -126,7 +129,7 @@ export default async function PostDetailPage({ params }: Props) {
             {status === "expired"
               ? "노출 기간이 지나 목록에서 내려간 글이에요. '내 홍보'에서 다시 홍보하기를 누르면 다시 노출돼요."
               : "현재 숨김 처리된 글이에요. 작성자와 관리자에게만 보입니다."}
-            {isOwner && (post.status === "hidden" || post.status === "blocked") && <Link href={`/restoration?post=${post.id}`} className="btn btn-outline ml-3">복원 신청하기</Link>}
+            {isOwner && (post.status === "hidden" || post.status === "blocked") && <Link href={secondStage ? `/restoration?post=${post.id}` : `/appeals/${post.id}`} className="btn btn-outline ml-3">{secondStage ? "복원 신청하기" : "이의제기 · 처리 상태"}</Link>}
           </p>
         </div>
       )}

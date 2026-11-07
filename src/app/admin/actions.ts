@@ -7,6 +7,7 @@ import { store } from "@/lib/store";
 import { normalizeExternalUrl } from "@/lib/url";
 import { composeNoticeTitle } from "@/lib/notice";
 import type { Ad, Banner, PostStatus } from "@/lib/types";
+import { DEFAULT_MODERATION_REASON, transitionAppeal } from "@/lib/post-appeals";
 
 // 모든 관리자 액션은 시작할 때 반드시 관리자 여부를 서버에서 다시 확인합니다.
 
@@ -21,11 +22,13 @@ const int = (v: FormDataEntryValue | null): number | null => {
 };
 
 export async function adminSetPostStatus(formData: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const id = int(formData.get("id"));
   const status = String(formData.get("status")) as PostStatus;
   if (!id || !["active", "hidden", "blocked"].includes(status)) return;
-  await store.setPostStatus(id, status);
+  const reason = String(formData.get("reason") ?? "").trim() || DEFAULT_MODERATION_REASON;
+  if (reason.length > 2000) throw new Error("조치 사유는 2,000자 이내로 작성해주세요.");
+  await transitionAppeal(id, admin.id, status === "active" ? "restore" : status, reason);
   refresh();
 }
 
@@ -65,13 +68,15 @@ export async function adminBulkSeed(formData: FormData) {
 }
 
 export async function adminHandleReport(formData: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const id = int(formData.get("id"));
   const postId = int(formData.get("postId"));
   const decision = String(formData.get("decision"));
   if (!id) return;
   if (decision === "resolve_hide" && postId) {
-    await store.setPostStatus(postId, "hidden");
+    const reason = String(formData.get("reason") ?? "").trim() || DEFAULT_MODERATION_REASON;
+    if (reason.length > 2000) throw new Error("조치 사유는 2,000자 이내로 작성해주세요.");
+    await transitionAppeal(postId, admin.id, "hidden", reason);
     await store.setReportStatus(id, "resolved");
   } else if (decision === "resolve") {
     await store.setReportStatus(id, "resolved");

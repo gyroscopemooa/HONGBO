@@ -58,7 +58,8 @@ export default async function AdminReports({ searchParams }: Props) {
                     <form action={adminHandleReport}>
                       <input type="hidden" name="id" value={r.id} />
                       <input type="hidden" name="postId" value={r.postId} />
-                      <input type="hidden" name="decision" value="resolve_hide" />
+                        <input type="hidden" name="decision" value="resolve_hide" />
+                        <label className="block text-xs">작성자에게 표시할 사유<textarea name="reason" className="field mb-2" required maxLength={2000} defaultValue="내부 운영정책에 의한 숨김 및 차단" /></label>
                       <button className="btn btn-primary btn-sm">글 숨기고 처리 완료</button>
                     </form>
                   )}
