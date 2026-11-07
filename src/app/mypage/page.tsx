@@ -49,6 +49,7 @@ export default async function MyPage() {
       {user.status === "blocked" && (
         <p role="alert" className="mb-6 rounded-xl bg-brand-soft px-4 py-3 text-[14px] font-medium text-brand-dark">
           작성이 제한된 계정이에요. 자세한 내용은 문의하기로 연락해주세요.
+          <Link href="/restoration" className="btn btn-outline ml-3">복원 신청하기</Link>
         </p>
       )}
 
@@ -89,6 +90,7 @@ export default async function MyPage() {
                 </div>
                 <div className="shrink-0">
                   <div className="flex flex-wrap items-center gap-2">
+                    {(p.status === "hidden" || p.status === "blocked") && <Link href={`/restoration?post=${p.id}`} className="btn btn-outline text-[13px]">복원 신청하기</Link>}
                     {p.extra.exclusive?.method === "survey" && (
                       <Link href={`/post/${p.id}/survey-results`} className="btn btn-outline text-[13px]">설문 결과</Link>
                     )}

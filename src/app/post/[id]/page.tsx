@@ -126,6 +126,7 @@ export default async function PostDetailPage({ params }: Props) {
             {status === "expired"
               ? "노출 기간이 지나 목록에서 내려간 글이에요. '내 홍보'에서 다시 홍보하기를 누르면 다시 노출돼요."
               : "현재 숨김 처리된 글이에요. 작성자와 관리자에게만 보입니다."}
+            {isOwner && (post.status === "hidden" || post.status === "blocked") && <Link href={`/restoration?post=${post.id}`} className="btn btn-outline ml-3">복원 신청하기</Link>}
           </p>
         </div>
       )}
