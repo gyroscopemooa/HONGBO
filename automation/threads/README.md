@@ -87,3 +87,13 @@ Meta 개발 문서 본문은 이번 환경에서 HTTP 429로 차단됐다. 실�
 ## 기존 실패 분석
 
 초안 index.mjs에 실제 줄바꿈 대신 문자 `\\n`이 들어가 node --check 단계에서 SyntaxError를 재현했다. 수정 후 Worker 검사를 통과했다. 기존 Validate survey feature 실행은 GitHub가 단계 정보를 제공하지 않고 로그 다운로드가 404 BlobNotFound를 반환하여 과거 실패의 정확한 원인은 확정하지 못했다. 새 커밋의 CI 결과로 별도 확인한다.
+
+### 최신 GitHub CI 차단 원인 확인
+
+2026-11-07 커밋 e405ed7의 두 실행 화면에서 다음 안내를 직접 확인했다: “The job was not started because your account is locked due to a billing issue.”
+코드 단계가 실행되기 전 GitHub 계정 결제 잠금으로 차단된 것이다. 계정 소유자가 결제/잠금을 해결한 뒤 CI를 다시 실행해야 한다. 결제 설정은 변경하지 않았다.
+
+- Threads: https://github.com/gyroscopemooa/HONGBO/actions/runs/42323243080
+- 사이트: https://github.com/gyroscopemooa/HONGBO/actions/runs/42323243079
+
+최종 로컬 검증: 테스트 23개, typecheck, lint, Next.js production build, Worker dry-run 모두 통과. 운영 DB 적용과 실제 Threads API 발행 검증은 미실시.
