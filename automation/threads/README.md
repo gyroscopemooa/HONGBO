@@ -1,91 +1,89 @@
-# 더홍보 → Threads 공식 계정 자동 홍보 (검토용 초안)
+# 더홍보 → Threads (PR #10 이어서 개발)
 
-이 폴더는 **기존 Next.js 사이트와 분리된** Cloudflare Worker입니다. 별도 배포 전까지 사이트에 영향이 없고, 배포하더라도 `AUTOPOST_ENABLED=false`가 기본값이므로 게시하지 않습니다.
+운영 자동 발행 기본 OFF. 기존 사이트 Worker와 별도인 `hongbo-threads-promo`에만 배포한다.
+이번 개발에서는 운영 SQL 적용, 비밀키 등록, 실제 SNS 발행, 운영 배포를 수행하지 않는다.
 
-## 목표
+## 구현
 
-- 공개된 더홍보의 **신규 게시글**만 10분 간격으로 검색합니다.
-- **원문 우선**: 실제 게시글 제목 + 한 줄 소개(없으면 본문 일부)를 글의 앞부분에 유지합니다. AI가 생성한 SNS식 짧은 소개는 중간에만 보충합니다. 뒤에는 실제 글 링크 + 더홍보 자체 홍보 + 유머러스한 공식 담당자 한마디를 붙입니다.
-- 10종의 서로 다른 유머 마무리 문구를 게시글 ID에 따라 순환합니다. 약 5개 중 1개는 가벼운 인사말로 시작하되 대다수는 바로 원문 소개로 시작합니다. 재시도해도 문구가 바뀌지 않습니다.
-- `USE_AI=false`면 비용 없는 원문 기반 템플릿, `USE_AI=true`면 OpenAI API로 홍보 문장을 재작성합니다.
-- 최초 시작 시각 이후의 글만 처리하고, 초기 샘플 글(`is_seed=true`)은 제외합니다.
-- 게시글별 1회만 예약하고, 24시간 최대 발행 시도 수를 제한합니다. 애매한 API 오류는 재시도하지 않고 `review`로 남깁니다.
-- 발행 직전 공식 Threads API로 로그인된 프로필의 사용자 이름이 `@iamthehongbo`와 정확히 일치하는지 확인합니다. 개인 계정으로 연결되면 발행을 차단합니다.
-- 원문에 휴대전화 번호·이메일·외부 링크가 있으면 Threads 재게시용 요약에서는 가리고, 원문 링크로 안내합니다.
+- 10분 Cron. DB `enabled=false`와 Worker `AUTOPOST_ENABLED=false` 두 스위치 모두 켜야 발행된다.
+- 한국 시간 자정 기준 일일 기본 6개, 관리자에서 1~20개. 안전상 실패·검토 중인 예약도 당일 한도를 사용한다.
+- 최초 `published_at >= THREADS_START_AT`인 공개 active 글만 조회. 끌어올리기는 bumped_at만 변경하므로 신규로 오인하지 않는다.
+- 샘플·숨김·차단·삭제·만료·기존 처리 글 제외. 원문별 PK, 설정 행 잠금, 작업별 UUID lease로 중복/동시 실행을 방지한다.
+- `/post/[id]/threads`: 작성자 본인만 선택 동의·철회. 기존 글의 동의는 추정하지 않는다. 글 상세의 작성자 메뉴에서 접근한다.
+- `/admin/threads`: ON/OFF, AI 선택 ON/OFF, 일일 한도, 최근 50개 작업, 원문/Threads 링크, 문구 미리보기, 글별 승인/제외, 안전한 재시도.
+- 원문 전체·부가 정보·링크 미리보기의 개인정보/민감정보를 관리자가 검토한 글만 발행 가능. 내용 해시가 바뀌면 재검토한다. 이메일·전화·주민번호·민감어 패턴은 추가로 자동 차단한다. 패턴 검사만으로 모든 개인정보를 식별할 수 있다고 보장하지 않는다.
+- 제목 + 원문 소개/일부 + 정확한 원문 URL + 더홍보 소개 + 순환 유머. 이모지에 여유를 둔 보수적 430 가중 문자 예산, 게시 직전 500 상한 검사.
+- AI는 자유로운 사실 생성 대신 검토된 세 가지 비사실성 멘트 중 하나를 선택한다. 유효하지 않은 출력/실패 시 원문 템플릿. 자유 생성형 SNS 카피는 구현하지 않았다.
+- 계정은 코드에서 `iamthehongbo`로 고정. 환경변수로 다른 계정을 허용할 수 없다. 큐 예약 전과 컨테이너 생성 직전 GET /me 확인.
+- `POST /{user_id}/threads`로 TEXT 컨테이너 생성 → 상태 FINISHED 확인 → DB에 publishing 단계 기록/원문·동의 재확인 → `POST /{user_id}/threads_publish`에 creation_id 전달.
+- auto_publish_text를 사용하지 않는다. 게시 요청 전 실패만 10/20분 후 최대 3회 안전 재시도. publishing 이후의 오류·타임아웃·DB 결과 불확실은 review이며 자동/관리자 재전송 금지. 15분 이상 남은 실행도 review로 격리.
+- 비밀키나 API 응답 원문을 로그에 남기지 않고 오류 코드만 남긴다. 공개 HTTP 트리거 없음.
 
-## SNS 문구 예시 (모두 가상의 게시글)
+## SQL 적용: 반드시 사전 검토/승인 후
 
-```text
-📢 울산 신규 카페 오픈
+운영에는 아직 적용하지 않았다. `sql/0001_threads_promotion.sql` 후 `sql/0002_safe_queue.sql`을 순서대로 적용한다. 이미 0001을 적용했다면 0002만 적용한다. 0002는 재실행용이 아니며 트랜잭션 전체가 성공해야 한다.
 
-오픈 기념 음료 할인 이벤트 진행! 가까운 분들은 구경해 보세요.
+기존 posts의 행/컬럼을 변경하거나 삭제하지 않는다. 새 Threads 전용 테이블·함수·권한만 변경한다. 기존 초안 job의 FK cascade를 제거하여 원문이 물리 삭제되어도 중복 방지 이력은 보존한다. Supabase service_role만 접근하며 anon/authenticated는 테이블·RPC 권한이 없다. 앱 서버가 매 요청 인증/관리자 또는 작성자 권한을 검증한다.
 
-🔎 원문 보기: https://www.thehongbo.com/post/123
+SQL 검증은 격리된 PGlite PostgreSQL 엔진의 테스트용 posts 테이블에서 수행한다. 실제 Supabase의 역할·확장·네트워크까지 검증한 것은 아니다. 별도 스테이징에서 0001→0002 적용, 동의→승인→예약, 권한 거부, 동시 호출을 다시 확인한다.
 
-광고냐고요? 맞습니다. 근데 꽤 열심히 하고 있죠. 😎
-무료 홍보는 더홍보에서! #더홍보
-```
-
-- 실제 없는 혜택/가격/주소를 만들어내지 않습니다.
-- 너무 잦은 반복홍보로 보이지 않도록 일일 발행 제한을 둡니다.
-- 사용자 공개 글을 외부 플랫폼에 재게시하는 목적을 서비스 고지에 반영하고, 연락처 등 개인정보 노출 가능성을 검토하세요.
-
-## 사용자 계정에서 준비할 것 (휴대폰 가능)
-
-1. Threads에 더홍보 공식 프로필 만들기.
-2. [Meta for Developers](https://developers.facebook.com/apps/) → Create App → Threads 사용 사례로 앱 만들기.
-3. 공식 계정이 게시를 승인하도록 OAuth 설정(`threads_basic`, `threads_content_publish`). 토큰 발급·장기 토큰 갱신 관리 필요. 앱 역할 이외 사용자는 별도 검수가 필요할 수 있습니다.
-4. Cloudflare Workers에 아래 **Secret**을 직접 등록하세요. 어떤 비밀 키도 GitHub/채팅에 붙여넣지 마세요.
-5. Supabase SQL Editor에서 `sql/0001_threads_promotion.sql`을 실행하세요.
-6. 게시물의 공식 SNS 재게시에 대해 작성자 고지/동의 및 운영정책을 확인한 후 발행을 활성화하세요.
-
-## Worker 별도 배포 준비
-
-프로젝트 루트에서 (Wrangler 로그인 필요):
+## 로컬 검증 (외부 발행 없음)
 
 ```sh
 cd automation/threads
-npx wrangler deploy
+npm ci --ignore-scripts
+npm test
+cd ../..
+npm run typecheck
+npm run lint
+npm run build
+npx wrangler deploy --dry-run --config automation/threads/wrangler.jsonc
 ```
 
-배포할 Worker 이름은 `hongbo-threads-promo`입니다. 기존 `hongbo` 사이트 Worker와 분리됩니다.
+토큰을 받은 뒤 별도 Secret 관리 도구에서 환경변수를 주입하고 `node automation/threads/preflight.mjs` 실행: GET /me만 호출한다. 토큰 값은 채팅·CLI 인자·GitHub·원고에 넣지 않는다. 출력에는 계정 확인 결과와 만료 상태만 표시된다.
 
-### Variables (일반 변수)
+## Meta PC 준비
 
-| 이름 | 예시 | 기능 |
-| --- | --- | --- |
-| `AUTOPOST_ENABLED` | `false` | 모든 준비가 끝나면 `true` |
-| `THREADS_START_AT` | `2026-11-07T09:00:00+09:00` | 첫 활성화한 시점부터 시작, 과거글 일괄 재게시 방지. **실제 활성화 시각으로 설정** |
-| `SITE_URL` | `https://www.thehongbo.com` | 글 링크 |
-| `THREADS_EXPECTED_USERNAME` | `iamthehongbo` | 연결한 Threads 계정 검사 |
-| `MAX_POSTS_PER_DAY` | `6` | 하루 최대 1~20개 |
-| `USE_AI` | `false` | AI 문구 재작성 선택 |
-| `OPENAI_MODEL` | `gpt-4.1-mini` | AI 모델 선택 |
+1. Meta 개발자 앱 Gyroscope에서 Threads 테스터 @iamthehongbo, 수락 상태, threads_basic/threads_content_publish 확인.
+2. PC에서 공식 계정으로 로그인하여 앱의 Threads 사용자 토큰 발급 절차를 진행한다. 브라우저 OAuth 흐름 사용 시 등록된 redirect URI, 승인 요청 URI, 코드 교환 redirect_uri가 완전히 일치해야 한다. 흰 화면의 원인은 아직 실제 브라우저로 재현하지 못했다.
+3. 단기 토큰은 공식 장기 토큰 교환 절차로 교환한다. 반환 expires_in으로 만료 시각을 계산하고 발급 시각과 함께 기록한다.
+4. GET /me 검증 후 토큰을 별도 Worker의 Cloudflare Secret에 등록한다. SQL service role 키도 별도 Secret에 저장한다.
 
-### Secrets (민감 키)
+## 별도 Worker 설정
 
-- `SUPABASE_URL` (프로젝트 URL, 공개값이지만 서버 설정으로 관리)
-- `SUPABASE_SERVICE_ROLE_KEY` (DB 전체 접근 가능: 절대로 공개하지 않기)
-- `THREADS_ACCESS_TOKEN` (공식 프로필에서 발급한 Threads 사용자 토큰)
-- `OPENAI_API_KEY` (선택, `USE_AI=true`일 때만)
+필수 Secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, THREADS_ACCESS_TOKEN.
+필수 서버 변수: THREADS_START_AT(최초 신규 글 허용 기준, 승인 시 결정), THREADS_TOKEN_ISSUED_AT, THREADS_TOKEN_EXPIRES_AT(ISO 8601).
+선택 Secret: OPENAI_API_KEY. AI 사용에는 Worker USE_AI와 DB use_ai가 모두 true여야 한다. 기본은 둘 다 false. OPENAI_MODEL 기본 gpt-4.1-mini.
 
-`THREADS_START_AT`이 없거나 날짜로 해석되지 않으면 자동 발행은 실패하도록 설계했습니다.
+THREADS_START_AT을 임의로 과거로 되돌리지 않는다. 재배포 시 config의 AUTOPOST_ENABLED=false가 복원될 수 있으므로 배포 설정 변경은 반드시 검토한다. 기존 사이트 Worker `hongbo`에 이 Cron이나 Threads 토큰을 추가하지 않는다.
 
-## 발행 검증
+## 장기 토큰 수명
 
-1. 먼저 `AUTOPOST_ENABLED=false`로 배포: 10분마다 아무 글도 발행하지 않음.
-2. Supabase SQL 적용, Meta 토큰 준비, 고지/동의 확인.
-3. 발행 시작 시각을 미래 현재 시각으로 입력. 실제 신규 글 하나로 검증.
-4. Worker 로그와 `select * from public.threads_promotion_jobs order by claimed_at desc;`로 확인.
-5. 실패하면 `review` 기록을 확인하고 수동 조치. 불확실한 발행을 자동 재전송하지 않습니다.
+만료 정보가 없거나 만료되면 발행을 차단한다. 7일 이내 만료는 token_health=expiring 로그. `src/token.mjs`의 refreshLongLivedToken은 만료 전/발급 24시간 이후에만 갱신 요청하고 양쪽 계정을 검증한다. 토큰은 반환/로그하지 않고 호출자가 제공한 안전한 Secret 저장 어댑터로만 전달한다.
 
-## GitHub에서 사전 점검
+**자동 Secret 교체 어댑터와 무인 갱신 스케줄은 연결하지 않았다.** 운영자의 Secret 버전 관리 경로를 결정하고 해당 어댑터 및 만료 알림을 연결해야 한다. 갱신 실패 시 기존 저장값을 덮어쓰지 않는다. 이미 만료된 토큰은 새 OAuth 승인이 필요하다. 만료 로그는 알림 발송 기능이 아니다.
 
-별도 패키지 설치 없이 Node 22 기준으로 `node --test automation/threads/test/*.test.mjs` 로 문구 생성 테스트를 할 수 있습니다. PR에서 자동 검사 워크플로도 준비했습니다. 실제 외부 API 호출이나 발행을 확인하는 테스트는 아닙니다.
+## 최종 승인 뒤 운영 순서
 
-## 현재 초안의 한계
+1. 스테이징 SQL/관리자·작성자 권한 검증 → 운영 SQL 적용 승인.
+2. PC 토큰 발급, Secret 등록, 읽기 전용 preflight.
+3. 사이트의 동의/관리자 화면과 별도 Worker를 OFF 상태로 배포하는 것에 대한 승인.
+4. 작성자가 동의한 새 글 하나 검토, 실제 API 컨테이너/문자 수/상태/링크 확인. 공개 테스트 발행은 별도 승인 후 한도 1로 통제한다.
+5. 성공한 원문/Threads URL 및 중복 방지, 철회·OFF 동작 확인. 최종 승인 후에만 한도 6과 자동 ON.
 
-- 소스 게시글은 공개 상태이지만, 작성자 동의를 확보하는 UI나 관리자 승인 UI는 아직 없습니다. 실제 전체 자동화 전 추가하세요.
-- Meta 토큰은 만료되므로 유효기간 점검과 장기 토큰 갱신이 필요합니다.
-- 홍보글에 개인정보나 부적절한 문구가 포함될 수 있으므로 초기에는 소수 게시글 시험 발행을 권장합니다.
-- API·서비스 계정 권한, Cloudflare 실배포, 실서비스 DB 스키마 적용은 아직 검증되지 않았습니다.
+동의 철회/숨김은 게시 직전 DB 검사에서 반영한다. DB와 외부 SNS는 하나의 트랜잭션이 아니므로 발행 요청이 이미 시작된 경우 중단·삭제를 보장할 수 없다. 이미 공유된 SNS 글의 삭제는 운영자 처리다. review의 publish_started_at이 있으면 이력을 지우거나 재전송하지 말고 공식 계정과 container/thread ID를 대조한다.
+
+## 공식 API 확인 근거 (2026-11-07)
+
+Meta 공식 Postman 컬렉션에서 TEXT/media_type, auto_publish_text의 의미, creation_id 게시, 토큰 교환/갱신 경로를 확인했다:
+- https://www.postman.com/meta/threads/documentation/dht3nzz/threads-api
+- https://www.postman.com/meta/threads/request/34203612-c940a17f-e719-4b5b-9d28-7390bc658fb7
+- https://www.postman.com/meta/threads/request/34203612-7a45f35b-0646-4d4e-ace7-5b32ad56f327
+
+Meta 개발 문서 본문은 이번 환경에서 HTTP 429로 차단됐다. 실제 연결 전에 다음 문서에서 현재 문자 계산/컨테이너 상태/토큰 갱신 조건을 다시 확인하고 실토큰으로 검증해야 한다:
+- https://developers.facebook.com/docs/threads/posts/
+- https://developers.facebook.com/docs/threads/get-started/long-lived-tokens/
+
+## 기존 실패 분석
+
+초안 index.mjs에 실제 줄바꿈 대신 문자 `\\n`이 들어가 node --check 단계에서 SyntaxError를 재현했다. 수정 후 Worker 검사를 통과했다. 기존 Validate survey feature 실행은 GitHub가 단계 정보를 제공하지 않고 로그 다운로드가 404 BlobNotFound를 반환하여 과거 실패의 정확한 원인은 확정하지 못했다. 새 커밋의 CI 결과로 별도 확인한다.

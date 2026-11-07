@@ -6,10 +6,7 @@
   "triggers": { "crons": ["*/10 * * * *"] },
   "vars": {
     "AUTOPOST_ENABLED": "false",
-    "USE_AI": "false",
-    "MAX_POSTS_PER_DAY": "6",
-    "SITE_URL": "https://www.thehongbo.com",
-    "THREADS_EXPECTED_USERNAME": "iamthehongbo"
+    "USE_AI": "false"
   },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true, "traces": { "enabled": true } }
 }
