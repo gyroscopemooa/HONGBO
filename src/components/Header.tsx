@@ -9,7 +9,7 @@ export async function Header() {
   const user = await getCurrentUser();
 
   return (
-    <header className="border-b border-line bg-white">
+    <header className="relative z-50 border-b border-line bg-white">
       <div className="wrap flex h-[60px] items-center gap-3 sm:h-[68px] sm:gap-5">
         <div className="flex items-baseline gap-3">
           <Logo size="md" />
@@ -57,9 +57,24 @@ export async function Header() {
               <Link href="/mypage" className="btn btn-ghost btn-sm hidden sm:inline-flex">
                 내 홍보
               </Link>
-              <Link href="/mypage" aria-label="내 홍보" className="flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-soft sm:hidden">
-                <UserRound size={20} aria-hidden />
-              </Link>
+              <details className="group relative sm:hidden">
+                <summary aria-label="계정 메뉴" className="flex size-10 cursor-pointer list-none items-center justify-center rounded-full text-ink-2 hover:bg-soft [&::-webkit-details-marker]:hidden">
+                  <UserRound size={20} aria-hidden />
+                </summary>
+                <div className="absolute right-0 top-full z-[60] mt-2 w-44 rounded-xl border border-line bg-white p-1.5 shadow-pop">
+                  <Link href="/mypage" className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-ink-2 hover:bg-soft">내 홍보</Link>
+                  {user.isAdmin && (
+                    <Link href="/admin" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-ink-2 hover:bg-soft">
+                      <ShieldCheck size={15} aria-hidden /> 관리
+                    </Link>
+                  )}
+                  <form action={signOutAction} className="mt-1 border-t border-line pt-1">
+                    <button type="submit" className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-ink-2 hover:bg-soft">
+                      <LogOut size={15} aria-hidden /> 로그아웃
+                    </button>
+                  </form>
+                </div>
+              </details>
               <form action={signOutAction} className="hidden sm:block">
                 <button type="submit" className="btn btn-ghost btn-sm">
                   <LogOut size={15} aria-hidden />
