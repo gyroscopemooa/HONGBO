@@ -271,6 +271,13 @@ export default async function PostDetailPage({ params }: Props) {
               상세 설명
             </h2>
             <div className="prose-body">{post.description}</div>
+            {!!post.extra.notes?.length && <section aria-label="추가 안내" className="mt-6 space-y-3">
+              {post.extra.notes.map((note, i) => <section key={i} className="min-w-0 rounded-xl border border-line bg-soft/50 p-4 sm:p-5">
+                <h3 className="break-words text-base font-bold">{note.title}</h3>
+                <p className="mt-2 whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-ink-2">{note.body}</p>
+              </section>)}
+            </section>}
+
             {post.tags.length > 0 && (
               <ul className="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
                 {post.tags.map((t) => (

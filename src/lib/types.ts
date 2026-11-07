@@ -25,6 +25,7 @@ export interface SurveyQuestion {
 export interface PostExtra {
   /** 추가 링크(이벤트 참여, 쿠폰 받기 등). 상세 페이지에서 버튼으로 보여줍니다. */
   links?: ExtraLink[];
+  notes?: Array<{ title: string; body: string }>;
   couponCode?: string;
   couponNote?: string;
   playUrl?: string;

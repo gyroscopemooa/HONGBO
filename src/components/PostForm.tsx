@@ -25,6 +25,9 @@ import {
   COUPON_CODE_MAX,
   COUPON_NOTE_MAX,
   EXTRA_LINK_MAX,
+  EXTRA_NOTE_MAX,
+  EXTRA_NOTE_TITLE_MAX,
+  EXTRA_NOTE_BODY_MAX,
   EXTRA_LINK_PRESETS,
   LIMITS,
   REGIONS,
@@ -72,6 +75,7 @@ export interface FormState {
   surveyPayout: string;
   surveyRewardText: string;
   links: Array<{ label: string; url: string }>;
+  notes: Array<{ title: string; body: string }>;
   couponCode: string;
   couponNote: string;
   videoUrl: string;
@@ -112,6 +116,7 @@ const EMPTY: FormState = {
   surveyPayout: "instant",
   surveyRewardText: "",
   links: [],
+  notes: [],
   couponCode: "",
   couponNote: "",
   videoUrl: "",
@@ -168,6 +173,7 @@ export function postToFormState(p: Post): FormState {
     surveyPayout: p.extra.exclusive?.payout ?? "instant",
     surveyRewardText: p.extra.exclusive?.rewardText ?? "",
     links: p.extra.links ?? [],
+    notes: p.extra.notes ?? [],
     couponCode: p.extra.couponCode ?? "",
     couponNote: p.extra.couponNote ?? "",
     videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
@@ -213,8 +219,9 @@ function toPayload(f: FormState) {
       surveyPayout: f.surveyPayout,
       surveyRewardText: f.surveyRewardText,
       links: f.links,
-      couponCode: f.couponCode,
-      couponNote: f.couponNote,
+      notes: f.notes,
+      couponCode: f.benefits.includes("coupon") ? f.couponCode : "",
+      couponNote: f.benefits.includes("coupon") ? f.couponNote : "",
       businessUrl: f.businessUrl,
       videoUrl: f.videoUrl,
     },
@@ -906,14 +913,34 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
               )}
             </div>
           </Field>
-          <div className="space-y-3 rounded-xl border border-line bg-soft/40 p-4">
-            <Field id="couponCode" label="쿠폰 코드" optional error={errors.couponCode} counter={{ now: (f.couponCode ?? "").length, max: COUPON_CODE_MAX }} hint="링크 없이 코드만 등록할 수 있어요. 상세 페이지에 코드와 복사 버튼이 표시됩니다. 쿠폰 혜택 배지는 위에서 별도로 선택해주세요.">
+          <Field id="additionalNotes" label="추가 안내" optional error={errors.notes} hint={`이벤트 참여 방법, 예약 안내 등을 최대 ${EXTRA_NOTE_MAX}개 추가할 수 있어요. 제목과 내용이 상세 페이지의 별도 안내 박스로 표시됩니다. 배지로 표시되지는 않아요.`}>
+            <div id="additionalNotes" className="space-y-3">
+              {(f.notes ?? []).map((note, i) => (
+                <div key={i} data-field={`notes.${i}`} className="min-w-0 space-y-3 rounded-xl border border-line bg-soft/40 p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold">안내 {i + 1}</span>
+                    <button type="button" aria-label={`안내 ${i + 1} 삭제`} onClick={() => { set("notes", f.notes.filter((_, index) => index !== i)); setErrors((errors) => Object.fromEntries(Object.entries(errors).filter(([key]) => !key.startsWith("notes.")))); }} className="flex size-9 items-center justify-center rounded-lg text-muted hover:bg-white hover:text-brand"><X size={16} aria-hidden /></button>
+                  </div>
+                  <Field id={`noteTitle${i}`} label="제목" counter={{ now: note.title.length, max: EXTRA_NOTE_TITLE_MAX }}>
+                    <input id={`noteTitle${i}`} value={note.title} maxLength={EXTRA_NOTE_TITLE_MAX} onChange={(e) => set("notes", f.notes.map((n, index) => index === i ? { ...n, title: e.target.value } : n))} placeholder="예: 이벤트 참여 방법" className="field" aria-invalid={!!errors[`notes.${i}`]} />
+                  </Field>
+                  <Field id={`noteBody${i}`} label="내용" counter={{ now: note.body.length, max: EXTRA_NOTE_BODY_MAX }}>
+                    <textarea id={`noteBody${i}`} value={note.body} maxLength={EXTRA_NOTE_BODY_MAX} rows={3} onChange={(e) => set("notes", f.notes.map((n, index) => index === i ? { ...n, body: e.target.value } : n))} placeholder="참여 순서, 이용 조건, 기간 등을 작성해주세요." className="field resize-y" aria-invalid={!!errors[`notes.${i}`]} />
+                  </Field>
+                  {errors[`notes.${i}`] && <p role="alert" className="text-sm text-brand-dark">{errors[`notes.${i}`]}</p>}
+                </div>
+              ))}
+              {(f.notes ?? []).length < EXTRA_NOTE_MAX && <button type="button" onClick={() => set("notes", [...(f.notes ?? []), { title: "", body: "" }])} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-line bg-white px-3 py-2 text-sm font-semibold text-muted hover:border-brand-line hover:text-brand"><Plus size={15} aria-hidden /> 안내 추가</button>}
+            </div>
+          </Field>
+          {f.benefits.includes("coupon") && <div className="space-y-3 rounded-xl border border-line bg-soft/40 p-4">
+            <Field id="couponCode" label="쿠폰 코드" optional error={errors.couponCode} counter={{ now: (f.couponCode ?? "").length, max: COUPON_CODE_MAX }} hint="링크 없이 코드만 등록할 수 있어요. 상세 페이지에 코드와 복사 버튼이 표시됩니다. 위에서 쿠폰 선택을 해제하고 저장하면 쿠폰 코드와 사용 안내도 삭제됩니다.">
               <input id="couponCode" value={f.couponCode ?? ""} onChange={(e) => set("couponCode", e.target.value)} maxLength={COUPON_CODE_MAX} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="예: FOCUS500" className="field" aria-invalid={!!errors.couponCode} />
             </Field>
             <Field id="couponNote" label="쿠폰 사용 방법·조건" optional error={errors.couponNote} counter={{ now: (f.couponNote ?? "").length, max: COUPON_NOTE_MAX }}>
               <textarea id="couponNote" value={f.couponNote ?? ""} onChange={(e) => set("couponNote", e.target.value)} maxLength={COUPON_NOTE_MAX} rows={2} placeholder="예: 앱 설정 → 쿠폰 입력에서 사용 · 계정당 1회 · 사용 기한" className="field" aria-invalid={!!errors.couponNote} />
             </Field>
-          </div>
+          </div>}
           <Field id="description" label="상세 설명" required error={errors.description} counter={{ now: f.description.length, max: LIMITS.descMax }}>
             <textarea
               id="description"
