@@ -234,7 +234,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
   const [pending, start] = useTransition();
   const [busyCount, setBusyCount] = useState(0);
   const [confirmNoImage, setConfirmNoImage] = useState(false);
-  const [threadsConsent, setThreadsConsent] = useState(false);
+  const [threadsConsent, setThreadsConsent] = useState(true);
   const [showPromotionDetails, setShowPromotionDetails] = useState(true);
   const [restored, setRestored] = useState(false);
   const loaded = useRef(false);
