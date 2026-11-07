@@ -22,7 +22,7 @@ export default async function ThreadsAdmin() {
   }));
   return <div className="space-y-6">
     <h2 className="text-xl font-bold">Threads 공식 계정 홍보</h2>
-    <p>대상 계정: @iamthehongbo · 10분 간격 · 한국 시간 기준 일일 한도. 동의한 글의 원문을 검토하면 자동 발행 대상이 됩니다. 수정된 원문은 다시 검토해야 합니다.</p>
+    <p>대상 계정: @iamthehongbo · 10분 간격 · 한국 시간 기준 일일 한도. 새 동의 절차에서 자동 검사를 통과한 글은 바로 발행 대상이 됩니다. 개인정보 의심 내용·첨부 이미지 등 검토 대기 글만 직접 확인해주세요. 수정된 원문도 다시 검사합니다.</p>
     <p>운영 활성화는 최종 승인 후 별도 Worker 설정도 켜야 합니다. 아래 ON만으로 배포 설정의 OFF가 해제되지 않습니다.</p>
     <form action={saveThreadsSettings} className="flex flex-wrap gap-4 rounded-xl border p-4">
       <label><input type="checkbox" name="enabled" defaultChecked={settings.data.enabled} /> 자동 홍보 ON</label>
@@ -36,7 +36,7 @@ export default async function ThreadsAdmin() {
       const blocked = hasSensitiveContent(source);
       return <article key={post.id} className="space-y-3 rounded-xl border p-4">
         <Link className="underline" href={`/post/${post.id}`}>{post.title}</Link>
-        <p>상태: {post.status} · {consent?.excluded ? "제외" : consent?.approved_hash === hash ? "검토 승인" : "검토 필요"}</p>
+        <p>상태: {post.status} · {consent?.excluded ? "제외" : consent?.approved_hash === hash ? consent.approved_by ? "관리자 검토 승인" : "자동 검사 통과" : "검토 필요"}</p>
         <details><summary>검토할 원문 전체와 부가 정보</summary><pre className="whitespace-pre-wrap break-all">{JSON.stringify({ title: post.title, short_description: post.short_description, description: post.description, contact: post.contact, address: post.address, extra: post.extra, external_url: post.external_url }, null, 2)}</pre></details>
         {blocked ? <p>개인정보 또는 민감정보 패턴 감지: 발행 차단</p> : <pre className="whitespace-pre-wrap">{formatPromo(source, "https://www.thehongbo.com")}</pre>}
         {hash && <form action={moderateThreadsPost} className="flex flex-wrap gap-3">

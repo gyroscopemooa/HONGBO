@@ -234,6 +234,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
   const [pending, start] = useTransition();
   const [busyCount, setBusyCount] = useState(0);
   const [confirmNoImage, setConfirmNoImage] = useState(false);
+  const [threadsConsent, setThreadsConsent] = useState(false);
   const [restored, setRestored] = useState(false);
   const loaded = useRef(false);
 
@@ -339,8 +340,9 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
     }
     setConfirmNoImage(false);
     start(async () => {
-      const r = mode === "edit" && post ? await updatePostAction(post.id, toPayload(f)) : await createPostAction(toPayload(f));
+      const r = mode === "edit" && post ? await updatePostAction(post.id, toPayload(f)) : await createPostAction({ ...toPayload(f), threadsConsent });
       if (r.ok) {
+        if (r.message) window.alert(r.message);
         try {
           if (mode === "create") localStorage.removeItem(DRAFT_KEY);
         } catch {
@@ -991,6 +993,12 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
           <Link href={mode === "edit" && post ? `/post/${post.id}` : "/"} className="btn btn-outline btn-lg">
             취소
           </Link>
+          {mode === "create" && <div className="space-y-2 text-sm">
+            <label className="flex gap-2"><input type="checkbox" checked={threadsConsent} onChange={e => setThreadsConsent(e.target.checked)} />
+              <span>[선택] 이 글의 제목·소개·본문 일부와 원문 링크를 공식 Threads @iamthehongbo에 공개 홍보하는 데 동의합니다.</span></label>
+            <p>동의하지 않아도 글 등록은 가능합니다. 자동 검사 통과 시 별도 승인 없이 발행하며, 개인정보 의심 내용·첨부 이미지 등 확인이 필요한 글은 검토 후 처리합니다. 발행은 보장되지 않습니다.</p>
+            <p>공개 링크에 미리보기가 표시될 수 있고, 홍보 문구·주제 태그가 덧붙습니다. 글 상세에서 동의를 철회할 수 있으며, 이미 발행 요청이 시작된 내용은 자동 삭제되지 않습니다. <Link href="/policy#threads" className="underline">공식 SNS 홍보 운영정책</Link></p>
+          </div>}
           <button type="submit" disabled={pending || busyCount > 0} className="btn btn-primary btn-lg sm:min-w-[200px]">
             {pending ? <LoaderCircle size={18} className="animate-spin" aria-hidden /> : <Send size={17} aria-hidden />}
             {pending ? "등록 중…" : mode === "edit" ? "수정 완료" : "홍보글 등록하기"}
