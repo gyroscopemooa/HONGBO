@@ -6,6 +6,7 @@ const post = { post_id:123, lease:'lease', title:'새 서비스', short_descript
 async function scenario(options={}) {
   const calls=[]; const old=globalThis.fetch;
   globalThis.fetch=async (url,init={}) => {
+    assert.equal(init.redirect, 'manual');
     const body = init.body instanceof URLSearchParams ? Object.fromEntries(init.body) : init.body ? JSON.parse(init.body) : null;
     calls.push({url,body});
     if (options.fail && url.includes(options.fail)) throw new Error('secret-threads secret-db');
@@ -33,6 +34,10 @@ test('two-step publishing and durable gate precede the only publish request',asy
   assert.equal(calls.at(-1).body.p_threads_id,'999');
 });
 test('wrong account blocks before claiming',async()=>{await assert.rejects(scenario({wrong:true}),/ACCOUNT_MISMATCH/);});
+test('token copy whitespace is trimmed; embedded whitespace blocks before any API call',async()=>{
+  assert.equal((await scenario({env:{THREADS_ACCESS_TOKEN:'  secret-threads\n'}})).result,'published');
+  await assert.rejects(scenario({env:{THREADS_ACCESS_TOKEN:'secret\nthreads'}}),/TOKEN_FORMAT_INVALID/);
+});
 test('sensitive source blocks before AI or container requests',async()=>{
   const {result,calls}=await scenario({post:{description:'문의 010-1234-5678'}}); assert.equal(result,'blocked');
   assert.ok(!calls.some(c=>c.url.includes('openai')||c.url.endsWith('/threads')));

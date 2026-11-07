@@ -130,3 +130,13 @@ Meta 개발 문서 본문은 이번 환경에서 HTTP 429로 차단됐다. 실�
 - 게시글 주제는 프로필에 없던 `무료홍보`, 본문에는 `#더홍보`. 마지막 문장은 “여러분은 만드는 일과 알리는 일 중 뭐가 더 어렵나요?”
 - `src/self-promo.mjs`에 수동 작성용 앞멘트 6개, 질문형 마무리 12개와 관련 주제 후보 3개를 보관했다. 12개 초안의 길이와 질문 마무리 검증 통과.
 - 이 파일은 예약 Worker에서 사용하지 않는다. 자체 홍보 자동 발행이나 자동 주제 태그 연동이 완료됐다는 의미는 아니다. 정기 발행 OFF 유지.
+
+## 운영 활성화 (2026-11-07, 사용자 정기 ON 승인)
+
+- 최신 origin/main의 좋아요 기능을 기존 PR 브랜치에 병합한 뒤 사이트 관리자 `/admin/threads`와 작성자 `/post/[id]/threads` 동의 화면을 운영 배포했다. 사이트 버전: 2f131ccd-acb8-48d8-9f98-52beee86738d.
+- 실제 Worker 인증 점검에서 redirect:error 런타임 실패를 발견했다. redirect:manual + 비-2xx 차단으로 수정하여 토큰이 리디렉션 대상으로 전송되지 않게 유지했다. 앞뒤 공백은 제거하고 내부 공백/비ASCII 토큰은 차단한다.
+- 운영 Worker AUTOPOST_ENABLED=true 및 DB enabled=true, use_ai=false, daily_limit=6을 인증된 읽기 전용 API로 확인했다. @iamthehongbo, tokenHealth=healthy 확인. 임시 PREFLIGHT_KEY는 확인 후 삭제하여 진단 경로를 닫는다.
+- THREADS_START_AT=2026-11-07T02:32:14.000Z (한국 11:32:14). 이후 등록된 기본 posts 중 작성자 동의와 관리자 원문 검토를 마친 글만 10분 간격으로 발행한다. 과거 글/커뮤니티/리뷰는 대상이 아니다.
+- 설정 파일의 기본 AUTOPOST_ENABLED=false는 유지한다. 승인된 ON 재배포 명령은 `wrangler deploy --config automation/threads/wrangler.jsonc --var AUTOPOST_ENABLED:true`이다. 일반 deploy는 OFF로 돌아가므로 활성화 상태를 반드시 읽어 확인한다.
+- 초기 ON 배포 버전 9e3e93a9-c6e3-4de7-beff-0d71fb0bef3a (후속 임시 Secret 추가/삭제로 버전이 갱신될 수 있음).
+- 검증: 테스트 28개, typecheck, lint, Next/OpenNext build, 운영 배포 사전 검증 통과. 실제 API 계정 인증 및 DB 연결 성공. 실제 컨테이너/게시 API의 성공 발행은 아직 미확인이다. 기존 두 게시물은 GUI 수동 게시였다. 첫 적격 글의 발행 결과는 별도 확인이 필요하다.

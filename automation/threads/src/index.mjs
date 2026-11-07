@@ -1,4 +1,5 @@
 import { formatPromo, weightedLength } from './copy.mjs';
+import { preflight } from './preflight.mjs';
 export { formatPromo } from './copy.mjs';
 const API = 'https://graph.threads.net/v1.0';
 const SITE = 'https://www.thehongbo.com';
@@ -12,7 +13,7 @@ export function hasSensitiveContent(post) {
 class SafeError extends Error {}
 function code(error) { return error instanceof SafeError ? error.message : 'NETWORK_OR_RESPONSE_ERROR'; }
 async function request(url, init = {}) {
-  const res = await fetch(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(15000) });
+  const res = await fetch(url, { ...init, redirect: 'manual', signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new SafeError(`HTTP_${res.status}`);
   return res.status === 204 ? null : res.json();
 }
@@ -24,8 +25,10 @@ async function rpc(env, name, body) {
   });
 }
 async function graph(env, path, params) {
+  const token = typeof env.THREADS_ACCESS_TOKEN === 'string' ? env.THREADS_ACCESS_TOKEN.trim() : '';
+  if (!token || /\s|[^\x21-\x7e]/.test(token)) throw new SafeError('TOKEN_FORMAT_INVALID');
   return request(API + path, {
-    headers: { Authorization: 'Bearer ' + env.THREADS_ACCESS_TOKEN,
+    headers: { Authorization: 'Bearer ' + token,
       ...(params ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}) },
     ...(params ? { method: 'POST', body: new URLSearchParams(params) } : {}),
   });
@@ -130,7 +133,7 @@ const worker = {
     try { await runOnce(env); }
     catch (error) { console.error(JSON.stringify({ event: 'run_blocked', code: code(error) })); }
   },
-  async fetch() { return new Response('Not found', { status: 404 }); },
+  async fetch(request, env) { return preflight(request, env, verifyProfile, tokenHealth); },
 };
 
 export default worker;

@@ -13,7 +13,7 @@ export async function refreshLongLivedToken(env, persist, now = Date.now()) {
   try {
     const res = await fetch('https://graph.threads.net/refresh_access_token?grant_type=th_refresh_token', {
       headers: { Authorization: 'Bearer ' + env.THREADS_ACCESS_TOKEN },
-      signal: AbortSignal.timeout(15000), redirect: 'error',
+      signal: AbortSignal.timeout(15000), redirect: 'manual',
     });
     if (!res.ok) throw new Error('refresh rejected');
     data = await res.json();
