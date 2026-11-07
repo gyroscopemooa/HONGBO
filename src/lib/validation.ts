@@ -16,6 +16,8 @@ import {
   SURVEY_QUESTION_MAX,
   SURVEY_OPTION_MAX,
   EXTRA_LINK_LABEL_MAX,
+  COUPON_CODE_MAX,
+  COUPON_NOTE_MAX,
   EXTRA_LINK_MAX,
   CATEGORY_SLUGS,
   LIMITS,
@@ -48,6 +50,8 @@ const rawSchema = z.object({
   contact: str(400),
   extra: z
     .object({
+      couponCode: str(400),
+      couponNote: str(1000),
       playUrl: str(2100),
       appStoreUrl: str(2100),
       siteUrl: str(2100),
@@ -229,6 +233,16 @@ export function parsePostInput(raw: unknown): ParseResult {
   }
   if (benefitsFinal.length) extra.benefits = benefitsFinal;
 
+  const couponCode = (v.extra.couponCode ?? "").trim();
+  const couponNote = (v.extra.couponNote ?? "").trim();
+  if (couponCode.length > COUPON_CODE_MAX || /[\r\n\t]/.test(couponCode)) errors.couponCode = `쿠폰 코드는 줄바꿈 없이 ${COUPON_CODE_MAX}자까지 입력해주세요.`;
+  if (couponNote.length > COUPON_NOTE_MAX) errors.couponNote = `사용 안내는 ${COUPON_NOTE_MAX}자까지 입력해주세요.`;
+  if (couponNote && !couponCode) errors.couponCode = "사용 안내와 함께 제공할 쿠폰 코드를 입력해주세요.";
+  if (couponCode) {
+    extra.couponCode = couponCode;
+    if (couponNote) extra.couponNote = couponNote;
+  }
+
   // --- 추가 링크 (모든 카테고리 공통) ---
   const extraLinks: Array<{ label: string; url: string }> = [];
   v.extra.links.forEach((l, i) => {
@@ -376,7 +390,7 @@ export function parsePostInput(raw: unknown): ParseResult {
   if (contact && contact.length > LIMITS.contactMax) errors.contact = `연락처는 ${LIMITS.contactMax}자까지 입력할 수 있어요.`;
 
   // --- 금지 키워드 ---
-  const banned = findBannedKeyword(title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
+  const banned = findBannedKeyword(couponCode, couponNote, title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
   if (banned) {
     errors.description = "운영정책상 등록할 수 없는 내용이 포함되어 있어요. 내용을 확인해주세요.";
   }

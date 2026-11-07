@@ -22,6 +22,8 @@ import {
   SURVEY_QUESTION_MAX,
   SURVEY_OPTION_MAX,
   EXTRA_LINK_LABEL_MAX,
+  COUPON_CODE_MAX,
+  COUPON_NOTE_MAX,
   EXTRA_LINK_MAX,
   EXTRA_LINK_PRESETS,
   LIMITS,
@@ -70,6 +72,8 @@ export interface FormState {
   surveyPayout: string;
   surveyRewardText: string;
   links: Array<{ label: string; url: string }>;
+  couponCode: string;
+  couponNote: string;
   videoUrl: string;
   price: string;
   region: string;
@@ -108,6 +112,8 @@ const EMPTY: FormState = {
   surveyPayout: "instant",
   surveyRewardText: "",
   links: [],
+  couponCode: "",
+  couponNote: "",
   videoUrl: "",
   price: "",
   region: "",
@@ -162,6 +168,8 @@ export function postToFormState(p: Post): FormState {
     surveyPayout: p.extra.exclusive?.payout ?? "instant",
     surveyRewardText: p.extra.exclusive?.rewardText ?? "",
     links: p.extra.links ?? [],
+    couponCode: p.extra.couponCode ?? "",
+    couponNote: p.extra.couponNote ?? "",
     videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
     price: p.price ?? "",
     region: p.region ?? "",
@@ -205,6 +213,8 @@ function toPayload(f: FormState) {
       surveyPayout: f.surveyPayout,
       surveyRewardText: f.surveyRewardText,
       links: f.links,
+      couponCode: f.couponCode,
+      couponNote: f.couponNote,
       businessUrl: f.businessUrl,
       videoUrl: f.videoUrl,
     },
@@ -833,7 +843,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
             label="추가 링크"
             optional
             error={errors.links}
-            hint={`이벤트 참여, 쿠폰 받기, 예약 등 버튼으로 보여줄 링크를 최대 ${EXTRA_LINK_MAX}개까지 추가할 수 있어요. 제목은 직접 써도 돼요.`}
+            hint={`이벤트 참여, 쿠폰 받기, 예약 등 버튼으로 보여줄 링크를 최대 ${EXTRA_LINK_MAX}개까지 추가할 수 있어요. 제목은 배지가 아닌 링크 버튼 문구이며 최대 ${EXTRA_LINK_LABEL_MAX}자예요.`}
           >
             <div className="space-y-3">
               {f.links.map((l, i) => (
@@ -843,7 +853,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                       <input
                         id={i === 0 ? "links0" : undefined}
                         value={l.label}
-                        maxLength={EXTRA_LINK_LABEL_MAX + 10}
+                        maxLength={EXTRA_LINK_LABEL_MAX}
                         onChange={(e) => set("links", f.links.map((x, idx) => (idx === i ? { ...x, label: e.target.value } : x)))}
                         placeholder="링크 제목 (예: 이벤트 참여)"
                         aria-label={`추가 링크 ${i + 1} 제목`}
@@ -890,12 +900,20 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                     onClick={() => set("links", [...f.links, { label: "", url: "" }])}
                     className="rounded-full border border-dashed border-line bg-white px-3 py-1.5 text-[13px] font-bold text-muted transition hover:border-brand-line hover:text-brand"
                   >
-                    직접 입력
+                    링크 제목 직접 입력
                   </button>
                 </div>
               )}
             </div>
           </Field>
+          <div className="space-y-3 rounded-xl border border-line bg-soft/40 p-4">
+            <Field id="couponCode" label="쿠폰 코드" optional error={errors.couponCode} counter={{ now: (f.couponCode ?? "").length, max: COUPON_CODE_MAX }} hint="링크 없이 코드만 등록할 수 있어요. 상세 페이지에 코드와 복사 버튼이 표시됩니다. 쿠폰 혜택 배지는 위에서 별도로 선택해주세요.">
+              <input id="couponCode" value={f.couponCode ?? ""} onChange={(e) => set("couponCode", e.target.value)} maxLength={COUPON_CODE_MAX} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="예: FOCUS500" className="field" aria-invalid={!!errors.couponCode} />
+            </Field>
+            <Field id="couponNote" label="쿠폰 사용 방법·조건" optional error={errors.couponNote} counter={{ now: (f.couponNote ?? "").length, max: COUPON_NOTE_MAX }}>
+              <textarea id="couponNote" value={f.couponNote ?? ""} onChange={(e) => set("couponNote", e.target.value)} maxLength={COUPON_NOTE_MAX} rows={2} placeholder="예: 앱 설정 → 쿠폰 입력에서 사용 · 계정당 1회 · 사용 기한" className="field" aria-invalid={!!errors.couponNote} />
+            </Field>
+          </div>
           <Field id="description" label="상세 설명" required error={errors.description} counter={{ now: f.description.length, max: LIMITS.descMax }}>
             <textarea
               id="description"

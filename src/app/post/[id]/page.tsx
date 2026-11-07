@@ -204,6 +204,13 @@ export default async function PostDetailPage({ params }: Props) {
               </dl>
             )}
 
+            {publicNow && post.extra.couponCode && (
+              <section aria-label="쿠폰 코드" className="mt-5 min-w-0 rounded-xl border border-brand-line bg-brand-soft p-3">
+                <h2 className="text-sm font-bold">쿠폰 코드</h2>
+                <CopyCodeButton code={post.extra.couponCode} />
+                {post.extra.couponNote && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-muted">{post.extra.couponNote}</p>}
+              </section>
+            )}
             <div className="mt-5 hidden space-y-2 lg:block">
               {publicNow && post.externalUrl && <ExternalCta href={post.externalUrl} postId={post.id} label={label} />}
               {publicNow &&
