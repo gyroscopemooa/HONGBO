@@ -7,7 +7,9 @@
   "vars": {
     "AUTOPOST_ENABLED": "false",
     "USE_AI": "false",
-    "ALLOW_PAID_AI": "false"
+    "ALLOW_PAID_AI": "false",
+    "THREADS_TOKEN_ISSUED_AT": "2026-11-06T22:31:35.000Z",
+    "THREADS_TOKEN_EXPIRES_AT": "2027-01-05T22:31:35.000Z"
   },
   "observability": {
     "enabled": true,
