@@ -1,7 +1,15 @@
 # 더홍보 → Threads (PR #10 이어서 개발)
 
 운영 자동 발행 기본 OFF. 기존 사이트 Worker와 별도인 `hongbo-threads-promo`에만 배포한다.
-이번 개발에서는 운영 SQL 적용, 비밀키 등록, 실제 SNS 발행, 운영 배포를 수행하지 않는다.
+초기 개발 단계에서는 운영 변경을 하지 않았다. 아래 후속 진행 상태를 기준으로 확인한다.
+
+## 후속 진행 상태 (2026-11-07)
+
+- 작성자가 마스킹 입력 도구 `preflight.ps1`로 `VERIFIED: @iamthehongbo` 결과를 확인했다. 도구는 토큰을 저장하거나 게시하지 않는다.
+- 운영 DB 읽기 전용 조회로 0001/0002의 테이블과 lease/publish_started_at 컬럼을 확인했다. 설정은 enabled=false, use_ai=false, daily_limit=6이다. 이번 확인에서 SQL은 재실행하지 않았다.
+- 사용자 승인 후 별도 `hongbo-threads-promo` Worker를 OFF 상태로 배포했다. 최초 버전: `06e61a53-6f8c-4806-8d82-46f68d6b60c8`, 10분 Cron, AUTOPOST_ENABLED=false / USE_AI=false.
+- SUPABASE_URL과 SUPABASE_SERVICE_ROLE_KEY를 Cloudflare Secret으로 등록했다. 값은 새 파일이나 로그에 기록하지 않았다.
+- Threads 토큰 Secret 및 발급/만료 시각 등록, 사이트 관리자 UI 운영 배포, 실제 1건 게시 테스트와 최종 ON 승인은 아직 남아 있다. 기존 사이트 Worker는 변경하지 않았다.
 
 ## 구현
 
@@ -21,7 +29,7 @@
 
 ## SQL 적용: 반드시 사전 검토/승인 후
 
-운영에는 아직 적용하지 않았다. `sql/0001_threads_promotion.sql` 후 `sql/0002_safe_queue.sql`을 순서대로 적용한다. 이미 0001을 적용했다면 0002만 적용한다. 0002는 재실행용이 아니며 트랜잭션 전체가 성공해야 한다.
+현재 운영에는 해당 스키마가 존재하므로 재실행하지 않는다. 신규 환경에서만 `sql/0001_threads_promotion.sql` 후 `sql/0002_safe_queue.sql`을 순서대로 적용한다. 이미 0001을 적용했다면 0002만 적용한다. 0002는 재실행용이 아니며 트랜잭션 전체가 성공해야 한다.
 
 기존 posts의 행/컬럼을 변경하거나 삭제하지 않는다. 새 Threads 전용 테이블·함수·권한만 변경한다. 기존 초안 job의 FK cascade를 제거하여 원문이 물리 삭제되어도 중복 방지 이력은 보존한다. Supabase service_role만 접근하며 anon/authenticated는 테이블·RPC 권한이 없다. 앱 서버가 매 요청 인증/관리자 또는 작성자 권한을 검증한다.
 
@@ -53,7 +61,7 @@ npx wrangler deploy --dry-run --config automation/threads/wrangler.jsonc
 
 필수 Secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, THREADS_ACCESS_TOKEN.
 필수 서버 변수: THREADS_START_AT(최초 신규 글 허용 기준, 승인 시 결정), THREADS_TOKEN_ISSUED_AT, THREADS_TOKEN_EXPIRES_AT(ISO 8601).
-선택 Secret: OPENAI_API_KEY. AI 사용에는 Worker USE_AI와 DB use_ai가 모두 true여야 한다. 기본은 둘 다 false. OPENAI_MODEL 기본 gpt-4.1-mini.
+선택 Secret: OPENAI_API_KEY. AI 사용에는 별도 비용 승인 후 Worker ALLOW_PAID_AI, USE_AI와 DB use_ai가 모두 true여야 한다. ALLOW_PAID_AI가 없거나 false면 API 키가 있어도 호출하지 않는다. 기본은 둘 다 false. OPENAI_MODEL 기본 gpt-4.1-mini.
 
 THREADS_START_AT을 임의로 과거로 되돌리지 않는다. 재배포 시 config의 AUTOPOST_ENABLED=false가 복원될 수 있으므로 배포 설정 변경은 반드시 검토한다. 기존 사이트 Worker `hongbo`에 이 Cron이나 Threads 토큰을 추가하지 않는다.
 
@@ -97,3 +105,12 @@ Meta 개발 문서 본문은 이번 환경에서 HTTP 429로 차단됐다. 실�
 - 사이트: https://github.com/gyroscopemooa/HONGBO/actions/runs/42323243079
 
 최종 로컬 검증: 테스트 23개, typecheck, lint, Next.js production build, Worker dry-run 모두 통과. 운영 DB 적용과 실제 Threads API 발행 검증은 미실시.
+
+## 비용 최소화 운영 (2026-11-07)
+
+- 사용자 요청에 따라 유료 AI 호출을 서버 ALLOW_PAID_AI=false로 차단했다. 원문 기반 템플릿과 순환 멘트를 사용한다.
+- 기존 10분 Cron 유지: 하루 144회, 30일 4,320회. 별도 웹훅/유료 큐를 추가하지 않는다. OFF일 때 외부 호출 없이 종료한다.
+- 정상 토큰 상태 로그와 자동 invocation 로그를 제거하고 trace sampling을 1%로 낮췄다. 오류/발행 로그와 DB 중복 방지 이력은 유지한다.
+- 무료 한도 내 운영을 목표로 하며 계정 전체 요금제/합산 사용량 때문에 전체 청구액 0원을 보장하지 않는다. 유료 플랜 전환이나 결제는 하지 않았다.
+- 기록은 게시글 수에 따라 증가한다. 중복 방지 이력은 자동 삭제하지 않는다. DB 전체 용량과 계정 사용량 점검은 필요하다.
+- 검증: 테스트 24개 통과, Wrangler dry-run 통과. OFF 배포 버전 924c35b4-4160-4057-8205-d1eec74ae078.

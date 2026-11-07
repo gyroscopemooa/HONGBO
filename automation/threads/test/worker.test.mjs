@@ -22,7 +22,7 @@ async function scenario(options={}) {
     else throw Error('unexpected URL');
     return Response.json(data);
   };
-  try { return {result:await runOnce({...env,USE_AI:'true',OPENAI_API_KEY:'fake',...options.env}),calls}; }
+  try { return {result:await runOnce({...env,USE_AI:'true',ALLOW_PAID_AI:'true',OPENAI_API_KEY:'fake',...options.env}),calls}; }
   finally {globalThis.fetch=old;}
 }
 test('two-step publishing and durable gate precede the only publish request',async()=>{
@@ -47,6 +47,14 @@ test('safe pre-publication failure may be retried',async()=>{
   const {result,calls}=await scenario({fail:'fields=id,status'}); assert.equal(result,'retry'); assert.ok(!calls.some(c=>c.url.endsWith('/threads_publish')));
 });
 test('AI failure falls back to source and still succeeds',async()=>{assert.equal((await scenario({fail:'openai'})).result,'published');});
+test('free mode blocks paid AI even when admin AI and an API key are enabled',async()=>{
+  for (const allowed of [undefined, 'false']) {
+    const {result,calls}=await scenario({env:{ALLOW_PAID_AI:allowed}});
+    assert.equal(result,'published');
+    assert.ok(!calls.some(c=>c.url.includes('openai')));
+    assert.match(calls.find(c=>c.url.endsWith('/threads')).body.text,/서비스 소개/);
+  }
+});
 test('model prompt injection cannot insert invented facts',async()=>{
   const {calls}=await scenario({ai:'무조건 90% 할인!'}); const draft=calls.find(c=>c.url.endsWith('/threads')).body.text;
   assert.doesNotMatch(draft,/90%/); assert.match(draft,/서비스 소개/);

@@ -44,6 +44,8 @@ export function tokenHealth(env, now = Date.now()) {
 }
 // AI selects a vetted non-factual aside: generated factual claims never reach SNS.
 async function aiCopy(env, post) {
+  // Paid calls require a separate server-side opt-in, even if admin AI is enabled.
+  if (env.ALLOW_PAID_AI !== 'true') return '';
   if (!post.use_ai || env.USE_AI !== 'true' || !env.OPENAI_API_KEY) return '';
   try {
     const data = await request('https://api.openai.com/v1/chat/completions', {
@@ -64,7 +66,7 @@ export async function runOnce(env) {
     throw new SafeError('SECRETS_MISSING');
   if (new URL(env.SUPABASE_URL).protocol !== 'https:') throw new SafeError('HTTPS_REQUIRED');
   const health = tokenHealth(env);
-  console.log(JSON.stringify({ event: 'token_health', health }));
+  if (health !== 'healthy') console.log(JSON.stringify({ event: 'token_health', health }));
   if (health === 'expired' || health === 'unknown') return 'token-blocked';
   await verifyProfile(env);
   const rows = await rpc(env, 'threads_claim_one', { p_since: env.THREADS_START_AT, p_max_daily: 20 });

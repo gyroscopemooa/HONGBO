@@ -6,7 +6,12 @@
   "triggers": { "crons": ["*/10 * * * *"] },
   "vars": {
     "AUTOPOST_ENABLED": "false",
-    "USE_AI": "false"
+    "USE_AI": "false",
+    "ALLOW_PAID_AI": "false"
   },
-  "observability": { "enabled": true, "traces": { "enabled": true } }
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": false },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  }
 }
