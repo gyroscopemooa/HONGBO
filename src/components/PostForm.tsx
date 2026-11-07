@@ -995,8 +995,9 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
           </Link>
           {mode === "create" && <div className="space-y-2 text-sm">
             <label className="flex gap-2"><input type="checkbox" checked={threadsConsent} onChange={e => setThreadsConsent(e.target.checked)} />
-              <span>[선택] 이 글의 제목·소개·본문 일부와 원문 링크를 공식 Threads @iamthehongbo에 공개 홍보하는 데 동의합니다.</span></label>
-            <p>동의하지 않아도 글 등록은 가능합니다. 자동 검사 통과 시 별도 승인 없이 발행하며, 개인정보 의심 내용·첨부 이미지 등 확인이 필요한 글은 검토 후 처리합니다. 발행은 보장되지 않습니다.</p>
+              <span>[선택] 추가로 더 홍보해드릴까요?</span></label>
+            <p>더홍보가 공식 Threads와 유튜브 등 다른 플랫폼에서도 대신 홍보해드립니다. 체크하시면 이 글의 제목·소개·본문 일부와 원문 링크를 외부 플랫폼에 공개 홍보하는 데 동의합니다. 선정된 글에 한해 진행되며, 모든 글이 홍보되는 것은 아닙니다.</p>
+            <p className="text-xs text-muted">현재는 Threads에서 진행하며, 다른 플랫폼은 추후 운영할 수 있습니다. 동의하지 않아도 글 등록과 서비스 이용에는 영향이 없습니다.</p>
             <p>공개 링크에 미리보기가 표시될 수 있고, 홍보 문구·주제 태그가 덧붙습니다. 글 상세에서 동의를 철회할 수 있으며, 이미 발행 요청이 시작된 내용은 자동 삭제되지 않습니다. <Link href="/policy#threads" className="underline">공식 SNS 홍보 운영정책</Link></p>
           </div>}
           <button type="submit" disabled={pending || busyCount > 0} className="btn btn-primary btn-lg sm:min-w-[200px]">
