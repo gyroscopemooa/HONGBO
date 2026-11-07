@@ -235,6 +235,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
   const [busyCount, setBusyCount] = useState(0);
   const [confirmNoImage, setConfirmNoImage] = useState(false);
   const [threadsConsent, setThreadsConsent] = useState(false);
+  const [showPromotionDetails, setShowPromotionDetails] = useState(false);
   const [restored, setRestored] = useState(false);
   const loaded = useRef(false);
 
@@ -989,17 +990,21 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
           </div>
         )}
 
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Link href={mode === "edit" && post ? `/post/${post.id}` : "/"} className="btn btn-outline btn-lg">
+        {mode === "create" && <div className="text-xs">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <label className="flex items-center gap-2 py-1"><input type="checkbox" checked={threadsConsent} onChange={e => setThreadsConsent(e.target.checked)} />
+              <span>[선택] 추가로 더 홍보해드릴까요?</span></label>
+            <button type="button" aria-expanded={showPromotionDetails} aria-controls="promotion-consent-details" onClick={() => setShowPromotionDetails(v => !v)} className="py-1 text-muted underline underline-offset-2">{showPromotionDetails ? "접기" : "자세히"}</button>
+          </div>
+          <div id="promotion-consent-details" hidden={!showPromotionDetails} className="mt-1 space-y-1.5 leading-relaxed text-muted">
+            <p>더홍보가 공식 Threads와 유튜브 등 다른 플랫폼에서도 대신 홍보해드립니다. 체크하시면 이 글의 제목·소개·본문 일부와 원문 링크를 외부 플랫폼에 공개 홍보하는 데 동의합니다. 선정된 글에 한해 진행되며, 모든 글이 홍보되는 것은 아닙니다.</p>
+            <p><Link href="/policy#threads" className="underline">공식 SNS 홍보 운영정책</Link></p>
+          </div>
+        </div>}
+        <div className="flex items-center justify-end gap-2">
+          <Link href={mode === "edit" && post ? `/post/${post.id}` : "/"} className="btn btn-outline btn-lg shrink-0">
             취소
           </Link>
-          {mode === "create" && <div className="space-y-2 text-sm">
-            <label className="flex gap-2"><input type="checkbox" checked={threadsConsent} onChange={e => setThreadsConsent(e.target.checked)} />
-              <span>[선택] 추가로 더 홍보해드릴까요?</span></label>
-            <p>더홍보가 공식 Threads와 유튜브 등 다른 플랫폼에서도 대신 홍보해드립니다. 체크하시면 이 글의 제목·소개·본문 일부와 원문 링크를 외부 플랫폼에 공개 홍보하는 데 동의합니다. 선정된 글에 한해 진행되며, 모든 글이 홍보되는 것은 아닙니다.</p>
-            <p className="text-xs text-muted">현재는 Threads에서 진행하며, 다른 플랫폼은 추후 운영할 수 있습니다. 동의하지 않아도 글 등록과 서비스 이용에는 영향이 없습니다.</p>
-            <p>공개 링크에 미리보기가 표시될 수 있고, 홍보 문구·주제 태그가 덧붙습니다. 글 상세에서 동의를 철회할 수 있으며, 이미 발행 요청이 시작된 내용은 자동 삭제되지 않습니다. <Link href="/policy#threads" className="underline">공식 SNS 홍보 운영정책</Link></p>
-          </div>}
           <button type="submit" disabled={pending || busyCount > 0} className="btn btn-primary btn-lg sm:min-w-[200px]">
             {pending ? <LoaderCircle size={18} className="animate-spin" aria-hidden /> : <Send size={17} aria-hidden />}
             {pending ? "등록 중…" : mode === "edit" ? "수정 완료" : "홍보글 등록하기"}
