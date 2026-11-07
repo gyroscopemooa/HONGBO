@@ -2,7 +2,7 @@ import { formatPromo, weightedLength } from './copy.mjs';
 export { formatPromo } from './copy.mjs';
 const API = 'https://graph.threads.net/v1.0';
 const SITE = 'https://www.thehongbo.com';
-const TEASERS = ['새 소식 구경은 제가 안내할게요. 👀', '오늘도 홍보 담당자가 소식을 들고 왔습니다.', '자세한 내용은 원문에 차곡차곡 담겨 있어요.'];
+const TEASERS = ['새 소식 구경은 제가 안내할게요.', '오늘도 홍보 담당자가 소식을 들고 왔습니다.', '자세한 내용은 원문에 차곡차곡 담겨 있어요.'];
 
 // Automated screening complements mandatory human approval of the source snapshot.
 export function hasSensitiveContent(post) {
@@ -80,7 +80,15 @@ export async function runOnce(env) {
   });
   try {
     if (hasSensitiveContent(post)) { await complete('blocked', 'SENSITIVE_CONTENT'); return 'blocked'; }
-    const draft = formatPromo(post, SITE, await aiCopy(env, post));
+    // Original publication time only; bumps/edits must never create a fresh-news claim.
+    let publishedAt;
+    try {
+      const source = await request(env.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/posts?id=eq.' + encodeURIComponent(post.post_id) + '&select=published_at', {
+        headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY },
+      });
+      publishedAt = source?.[0]?.published_at;
+    } catch { /* Unknown freshness uses a neutral introduction. */ }
+    const draft = formatPromo({ ...post, published_at: publishedAt }, SITE, await aiCopy(env, post));
     if (weightedLength(draft) > 500) { await complete('blocked', 'TEXT_TOO_LONG'); return 'blocked'; }
     const userId = await verifyProfile(env);
     // No auto_publish_text: creation alone cannot publish a post.

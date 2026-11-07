@@ -11,6 +11,7 @@ async function scenario(options={}) {
     if (options.fail && url.includes(options.fail)) throw new Error('secret-threads secret-db');
     let data;
     if (url.includes('/me?')) data={id:'42',username:options.wrong?'wrong':'iamthehongbo'};
+    else if (url.includes('/rest/v1/posts?')) data=[{published_at:'2026-01-01T00:00:00Z'}];
     else if (url.endsWith('threads_claim_one')) data=[{...post,...options.post}];
     else if (url.endsWith('threads_prepare_publish')) data=options.ineligible?false:true;
     else if (url.endsWith('threads_complete')) data=true;
