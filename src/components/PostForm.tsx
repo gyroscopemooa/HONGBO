@@ -928,9 +928,9 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
         </SectionCard>
 
         {/* 4. 이미지 */}
-        <SectionCard step={4} title="이미지를 올려주세요" desc="대표 이미지가 있으면 훨씬 더 많이 눌려요. 대표 이미지는 목록 썸네일이라 자동으로 16:9로 잘라드려요.">
-          <Field id="primaryImage" label="대표 이미지" error={errors.primaryImageUrl} hint="목록에 보이는 썸네일이에요. 16:9(가로형) 이미지를 권장해요. 다른 비율은 가운데 기준으로 잘려요.">
-            <div className="max-w-[560px]"><ImageSlot value={f.primaryImageUrl} onChange={(u) => set("primaryImageUrl", u)} alt="대표 이미지 미리보기" onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} /></div>
+        <SectionCard step={4} title="이미지를 올려주세요" desc="이미지는 자르지 않고 원본 해상도로 저장해요. 용량 압축은 적용되며, 목록에서만 16:9 썸네일로 보여요.">
+          <Field id="primaryImage" label="대표 이미지" error={errors.primaryImageUrl} hint="목록은 가운데를 기준으로 꽉 채우고, 상세·확대에서는 전체 사진을 보여줘요. 이전에 잘려 저장된 사진은 원본을 다시 올려주세요.">
+            <div className="max-w-[560px]"><ImageSlot keepOriginal value={f.primaryImageUrl} onChange={(u) => set("primaryImageUrl", u)} alt="대표 이미지 미리보기" onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} /></div>
           </Field>
           <Field id="extraImages" label={`추가 이미지 (최대 ${LIMITS.extraImagesMax}장)`} optional error={errors.images} hint="자르지 않고 원본 비율 그대로 보여드려요. 큰 사진이나 세로 스크린샷도 그대로 올려도 돼요. (권장: 가로 1200px 이상)">
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">

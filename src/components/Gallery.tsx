@@ -23,30 +23,13 @@ export function Gallery({ images, title }: { images: string[]; title: string }) 
     };
   }, [open]);
   const current = images[idx] ?? images[0];
-  const local = current.startsWith("/");
   return (
     <div>
-      <button type="button" aria-label={`이미지 ${idx + 1} 확대 보기`} aria-haspopup="dialog" onClick={() => { setOriginalSize(false); setOpen(true); }} className="group relative block w-full cursor-zoom-in rounded-2xl">
-      {idx === 0 ? (
-        <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-line bg-soft">
-          <Image
-            key={current}
-            src={current}
-            alt={title}
-            fill
-            sizes="(min-width:1024px) 780px, 100vw"
-            unoptimized={local}
-            preload
-            className="object-cover"
-          />
-        </div>
-      ) : (
+      <button type="button" aria-label={`이미지 ${idx + 1} 확대 보기`} aria-haspopup="dialog" onClick={() => { setOriginalSize(true); setOpen(true); }} className="group relative block w-full cursor-zoom-in rounded-2xl">
         <div className="flex w-full items-center justify-center overflow-hidden rounded-2xl border border-line bg-soft">
-          {/* 추가 이미지는 원본 비율 그대로 전체를 보여줍니다 */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img key={current} src={current} alt={`${title} 이미지 ${idx + 1}`} className="h-auto max-h-[80vh] w-full object-contain" />
+          <img key={current} src={current} alt={`${title} 이미지 ${idx + 1}`} loading={idx === 0 ? "eager" : "lazy"} className="h-auto max-h-[80vh] w-full object-contain" />
         </div>
-      )}
         <span aria-hidden="true" className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-2 text-xs font-semibold text-white"><Expand size={14} /> 확대 보기</span>
       </button>
       <dialog ref={dialog} aria-label={`${title} 이미지 확대`} onClose={() => setOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) setOpen(false); }} className="m-auto h-[92dvh] max-h-none w-[96vw] max-w-[1600px] overflow-hidden rounded-2xl border border-white/20 bg-[#15171b] p-0 text-white backdrop:bg-black/80">
