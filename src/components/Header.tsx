@@ -10,7 +10,7 @@ export async function Header() {
 
   return (
     <header className="border-b border-line bg-white">
-      <div className="wrap flex h-[60px] items-center gap-3 sm:h-[68px] sm:gap-5">
+      <div className="wrap flex h-[60px] items-center gap-2 sm:h-[68px] sm:gap-5">
         <div className="flex items-baseline gap-3">
           <Logo size="md" />
           <span className="hidden whitespace-nowrap text-[13px] text-muted xl:inline">{SITE.slogan}</span>
@@ -41,8 +41,8 @@ export async function Header() {
           </div>
         </form>
 
-        <nav aria-label="사용자 메뉴" className="ml-auto flex items-center gap-1 sm:gap-2 md:ml-0">
-          <Link href="/search" aria-label="검색" className="flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-soft md:hidden">
+        <nav aria-label="사용자 메뉴" className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2 md:ml-0">
+          <Link href="/search" aria-label="검색" className="flex size-8 items-center justify-center rounded-full text-ink-2 hover:bg-soft sm:size-10 md:hidden">
             <Search size={20} aria-hidden />
           </Link>
 
@@ -57,13 +57,13 @@ export async function Header() {
               <Link href="/mypage" className="btn btn-ghost btn-sm hidden! sm:inline-flex!">
                 내 홍보
               </Link>
-              <Link href="/mypage" aria-label="내 홍보" className="flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-soft sm:hidden">
+              <Link href="/mypage" aria-label="내 홍보" className="flex size-8 items-center justify-center rounded-full text-ink-2 hover:bg-soft sm:size-10 sm:hidden">
                 <UserRound size={20} aria-hidden />
               </Link>
-              <form action={signOutAction} className="hidden sm:block">
-                <button type="submit" className="btn btn-ghost btn-sm">
-                  <LogOut size={15} aria-hidden />
-                  로그아웃
+              <form action={signOutAction}>
+                <button type="submit" aria-label="로그아웃" title="로그아웃" className="flex size-8 shrink-0 items-center justify-center whitespace-nowrap rounded-full text-ink-2 hover:bg-soft sm:w-auto sm:gap-1.5 sm:rounded-lg sm:px-3 sm:text-[13.5px] sm:font-semibold">
+                  <LogOut size={16} aria-hidden />
+                  <span className="sr-only sm:not-sr-only">로그아웃</span>
                 </button>
               </form>
             </>
@@ -73,7 +73,7 @@ export async function Header() {
                 <LogIn size={15} aria-hidden />
                 로그인
               </Link>
-              <Link href="/auth" aria-label="로그인" className="flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-soft sm:hidden">
+              <Link href="/auth" aria-label="로그인" className="flex size-8 items-center justify-center rounded-full text-ink-2 hover:bg-soft sm:size-10 sm:hidden">
                 <UserRound size={20} aria-hidden />
               </Link>
             </>
