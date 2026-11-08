@@ -84,14 +84,15 @@ export async function runOnce(env) {
   try {
     if (hasSensitiveContent(post)) { await complete('blocked', 'SENSITIVE_CONTENT'); return 'blocked'; }
     // Original publication time only; bumps/edits must never create a fresh-news claim.
-    let publishedAt;
+    let publishedAt, externalUrl;
     try {
-      const source = await request(env.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/posts?id=eq.' + encodeURIComponent(post.post_id) + '&select=published_at', {
+      const source = await request(env.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/posts?id=eq.' + encodeURIComponent(post.post_id) + '&select=published_at,external_url', {
         headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY },
       });
       publishedAt = source?.[0]?.published_at;
+      externalUrl = source?.[0]?.external_url;
     } catch { /* Unknown freshness uses a neutral introduction. */ }
-    const draft = formatPromo({ ...post, published_at: publishedAt }, SITE, await aiCopy(env, post));
+    const draft = formatPromo({ ...post, published_at: publishedAt, external_url: externalUrl }, SITE, await aiCopy(env, post));
     if (weightedLength(draft) > 500) { await complete('blocked', 'TEXT_TOO_LONG'); return 'blocked'; }
     const userId = await verifyProfile(env);
     // No auto_publish_text: creation alone cannot publish a post.

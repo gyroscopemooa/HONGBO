@@ -1,6 +1,7 @@
 // Manual-only brand posts: never imported by the scheduled publishing Worker.
 import { appendPromoHashtags } from './copy.mjs';
 export const QUESTIONS = [
+  '여러분은 홍보를 어떻게 하고 계신가요?',
   '여러분은 만드는 일과 알리는 일 중 뭐가 더 어렵나요?',
   '만든 서비스 처음 알릴 때, 어디서부터 시작하셨나요?',
   '내 서비스 소개를 한 문장으로 줄이는 거, 저만 어렵나요?',
