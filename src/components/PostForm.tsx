@@ -1023,6 +1023,11 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
           </div>
         )}
 
+        <p className="text-sm leading-relaxed text-ink-2">
+          동일 앱·상품·서비스는 공개 글 1개를 유지해주세요. 설명 변경은 기존 글 수정, 재노출은 ‘내 홍보’의 ‘다시 홍보하기’를 이용해주세요.{" "}
+          <Link href="/policy#duplicates" target="_blank" className="font-semibold underline">중복 게시·도배 기준</Link>
+        </p>
+
         {f.category !== "quick" && (
           <div role="note" className="flex items-start gap-2.5 rounded-xl border border-line bg-soft px-4 py-3 text-[13.5px] leading-relaxed text-ink-2">
             <CircleAlert size={17} className="mt-0.5 shrink-0 text-muted" aria-hidden />

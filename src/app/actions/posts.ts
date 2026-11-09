@@ -38,12 +38,11 @@ export async function createPostAction(raw: unknown): Promise<ActionResult> {
   if ((await store.countAuthorPostsSince(user.id, oneDay)) >= LIMITS.postsPerDay) {
     return { ok: false, message: `하루에 등록할 수 있는 홍보글(${LIMITS.postsPerDay}개)을 모두 사용했어요.` };
   }
-  // 같은 링크 반복 등록 제한
-  if (parsed.data.externalUrl && (await store.findActiveByUrl(user.id, parsed.data.externalUrl))) {
+  // 동일 목적지·앱·복제 내용 반복 등록 제한
+  if (await store.findActiveDuplicate(user.id, parsed.data)) {
     return {
       ok: false,
-      message: "같은 링크로 등록한 홍보글이 이미 있어요. 기존 글을 수정하거나 '다시 홍보하기'를 이용해주세요.",
-      errors: { externalUrl: "이미 같은 링크로 등록한 홍보글이 있어요." },
+      message: "동일한 앱·상품·주소 또는 반복 내용의 공개 글이 이미 있어요. 내 홍보에서 기존 글을 수정하거나 '다시 홍보하기'를 이용해주세요.",
     };
   }
 
@@ -78,11 +77,10 @@ export async function updatePostAction(id: number, raw: unknown): Promise<Action
     }
   }
 
-  if (post.authorId && parsed.data.externalUrl && (await store.findActiveByUrl(post.authorId, parsed.data.externalUrl, post.id))) {
+  if (post.authorId && (await store.findActiveDuplicate(post.authorId, parsed.data, post.id))) {
     return {
       ok: false,
-      message: "같은 링크로 등록한 다른 홍보글이 있어요.",
-      errors: { externalUrl: "이미 같은 링크로 등록한 홍보글이 있어요." },
+      message: "동일한 앱·상품·주소 또는 반복 내용의 다른 공개 글이 있어요. 내 홍보에서 중복 글을 정리하고 기존 글을 수정해주세요.",
     };
   }
 
@@ -124,6 +122,10 @@ export async function renewPostAction(id: number): Promise<ActionResult> {
   }
   if (Date.now() - new Date(post.bumpedAt).getTime() < 24 * 3_600_000 && post.status === "active") {
     return { ok: false, message: "다시 홍보하기는 하루에 한 번만 할 수 있어요." };
+  }
+  if (user.status === "blocked") return { ok: false, message: "이용이 제한된 계정은 다시 홍보할 수 없어요." };
+  if (await store.findActiveDuplicate(user.id, post, post.id)) {
+    return { ok: false, message: "동일한 홍보 대상 또는 반복 내용의 공개 글이 있어요. 내 홍보에서 중복 글을 정리한 뒤 다시 홍보해주세요." };
   }
   await store.renewPost(id, postExpiryFromNow());
   revalidatePath("/", "layout");

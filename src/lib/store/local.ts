@@ -1,3 +1,4 @@
+import { isDuplicatePost } from "../post-duplicates";
 import fs from "node:fs";
 import path from "node:path";
 import type { CategorySlug } from "../constants";
@@ -353,10 +354,10 @@ export const localStore: Store = {
     return load().posts.filter((p) => p.authorId === authorId && p.publishedAt >= sinceIso).length;
   },
 
-  async findActiveByUrl(authorId, url, excludeId) {
+  async findActiveDuplicate(authorId, input, excludeId) {
     const now = Date.now();
     const p = load().posts.find(
-      (x) => x.authorId === authorId && x.externalUrl === url && x.id !== excludeId && isPublic(x, now),
+      (x) => x.authorId === authorId && x.id !== excludeId && isPublic(x, now) && isDuplicatePost(input, x),
     );
     return p ? clone(p) : null;
   },

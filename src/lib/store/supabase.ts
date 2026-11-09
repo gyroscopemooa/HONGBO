@@ -1,3 +1,4 @@
+import { isDuplicatePost } from "../post-duplicates";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CategorySlug } from "../constants";
@@ -285,19 +286,22 @@ export const supabaseStore: Store = {
     return count ?? 0;
   },
 
-  async findActiveByUrl(authorId, url, excludeId) {
-    let qb = sb()
-      .from("posts")
-      .select(POST_SELECT)
-      .eq("author_id", authorId)
-      .eq("external_url", url)
-      .eq("status", "active")
-      .or(`expires_at.is.null,expires_at.gt.${iso(new Date())}`)
-      .limit(1);
-    if (excludeId) qb = qb.neq("id", excludeId);
-    const { data, error } = await qb;
-    if (error) fail("posts.byUrl", error);
-    return data?.length ? toPost(data[0] as Row) : null;
+  async findActiveDuplicate(authorId, input, excludeId) {
+    // Page through all candidates: never silently skip members with many posts.
+    for (let offset = 0; ; offset += 200) {
+      let qb = sb().from("posts").select(POST_SELECT)
+        .eq("author_id", authorId).eq("status", "active")
+        .or(`expires_at.is.null,expires_at.gt.${iso(new Date())}`)
+        .order("id").range(offset, offset + 199);
+      if (excludeId) qb = qb.neq("id", excludeId);
+      const { data, error } = await qb;
+      if (error) fail("posts.duplicate", error);
+      for (const row of data ?? []) {
+        const post = toPost(row as Row);
+        if (isDuplicatePost(input, post)) return post;
+      }
+      if (!data || data.length < 200) return null;
+    }
   },
 
   async incrementCounter(postId, kind) {

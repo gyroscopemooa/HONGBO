@@ -70,7 +70,7 @@ export interface Store {
   /** 시드 글 일괄 처리. 변경된 개수 반환 */
   bulkSeed(action: "hide" | "show" | "delete"): Promise<number>;
   countAuthorPostsSince(authorId: string, sinceIso: string): Promise<number>;
-  findActiveByUrl(authorId: string, url: string, excludeId?: number): Promise<Post | null>;
+  findActiveDuplicate(authorId: string, input: PostInput, excludeId?: number): Promise<Post | null>;
 
   // ── analytics ──
   incrementCounter(postId: number, kind: "view" | "click"): Promise<void>;

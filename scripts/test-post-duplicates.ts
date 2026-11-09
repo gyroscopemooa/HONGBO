@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import { destinationKey, isDuplicatePost } from '../src/lib/post-duplicates';
+const post = (externalUrl: string | null, description = '', title = '상품 소개', shortDescription = '') => ({externalUrl, description, title, shortDescription});
+const android = 'https://play.google.com/store/apps/details?id=com.jystudio.focusrpg';
+assert.equal(destinationKey(android), destinationKey(android + '&hl=ko'));
+assert.equal(destinationKey('https://apps.apple.com/app/id6761639896'), destinationKey('https://apps.apple.com/kr/app/focus/id6761639896?l=ko'));
+assert.ok(isDuplicatePost(post(android), post(android + '&hl=ko')));
+assert.ok(isDuplicatePost(post(null, '설명 ' + android), post(android)));
+assert.ok(isDuplicatePost(post('https://example.com/item?id=1&utm_source=x'), post('http://example.com/item?id=1')));
+assert.ok(!isDuplicatePost(post('https://example.com/item?id=1'), post('https://example.com/item?id=2')));
+assert.ok(!isDuplicatePost(post(android), post(android.replace('focusrpg', 'otherapp'))));
+assert.ok(!isDuplicatePost(post('https://example.com/#/item/1'), post('https://example.com/#/item/2')));
+const body = '집중 타이머와 장비 수집으로 성장하는 게임입니다. 매일 공부 시간을 기록하고 목표를 관리할 수 있습니다. 보스와 전투하며 장비를 모으고 캐릭터를 성장시키는 다양한 기능을 제공합니다. 집중한 시간을 확인하고 새로운 목표를 세워보세요.';
+assert.ok(isDuplicatePost(post(null, body), post(null, body.replaceAll(' ', '\n'))));
+assert.ok(!isDuplicatePost(post(null, '좋은 상품입니다.'), post(null, '좋은 상품입니다.')));
+assert.ok(!isDuplicatePost(post(null), post(null)));
+assert.equal(destinationKey('not a URL'), null);
+console.log('Duplicate regression checks passed (12 cases).');
