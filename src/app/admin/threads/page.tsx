@@ -32,7 +32,7 @@ export default async function ThreadsAdmin() {
     </form>
     <h3 className="font-bold">동의한 글 검토 · 템플릿 미리보기 (최근 50개)</h3>
     {candidates.map(({ post, hash, consent }) => {
-      const source = { post_id: post.id, title: post.title, short_description: post.short_description, description: post.description };
+      const source = { post_id: post.id, title: post.title, short_description: post.short_description, description: post.description, published_at: post.published_at, external_url: post.external_url };
       const blocked = hasSensitiveContent(source);
       return <article key={post.id} className="space-y-3 rounded-xl border p-4">
         <Link className="underline" href={`/post/${post.id}`}>{post.title}</Link>
