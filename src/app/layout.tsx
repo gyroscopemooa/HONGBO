@@ -1,3 +1,4 @@
+import { CommunityOverview } from "@/components/CommunityOverview";
 import { LandingBeacon } from "@/components/LandingBeacon";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
@@ -77,6 +78,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Suspense>
         <CategoryNav />
         <main id="main">{children}</main>
+        <details className="group fixed right-0 top-1/3 z-40">
+          <summary className="cursor-pointer list-none rounded-l-xl border border-r-0 border-indigo-100 bg-white px-2 py-3 text-xs font-bold text-indigo-600 shadow-card [writing-mode:vertical-rl]">커뮤니티 <span className="group-open:hidden">열기</span><span className="hidden group-open:inline">닫기</span></summary>
+          <div className="absolute right-10 top-0 max-h-[60vh] w-[320px] max-w-[calc(100vw-64px)] overflow-auto rounded-xl bg-white shadow-pop">
+            <Suspense fallback={<p className="p-4 text-sm">커뮤니티 불러오는 중…</p>}><CommunityOverview /></Suspense>
+          </div>
+        </details>
         <LandingBeacon />
         <Footer />
       </body>

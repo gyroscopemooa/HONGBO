@@ -6,6 +6,7 @@ import { BannerPlaceholder, BannerSlider } from "@/components/BannerSlider";
 import { Carousel } from "@/components/Carousel";
 import { ExclusiveStrip } from "@/components/ExclusiveStrip";
 import { CategoryTiles } from "@/components/CategoryTiles";
+import { CommunityLatest } from "@/components/CommunityLatest";
 import { FeatureRequestBanner } from "@/components/FeatureRequestBanner";
 import { Infl09Banner } from "@/components/Infl09Banner";
 import { Hero } from "@/components/Hero";
@@ -137,6 +138,7 @@ export default async function HomePage() {
         <Hero ads={heroAds} infl09={{ url: infl09Url, preview: !infl09Url && process.env.NODE_ENV !== "production" }} />
       </div>
       <CategoryTiles />
+      <div className="wrap pb-5"><CommunityLatest limit={2} /></div>
 
       <Carousel title="오늘의 인기 홍보" icon={<Flame className="text-brand" size={22} fill="currentColor" aria-hidden />} moreHref="/posts?sort=popular">
         {popular.slice(0, 12).map((p, i) => (
@@ -215,6 +217,8 @@ export default async function HomePage() {
       </div>
 
       <HomeBoards reviews={reviewBoard.items} community={communityBoard.items} meetup={meetupBoard.items} />
+
+      <div className="wrap pt-5"><CommunityLatest limit={5} title="회원 커뮤니티 최신글" /></div>
 
       <HomeFaq />
     </>

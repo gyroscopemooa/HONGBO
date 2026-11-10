@@ -76,7 +76,8 @@ function NavInner() {
       : null;
 
   const extra: Array<[string, string]> = [
-    ["/community", "커뮤니티"],
+    ["/talk", "회원 커뮤니티"],
+    ["/community", "운영자 가이드"],
     ["/reviews", "후기·리뷰"],
     ["/meetup", "홍보소모임"],
   ];
@@ -97,6 +98,10 @@ function NavInner() {
           {underline(activeCat === "all")}
         </Link>
         {/* 모바일: 가로 스크롤 전체 목록 */}
+        <Link href="/talk" className={linkCls(pathname.startsWith("/talk"))} style={{ color: "#4f46e5", fontWeight: 700 }}>
+          새 이야기
+          {underline(pathname.startsWith("/talk"))}
+        </Link>
         <div className="flex w-max shrink-0 items-center xl:hidden">
           {CATEGORIES.map((c) => {
             const active = activeCat === c.slug;

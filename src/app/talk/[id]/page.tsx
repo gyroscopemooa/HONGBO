@@ -60,7 +60,8 @@ export default async function Page({
       <Link className="text-sm text-brand" href="/talk">
         ← 회원 커뮤니티
       </Link>
-      <article className="mt-5">
+      <article className="mt-5 overflow-hidden rounded-2xl border border-line bg-white">
+        <header className="border-b border-line bg-soft/50 p-5 sm:p-6">
         <p className="text-sm text-muted">
           {MEMBER_CATEGORIES.find((x) => x.value === post.category)?.label} ·{" "}
           {MEMBER_PURPOSES.find((x) => x.value === post.purpose)?.label}
@@ -73,10 +74,16 @@ export default async function Page({
             timeZone: "Asia/Seoul",
           })}
         </p>
-        <div className="whitespace-pre-wrap break-words py-5 leading-relaxed">
+        </header>
+        <section aria-label="글 내용" className="p-5 sm:p-6">
+        <h2 className="mb-4 text-sm font-bold text-muted">내용</h2>
+        <div className="min-h-24 whitespace-pre-wrap break-words leading-relaxed">
           {post.body}
         </div>
-        <dl className="space-y-3 rounded-xl bg-soft p-4">
+        </section>
+        {(fields.some(([, v]) => !!v) || d.link || d.promotionId) && <section aria-label="추가 정보" className="border-t border-line p-5 sm:p-6">
+        <h2 className="mb-4 text-sm font-bold text-muted">참여 안내 · 추가 정보</h2>
+        <dl className="space-y-3 text-sm">
           {fields
             .filter(([, v]) => !!v)
             .map(([k, v]) => (
@@ -114,16 +121,8 @@ export default async function Page({
             </div>
           )}
         </dl>
-        <p className="my-4 text-xs text-muted">{MEMBER_POLICY}</p>
-        <MemberPostControls
-          id={post.id}
-          closed={post.closed}
-          owner={user?.id === post.authorId}
-          admin={!!user?.isAdmin}
-        />
-        <div className="mt-3">
-          <MemberReport postId={post.id} />
-        </div>
+        </section>}
+
       </article>
       {(post.details.acceptApplications || applications.length > 0) && (
         <MemberApplications
@@ -152,12 +151,26 @@ export default async function Page({
           )}
         </nav>
       )}
+      <div className="mt-6 rounded-2xl border border-line bg-white p-5 sm:p-6 [&>section]:mt-0">
       <MemberComments
         postId={post.id}
         comments={comments}
         userId={user?.id}
         isAdmin={!!user?.isAdmin}
       />
+      </div>
+      <footer className="mt-6 border-t border-line pt-2">
+        <p className="my-4 text-xs text-muted">{MEMBER_POLICY}</p>
+        <MemberPostControls
+          id={post.id}
+          closed={post.closed}
+          owner={user?.id === post.authorId}
+          admin={!!user?.isAdmin}
+        />
+        <div className="mt-3">
+          <MemberReport postId={post.id} />
+        </div>
+      </footer>
     </div>
   );
 }
