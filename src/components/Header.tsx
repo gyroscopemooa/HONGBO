@@ -10,7 +10,7 @@ export async function Header() {
 
   return (
     <header className="relative z-50 border-b border-line bg-white">
-      <div className="wrap flex h-[60px] items-center gap-3 sm:h-[68px] sm:gap-5">
+      <div className="wrap flex h-[60px] items-center gap-2 sm:h-[68px] sm:gap-5">
         <div className="flex items-baseline gap-3">
           <Logo size="md" />
           <span className="hidden whitespace-nowrap text-[13px] text-muted xl:inline">{SITE.slogan}</span>
@@ -49,12 +49,12 @@ export async function Header() {
           {user ? (
             <>
               {user.isAdmin && (
-                <Link href="/admin" className="btn btn-ghost btn-sm hidden sm:inline-flex">
+                <Link href="/admin" aria-label="관리자" title="관리자" className="flex size-10 shrink-0 items-center justify-center rounded-full text-ink-2 hover:bg-soft sm:w-auto sm:gap-1.5 sm:rounded-lg sm:px-3">
                   <ShieldCheck size={16} aria-hidden />
-                  관리
+                  <span className="hidden sm:inline">관리</span>
                 </Link>
               )}
-              <Link href="/mypage" className="btn btn-ghost btn-sm hidden sm:inline-flex">
+              <Link href="/mypage" className="btn btn-ghost btn-sm hidden! sm:inline-flex!">
                 내 홍보
               </Link>
               <details className="group relative sm:hidden">
@@ -84,7 +84,7 @@ export async function Header() {
             </>
           ) : (
             <>
-              <Link href="/auth" className="btn btn-ghost btn-sm hidden sm:inline-flex">
+              <Link href="/auth" className="btn btn-ghost btn-sm hidden! sm:inline-flex!">
                 <LogIn size={15} aria-hidden />
                 로그인
               </Link>
@@ -94,7 +94,7 @@ export async function Header() {
             </>
           )}
 
-          <Link href="/write" className="btn btn-primary !px-3.5 !py-2.5 sm:!px-5">
+          <Link href="/write" className="btn btn-primary shrink-0 !px-2.5 !py-2.5 sm:!px-5">
             <PencilLine size={16} aria-hidden />
             글쓰기
           </Link>

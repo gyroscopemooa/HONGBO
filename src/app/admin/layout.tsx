@@ -17,6 +17,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const links: Array<[string, string, number?]> = [
     ["/admin", "대시보드"],
     ["/admin/posts", "홍보글"],
+    ["/admin/appeals", "이의제기"],
+    ["/admin/threads", "Threads 홍보"],
     ["/admin/community", "커뮤니티"],
     ["/admin/reports", "신고", stats.openReports],
     ["/admin/feature-requests", "기능 요청"],
@@ -30,7 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="wrap py-6 sm:py-8">
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <h1 className="mr-2 text-[24px] font-black tracking-[-0.04em]">관리자</h1>
-        <nav aria-label="관리자 메뉴" className="no-scrollbar -mx-1 flex min-w-0 gap-1.5 overflow-x-auto px-1">
+        <nav aria-label="관리자 메뉴" className="flex w-full min-w-0 flex-wrap gap-1.5">
           {links.map(([href, label, n]) => (
             <Link key={href} href={href} className="btn btn-outline btn-sm shrink-0">
               {label}

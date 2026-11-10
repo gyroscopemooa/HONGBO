@@ -22,7 +22,12 @@ import {
   SURVEY_QUESTION_MAX,
   SURVEY_OPTION_MAX,
   EXTRA_LINK_LABEL_MAX,
+  COUPON_CODE_MAX,
+  COUPON_NOTE_MAX,
   EXTRA_LINK_MAX,
+  EXTRA_NOTE_MAX,
+  EXTRA_NOTE_TITLE_MAX,
+  EXTRA_NOTE_BODY_MAX,
   EXTRA_LINK_PRESETS,
   LIMITS,
   REGIONS,
@@ -70,6 +75,9 @@ export interface FormState {
   surveyPayout: string;
   surveyRewardText: string;
   links: Array<{ label: string; url: string }>;
+  notes: Array<{ title: string; body: string }>;
+  couponCode: string;
+  couponNote: string;
   videoUrl: string;
   price: string;
   region: string;
@@ -108,6 +116,9 @@ const EMPTY: FormState = {
   surveyPayout: "instant",
   surveyRewardText: "",
   links: [],
+  notes: [],
+  couponCode: "",
+  couponNote: "",
   videoUrl: "",
   price: "",
   region: "",
@@ -162,6 +173,9 @@ export function postToFormState(p: Post): FormState {
     surveyPayout: p.extra.exclusive?.payout ?? "instant",
     surveyRewardText: p.extra.exclusive?.rewardText ?? "",
     links: p.extra.links ?? [],
+    notes: p.extra.notes ?? [],
+    couponCode: p.extra.couponCode ?? "",
+    couponNote: p.extra.couponNote ?? "",
     videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
     price: p.price ?? "",
     region: p.region ?? "",
@@ -205,6 +219,9 @@ function toPayload(f: FormState) {
       surveyPayout: f.surveyPayout,
       surveyRewardText: f.surveyRewardText,
       links: f.links,
+      notes: f.notes,
+      couponCode: f.benefits.includes("coupon") ? f.couponCode : "",
+      couponNote: f.benefits.includes("coupon") ? f.couponNote : "",
       businessUrl: f.businessUrl,
       videoUrl: f.videoUrl,
     },
@@ -226,7 +243,7 @@ function SectionCard({ step, title, desc, children }: { step: number; title: str
   );
 }
 
-export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post }) {
+export function PostForm({ mode, post, canManageConsent = false, initialThreadsConsent = null }: { mode: "create" | "edit"; post?: Post; canManageConsent?: boolean; initialThreadsConsent?: boolean | null }) {
   const router = useRouter();
   const [f, setF] = useState<FormState>(() => (post ? postToFormState(post) : EMPTY));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -234,6 +251,8 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
   const [pending, start] = useTransition();
   const [busyCount, setBusyCount] = useState(0);
   const [confirmNoImage, setConfirmNoImage] = useState(false);
+  const [threadsConsent, setThreadsConsent] = useState(mode === "create" ? true : initialThreadsConsent ?? false);
+  const [showPromotionDetails, setShowPromotionDetails] = useState(true);
   const [restored, setRestored] = useState(false);
   const loaded = useRef(false);
 
@@ -339,8 +358,9 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
     }
     setConfirmNoImage(false);
     start(async () => {
-      const r = mode === "edit" && post ? await updatePostAction(post.id, toPayload(f)) : await createPostAction(toPayload(f));
+      const r = mode === "edit" && post ? await updatePostAction(post.id, { ...toPayload(f), ...(canManageConsent && initialThreadsConsent !== null && threadsConsent !== initialThreadsConsent ? { threadsConsent } : {}) }) : await createPostAction({ ...toPayload(f), threadsConsent });
       if (r.ok) {
+        if (r.message) window.alert(r.message);
         try {
           if (mode === "create") localStorage.removeItem(DRAFT_KEY);
         } catch {
@@ -830,7 +850,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
             label="추가 링크"
             optional
             error={errors.links}
-            hint={`이벤트 참여, 쿠폰 받기, 예약 등 버튼으로 보여줄 링크를 최대 ${EXTRA_LINK_MAX}개까지 추가할 수 있어요. 제목은 직접 써도 돼요.`}
+            hint={`이벤트 참여, 쿠폰 받기, 예약 등 버튼으로 보여줄 링크를 최대 ${EXTRA_LINK_MAX}개까지 추가할 수 있어요. 제목은 배지가 아닌 링크 버튼 문구이며 최대 ${EXTRA_LINK_LABEL_MAX}자예요.`}
           >
             <div className="space-y-3">
               {f.links.map((l, i) => (
@@ -840,7 +860,7 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                       <input
                         id={i === 0 ? "links0" : undefined}
                         value={l.label}
-                        maxLength={EXTRA_LINK_LABEL_MAX + 10}
+                        maxLength={EXTRA_LINK_LABEL_MAX}
                         onChange={(e) => set("links", f.links.map((x, idx) => (idx === i ? { ...x, label: e.target.value } : x)))}
                         placeholder="링크 제목 (예: 이벤트 참여)"
                         aria-label={`추가 링크 ${i + 1} 제목`}
@@ -887,12 +907,40 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
                     onClick={() => set("links", [...f.links, { label: "", url: "" }])}
                     className="rounded-full border border-dashed border-line bg-white px-3 py-1.5 text-[13px] font-bold text-muted transition hover:border-brand-line hover:text-brand"
                   >
-                    직접 입력
+                    링크 제목 직접 입력
                   </button>
                 </div>
               )}
             </div>
           </Field>
+          <Field id="additionalNotes" label="추가 안내" optional error={errors.notes} hint={`이벤트 참여 방법, 예약 안내 등을 최대 ${EXTRA_NOTE_MAX}개 추가할 수 있어요. 제목과 내용이 상세 페이지의 별도 안내 박스로 표시됩니다. 배지로 표시되지는 않아요.`}>
+            <div id="additionalNotes" className="space-y-3">
+              {(f.notes ?? []).map((note, i) => (
+                <div key={i} data-field={`notes.${i}`} className="min-w-0 space-y-3 rounded-xl border border-line bg-soft/40 p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold">안내 {i + 1}</span>
+                    <button type="button" aria-label={`안내 ${i + 1} 삭제`} onClick={() => { set("notes", f.notes.filter((_, index) => index !== i)); setErrors((errors) => Object.fromEntries(Object.entries(errors).filter(([key]) => !key.startsWith("notes.")))); }} className="flex size-9 items-center justify-center rounded-lg text-muted hover:bg-white hover:text-brand"><X size={16} aria-hidden /></button>
+                  </div>
+                  <Field id={`noteTitle${i}`} label="제목" counter={{ now: note.title.length, max: EXTRA_NOTE_TITLE_MAX }}>
+                    <input id={`noteTitle${i}`} value={note.title} maxLength={EXTRA_NOTE_TITLE_MAX} onChange={(e) => set("notes", f.notes.map((n, index) => index === i ? { ...n, title: e.target.value } : n))} placeholder="예: 이벤트 참여 방법" className="field" aria-invalid={!!errors[`notes.${i}`]} />
+                  </Field>
+                  <Field id={`noteBody${i}`} label="내용" counter={{ now: note.body.length, max: EXTRA_NOTE_BODY_MAX }}>
+                    <textarea id={`noteBody${i}`} value={note.body} maxLength={EXTRA_NOTE_BODY_MAX} rows={3} onChange={(e) => set("notes", f.notes.map((n, index) => index === i ? { ...n, body: e.target.value } : n))} placeholder="참여 순서, 이용 조건, 기간 등을 작성해주세요." className="field resize-y" aria-invalid={!!errors[`notes.${i}`]} />
+                  </Field>
+                  {errors[`notes.${i}`] && <p role="alert" className="text-sm text-brand-dark">{errors[`notes.${i}`]}</p>}
+                </div>
+              ))}
+              {(f.notes ?? []).length < EXTRA_NOTE_MAX && <button type="button" onClick={() => set("notes", [...(f.notes ?? []), { title: "", body: "" }])} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-line bg-white px-3 py-2 text-sm font-semibold text-muted hover:border-brand-line hover:text-brand"><Plus size={15} aria-hidden /> 안내 추가</button>}
+            </div>
+          </Field>
+          {f.benefits.includes("coupon") && <div className="space-y-3 rounded-xl border border-line bg-soft/40 p-4">
+            <Field id="couponCode" label="쿠폰 코드" optional error={errors.couponCode} counter={{ now: (f.couponCode ?? "").length, max: COUPON_CODE_MAX }} hint="링크 없이 코드만 등록할 수 있어요. 상세 페이지에 코드와 복사 버튼이 표시됩니다. 위에서 쿠폰 선택을 해제하고 저장하면 쿠폰 코드와 사용 안내도 삭제됩니다.">
+              <input id="couponCode" value={f.couponCode ?? ""} onChange={(e) => set("couponCode", e.target.value)} maxLength={COUPON_CODE_MAX} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="예: FOCUS500" className="field" aria-invalid={!!errors.couponCode} />
+            </Field>
+            <Field id="couponNote" label="쿠폰 사용 방법·조건" optional error={errors.couponNote} counter={{ now: (f.couponNote ?? "").length, max: COUPON_NOTE_MAX }}>
+              <textarea id="couponNote" value={f.couponNote ?? ""} onChange={(e) => set("couponNote", e.target.value)} maxLength={COUPON_NOTE_MAX} rows={2} placeholder="예: 앱 설정 → 쿠폰 입력에서 사용 · 계정당 1회 · 사용 기한" className="field" aria-invalid={!!errors.couponNote} />
+            </Field>
+          </div>}
           <Field id="description" label="상세 설명" required error={errors.description} counter={{ now: f.description.length, max: LIMITS.descMax }}>
             <textarea
               id="description"
@@ -907,9 +955,9 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
         </SectionCard>
 
         {/* 4. 이미지 */}
-        <SectionCard step={4} title="이미지를 올려주세요" desc="대표 이미지가 있으면 훨씬 더 많이 눌려요. 대표 이미지는 목록 썸네일이라 자동으로 16:9로 잘라드려요.">
-          <Field id="primaryImage" label="대표 이미지" error={errors.primaryImageUrl} hint="목록에 보이는 썸네일이에요. 16:9(가로형) 이미지를 권장해요. 다른 비율은 가운데 기준으로 잘려요.">
-            <div className="max-w-[560px]"><ImageSlot value={f.primaryImageUrl} onChange={(u) => set("primaryImageUrl", u)} alt="대표 이미지 미리보기" onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} /></div>
+        <SectionCard step={4} title="이미지를 올려주세요" desc="이미지는 자르지 않고 원본 해상도로 저장해요. 용량 압축은 적용되며, 목록에서만 16:9 썸네일로 보여요.">
+          <Field id="primaryImage" label="대표 이미지" error={errors.primaryImageUrl} hint="목록은 가운데를 기준으로 꽉 채우고, 상세·확대에서는 전체 사진을 보여줘요. 이전에 잘려 저장된 사진은 원본을 다시 올려주세요.">
+            <div className="max-w-[560px]"><ImageSlot keepOriginal value={f.primaryImageUrl} onChange={(u) => set("primaryImageUrl", u)} alt="대표 이미지 미리보기" onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} /></div>
           </Field>
           <Field id="extraImages" label={`추가 이미지 (최대 ${LIMITS.extraImagesMax}장)`} optional error={errors.images} hint="자르지 않고 원본 비율 그대로 보여드려요. 큰 사진이나 세로 스크린샷도 그대로 올려도 돼요. (권장: 가로 1200px 이상)">
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
@@ -975,6 +1023,11 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
           </div>
         )}
 
+        <p className="text-sm leading-relaxed text-ink-2">
+          동일 앱·상품·서비스는 공개 글 1개를 유지해주세요. 설명 변경은 기존 글 수정, 재노출은 ‘내 홍보’의 ‘다시 홍보하기’를 이용해주세요.{" "}
+          <Link href="/policy#duplicates" target="_blank" className="font-semibold underline">중복 게시·도배 기준</Link>
+        </p>
+
         {f.category !== "quick" && (
           <div role="note" className="flex items-start gap-2.5 rounded-xl border border-line bg-soft px-4 py-3 text-[13.5px] leading-relaxed text-ink-2">
             <CircleAlert size={17} className="mt-0.5 shrink-0 text-muted" aria-hidden />
@@ -987,14 +1040,29 @@ export function PostForm({ mode, post }: { mode: "create" | "edit"; post?: Post 
           </div>
         )}
 
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Link href={mode === "edit" && post ? `/post/${post.id}` : "/"} className="btn btn-outline btn-lg">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        {(mode === "create" || canManageConsent) && <div className="min-w-0 flex-1 text-base">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <label className="flex min-h-[50px] cursor-pointer items-center gap-2.5 font-semibold"><input type="checkbox" className="h-5 w-5 shrink-0 accent-brand" checked={threadsConsent} disabled={mode === "edit" && initialThreadsConsent === null} onChange={e => setThreadsConsent(e.target.checked)} />
+              <span>[선택] 추가로 더 홍보해드릴까요?</span></label>
+            <button type="button" aria-expanded={showPromotionDetails} aria-controls="promotion-consent-details" onClick={() => setShowPromotionDetails(v => !v)} className="py-2 text-muted underline underline-offset-2">{showPromotionDetails ? "접기" : "자세히"}</button>
+          </div>
+          {mode === "edit" && initialThreadsConsent === null && <p role="status" className="text-sm text-muted">현재 동의 상태를 불러올 수 없어 변경할 수 없습니다. 운영 사이트에서 다시 확인해주세요.</p>}
+          {mode === "edit" && <p className="text-sm text-muted">체크를 변경한 뒤 수정 완료를 눌러 저장하세요. 동의를 철회해도 이미 외부에 게시된 내용은 자동 삭제되지 않습니다.</p>}
+          <div id="promotion-consent-details" hidden={!showPromotionDetails} className="mt-1 space-y-1.5 text-sm leading-relaxed text-muted">
+            <p>더홍보가 공식 Threads와 유튜브 등 다른 플랫폼에서도 대신 홍보해드립니다. 체크하시면 이 글의 제목·소개·본문 일부와 원문 링크를 외부 플랫폼에 공개 홍보하는 데 동의합니다. 선정된 글에 한해 진행되며, 모든 글이 홍보되는 것은 아닙니다.</p>
+            <p><Link href="/policy#threads" className="underline">공식 SNS 홍보 운영정책</Link></p>
+          </div>
+        </div>}
+        <div className="flex shrink-0 items-center justify-end gap-2 sm:ml-auto">
+          <Link href={mode === "edit" && post ? `/post/${post.id}` : "/"} className="btn btn-outline btn-lg shrink-0">
             취소
           </Link>
           <button type="submit" disabled={pending || busyCount > 0} className="btn btn-primary btn-lg sm:min-w-[200px]">
             {pending ? <LoaderCircle size={18} className="animate-spin" aria-hidden /> : <Send size={17} aria-hidden />}
             {pending ? "등록 중…" : mode === "edit" ? "수정 완료" : "홍보글 등록하기"}
           </button>
+        </div>
         </div>
       </div>
 

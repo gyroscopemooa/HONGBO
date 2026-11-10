@@ -1,6 +1,7 @@
 "use client";
 
-/** 브라우저에서 이미지를 16:9 로 자동 크롭하고 webp 로 줄입니다. (EXIF 위치정보도 함께 제거됩니다.) */
+/** 브라우저에서 이미지를 WebP로 변환합니다. 게시글은 전체 해상도를 보존하고 광고는 지정 비율로 자릅니다. EXIF 위치정보는 제거됩니다. */
+import { LIMITS } from "./constants";
 
 const DEFAULT_MAX_W = 960;
 const DEFAULT_RATIO = 16 / 9;
@@ -12,6 +13,8 @@ export interface ProcessOptions {
   maxWidth?: number;
   /** true 면 자르지 않고 원본 비율 그대로 (긴 변 기준 maxWidth 이하로만 축소) */
   keepOriginal?: boolean;
+  /** 자르지 않는 이미지의 원본 픽셀 크기를 보존합니다. */
+  preserveResolution?: boolean;
 }
 
 export async function processImage(file: Blob, opts: ProcessOptions = {}): Promise<Blob> {
@@ -32,7 +35,7 @@ export async function processImage(file: Blob, opts: ProcessOptions = {}): Promi
   let sx = 0;
   let sy = 0;
   if (opts.keepOriginal) {
-    const scale = Math.min(1, MAX_W / Math.max(sw, sh));
+    const scale = opts.preserveResolution ? 1 : Math.min(1, MAX_W / Math.max(sw, sh));
     tw = Math.max(1, Math.round(sw * scale));
     th = Math.max(1, Math.round(sh * scale));
   } else {
@@ -54,6 +57,15 @@ export async function processImage(file: Blob, opts: ProcessOptions = {}): Promi
   bitmap.close?.();
 
   const toBlob = (type: string, q: number) => new Promise<Blob | null>((res) => canvas.toBlob(res, type, q));
+  if (opts.keepOriginal && opts.preserveResolution) {
+    for (const quality of [0.9, 0.8, 0.7, 0.6]) {
+      const blob = await toBlob("image/webp", quality);
+      if (blob && blob.type === "image/webp" && blob.size <= LIMITS.uploadMaxBytes) return blob;
+    }
+    const jpg = await toBlob("image/jpeg", 0.8);
+    if (jpg && jpg.size <= LIMITS.uploadMaxBytes) return jpg;
+    throw new Error("원본 해상도를 유지한 파일이 4MB를 초과해요. 파일 용량을 줄여 다시 올려주세요. 이미지를 자동으로 자르거나 축소하지 않습니다.");
+  }
   const webp = await toBlob("image/webp", 0.86);
   if (webp && webp.type === "image/webp") return webp;
   const jpg = await toBlob("image/jpeg", 0.88);

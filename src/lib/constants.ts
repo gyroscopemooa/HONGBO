@@ -385,6 +385,11 @@ export function isBenefitSlug(v: unknown): v is BenefitSlug | typeof EXCLUSIVE_S
 }
 
 /** 추가 링크(이벤트 참여, 쿠폰 받기 등) — 제목은 직접 입력하거나 빠른 선택으로 채웁니다. */
+export const COUPON_CODE_MAX = 80;
+export const COUPON_NOTE_MAX = 200;
+export const EXTRA_NOTE_MAX = 5;
+export const EXTRA_NOTE_TITLE_MAX = 30;
+export const EXTRA_NOTE_BODY_MAX = 500;
 export const EXTRA_LINK_MAX = 5;
 export const EXTRA_LINK_LABEL_MAX = 20;
 export const EXTRA_LINK_PRESETS = ["이벤트 참여", "쿠폰 받기", "예약하기", "공식 홈페이지", "카카오채널"] as const;

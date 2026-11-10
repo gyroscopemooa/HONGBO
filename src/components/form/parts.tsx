@@ -56,7 +56,7 @@ export function Field({
   );
 }
 
-/** 이미지 1장 업로드 칸 — 선택/드래그 → 16:9 자동 크롭 → 업로드 → 미리보기 */
+/** 이미지 1장 업로드 칸 — 선택/드래그 → 이미지 처리 → 업로드 → 미리보기 */
 export function ImageSlot({
   value,
   onChange,
@@ -72,7 +72,7 @@ export function ImageSlot({
   size?: "lg" | "sm";
   error?: string;
   onBusyChange?: (busy: boolean) => void;
-  /** true 면 16:9 로 자르지 않고 원본 비율 유지 (추가 이미지용) */
+  /** true 면 16:9 로 자르지 않고 원본 비율 유지 (대표·추가 이미지용) */
   keepOriginal?: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
@@ -86,7 +86,7 @@ export function ImageSlot({
     setBusy(true);
     onBusyChange?.(true);
     try {
-      onChange(await processAndUpload(file, keepOriginal ? { keepOriginal: true, maxWidth: 1600 } : {}));
+      onChange(await processAndUpload(file, keepOriginal ? { keepOriginal: true, preserveResolution: true } : {}));
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "이미지를 올리지 못했어요.");
     } finally {
@@ -130,7 +130,7 @@ export function ImageSlot({
             {size === "lg" ? (
               <>
                 <span className="text-sm font-semibold text-ink-2">클릭하거나 이미지를 끌어다 놓으세요</span>
-                <span className="text-xs">16:9로 자동 크롭돼요 · JPG, PNG, WebP</span>
+                <span className="text-xs">{keepOriginal ? "자르지 않고 전체 이미지 저장" : "16:9로 자동 크롭"} · JPG, PNG, WebP</span>
               </>
             ) : (
               <span className="text-xs font-medium">추가</span>
@@ -294,11 +294,11 @@ export function LinkInput({
   );
 }
 
-/** 링크의 대표 이미지를 서버를 거쳐 받아와 같은 규칙(16:9 크롭)으로 업로드합니다. */
+/** 링크의 대표 이미지를 서버를 거쳐 받아와 원본 비율과 해상도를 보존해 업로드합니다. */
 export async function importRemoteImage(src: string): Promise<string> {
   const res = await fetch(`/api/og/image?src=${encodeURIComponent(src)}`);
   if (!res.ok) throw new Error("이미지를 가져오지 못했어요.");
-  const processed = await processImage(await res.blob());
+  const processed = await processImage(await res.blob(), { keepOriginal: true, preserveResolution: true });
   return uploadImage(processed);
 }
 

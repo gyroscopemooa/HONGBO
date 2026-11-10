@@ -42,8 +42,8 @@ export default async function AdminPosts({ searchParams }: Props) {
 
   return (
     <div>
-      <form action="/admin/posts" className="mb-4 grid grid-cols-2 gap-2 rounded-2xl border border-line bg-white p-3 shadow-card sm:grid-cols-3 xl:grid-cols-[minmax(190px,2fr)_repeat(3,minmax(110px,1fr))_auto_auto] xl:items-end">
-        <label className="col-span-2 min-w-0 text-xs font-semibold text-muted sm:col-span-3 xl:col-span-1">
+      <form action="/admin/posts" className="mb-4 grid grid-cols-2 items-end gap-2 sm:flex sm:flex-wrap rounded-2xl border border-line bg-white p-3 shadow-card">
+        <label className="col-span-2 min-w-0 sm:min-w-[180px] sm:flex-1 text-xs font-semibold text-muted">
           검색
           <input name="q" defaultValue={q} placeholder="제목·소개·설명·태그" className="field mt-1 !py-2" />
         </label>
@@ -76,13 +76,13 @@ export default async function AdminPosts({ searchParams }: Props) {
             <option value="0">이용자 글</option>
           </select>
         </label>
-        <label className="col-span-2 flex min-w-0 items-center gap-1.5 text-sm font-medium text-ink-2 sm:col-span-1">
+        <label className="flex h-[42px] items-center gap-1.5 text-sm font-medium text-ink-2">
           <input type="checkbox" name="pinned" value="1" defaultChecked={pinnedOnly} className="accent-[#f04f4a]" /> 메인 고정만
         </label>
-        <div className="col-span-2 flex items-center gap-2 sm:col-span-2 xl:col-span-1 xl:justify-end">
-          <button className="btn btn-primary btn-sm min-w-0 flex-1 xl:flex-none">검색</button>
-          <Link href="/admin/posts" className="btn btn-ghost btn-sm min-w-0 flex-1 xl:flex-none">초기화</Link>
-        </div>
+        <button className="btn btn-primary">검색</button>
+        <Link href="/admin/posts" className="btn btn-ghost">
+          초기화
+        </Link>
       </form>
 
       <p className="mb-3 text-sm text-muted">
@@ -92,79 +92,91 @@ export default async function AdminPosts({ searchParams }: Props) {
       <ul className="space-y-2.5">
         {items.map((p) => {
           const st = effectiveStatus(p);
+          const canHide = p.status === "active";
+          const canBlock = p.status !== "blocked" && p.status !== "deleted" && !p.isSeed;
           return (
-            <li key={p.id} className="min-w-0 rounded-2xl border border-line bg-white p-3 shadow-card sm:p-3.5">
-              <div className="flex min-w-0 items-start gap-3 sm:items-center">
-                <Link href={`/post/${p.id}`} aria-label={`${p.title} 상세 보기`} className="block w-[94px] shrink-0 overflow-hidden rounded-lg sm:w-[118px]">
-                  <PostImage src={p.primaryImageUrl} alt="" category={p.category} sizes="(max-width: 639px) 94px, 118px" />
-                </Link>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <StatusBadge status={st} />
-                    <CategoryBadge slug={p.category} />
-                    {p.isSeed && <span className="rounded-md bg-[#eef0f4] px-1.5 py-0.5 text-[11px] font-bold text-muted">초기 글</span>}
-                    {p.adminPinned && (
-                      <span className="inline-flex items-center gap-0.5 rounded-md bg-brand-soft px-1.5 py-0.5 text-[11px] font-bold text-brand-dark">
-                        <Pin size={11} aria-hidden /> 메인 고정{p.curatedRank ? ` #${p.curatedRank}` : ""}
-                      </span>
-                    )}
-                    <span className="text-xs text-faint">#{p.id}</span>
-                  </div>
-                  <Link href={`/post/${p.id}`} className="mt-1 block line-clamp-2 text-[14px] font-bold leading-snug hover:text-brand-dark sm:text-[15px]">{p.title}</Link>
-                  <p className="mt-1 text-[11px] leading-relaxed text-faint sm:text-xs">
-                    {formatDate(p.publishedAt)} · 조회 {p.viewCount} · 클릭 {p.clickCount}
-                    {p.authorId ? ` · 작성자 ${p.authorId.slice(0, 8)}` : " · 운영자"}
-                  </p>
+            <li key={p.id} className="grid min-w-0 grid-cols-[64px_minmax(0,1fr)] items-start gap-3 rounded-2xl border border-line bg-white p-3 shadow-card sm:grid-cols-[96px_minmax(0,1fr)] xl:grid-cols-[96px_minmax(0,1fr)_auto]">
+              <Link href={`/post/${p.id}`} className="block w-full overflow-hidden rounded-lg">
+                <PostImage src={p.primaryImageUrl} alt="" category={p.category} sizes="(min-width: 640px) 96px, 64px" />
+              </Link>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <StatusBadge status={st} />
+                  <CategoryBadge slug={p.category} />
+                  {p.isSeed && <span className="rounded-md bg-[#eef0f4] px-1.5 py-0.5 text-[11.5px] font-bold text-muted">초기 글</span>}
+                  {p.adminPinned && (
+                    <span className="inline-flex items-center gap-0.5 rounded-md bg-brand-soft px-1.5 py-0.5 text-[11.5px] font-bold text-brand-dark">
+                      <Pin size={11} aria-hidden /> 메인 고정{p.curatedRank ? ` #${p.curatedRank}` : ""}
+                    </span>
+                  )}
+                  <span className="whitespace-nowrap text-xs text-faint">#{p.id}</span>
                 </div>
+                <Link href={`/post/${p.id}`} className="mt-1 line-clamp-2 text-sm font-bold hover:text-brand-dark sm:text-base" title={p.title}>
+                  {p.title}
+                </Link>
+                <p className="mt-0.5 text-xs leading-relaxed text-faint">
+                  {formatDate(p.publishedAt)} · 조회 {p.viewCount} · 클릭 {p.clickCount}
+                  {p.authorId ? ` · 작성자 ${p.authorId.slice(0, 8)}` : " · 운영자"}
+                </p>
               </div>
-
-              <div className="mt-3 grid min-w-0 gap-2 border-t border-line pt-3 sm:grid-cols-2 xl:flex xl:flex-wrap xl:items-center">
-                <form action={adminSetOfficial} className="flex min-w-0 items-center gap-1.5 rounded-lg bg-soft p-1.5 xl:w-auto">
+              <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-2 xl:col-span-1 xl:self-center">
+                <form action={adminSetOfficial} className="flex min-w-0 basis-full items-center gap-1.5 rounded-lg bg-soft p-1.5 sm:basis-auto">
                   <input type="hidden" name="id" value={p.id} />
-                  <select name="official" defaultValue={p.extra.official ?? ""} aria-label="더홍보 표시" className="h-8 w-full min-w-0 flex-1 rounded-md border border-line bg-white px-2 text-[13px] xl:w-[132px] xl:flex-none">
+                  <select name="official" defaultValue={p.extra.official ?? ""} aria-label="더홍보 표시" className="h-8 min-w-0 flex-1 rounded-md border border-line bg-white px-2 text-xs sm:text-sm">
                     <option value="">표시 없음</option>
                     <option value="official">더홍보 공식</option>
                     <option value="verified">더홍보 인증</option>
                   </select>
-                  <button className="btn btn-outline btn-sm shrink-0 !px-2.5">저장</button>
+                  <button className="btn btn-outline btn-sm !px-2.5">저장</button>
                 </form>
-                <form action={adminPinPost} className="flex min-w-0 items-center gap-1.5 rounded-lg bg-soft p-1.5 xl:w-auto">
+                <form action={adminPinPost} className="flex min-w-0 basis-full items-center gap-1.5 rounded-lg bg-soft p-1.5 sm:basis-auto">
                   <input type="hidden" name="id" value={p.id} />
-                  <label className="flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-semibold text-ink-2">
+                  <label className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[12px] font-semibold text-ink-2">
                     <input type="checkbox" name="pinned" defaultChecked={p.adminPinned} className="accent-[#f04f4a]" /> 메인 고정
                   </label>
-                  <input type="number" name="rank" min={1} defaultValue={p.curatedRank ?? ""} placeholder="순위" aria-label="큐레이션 순위" className="h-8 w-14 min-w-0 flex-1 rounded-md border border-line bg-white px-2 text-[13px] xl:flex-none" />
-                  <button className="btn btn-outline btn-sm shrink-0 !px-2.5">저장</button>
+                  <input
+                    type="number"
+                    name="rank"
+                    min={1}
+                    defaultValue={p.curatedRank ?? ""}
+                    placeholder="순위"
+                    aria-label="큐레이션 순위"
+                    className="h-8 w-12 min-w-0 flex-1 rounded-md border border-line bg-white px-1.5 text-xs sm:flex-none"
+                  />
+                  <button className="btn btn-outline btn-sm !px-2.5">저장</button>
                 </form>
-                <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:col-span-2 xl:ml-auto">
-                  {p.status === "active" ? (
-                    <form action={adminSetPostStatus}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <input type="hidden" name="status" value="hidden" />
-                      <button className="btn btn-outline btn-sm !px-2.5"><EyeOff size={14} aria-hidden /> 숨김</button>
-                    </form>
-                  ) : (
-                    p.status !== "deleted" && (
-                      <form action={adminSetPostStatus}>
-                        <input type="hidden" name="id" value={p.id} />
-                        <input type="hidden" name="status" value="active" />
-                        <button className="btn btn-outline btn-sm !px-2.5"><Eye size={14} aria-hidden /> 복구</button>
-                      </form>
-                    )
+              </div>
+              <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-2 border-t border-line pt-2.5 xl:col-span-3 [&_.btn]:min-h-9 [&_.btn]:px-2! sm:[&_.btn]:px-2.5!">
+                <form action={adminSetPostStatus} className="contents">
+                  <input type="hidden" name="id" value={p.id} />
+                  {(canHide || canBlock) && (
+                    <label className="flex min-w-0 basis-full items-center gap-2 rounded-lg border border-line bg-soft/50 px-2.5 sm:basis-auto sm:flex-1">
+                      <span className="shrink-0 text-xs font-semibold text-muted">조치 사유</span>
+                      <input name="reason" aria-label="작성자에게 표시할 숨김·차단 사유" className="h-9 w-full min-w-0 bg-transparent text-[13px] outline-none" required maxLength={2000} defaultValue="내부 운영정책에 의한 숨김 및 차단" />
+                    </label>
                   )}
-                  {p.status !== "blocked" && p.status !== "deleted" && !p.isSeed && (
-                    <form action={adminSetPostStatus}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <input type="hidden" name="status" value="blocked" />
-                      <button className="btn btn-outline btn-sm !px-2.5" title="작성자가 다시 공개할 수 없는 차단 상태로 바꿉니다"><ShieldBan size={14} aria-hidden /> 차단</button>
-                    </form>
+                  {canHide ? (
+                    <button name="status" value="hidden" className="btn btn-outline btn-sm">
+                      <EyeOff size={14} aria-hidden /> 숨김
+                    </button>
+                  ) : p.status !== "deleted" && (
+                    <button name="status" value="active" formNoValidate className="btn btn-outline btn-sm">
+                      <Eye size={14} aria-hidden /> 복구
+                    </button>
                   )}
-                  <Link href={`/post/${p.id}/edit`} className="btn btn-outline btn-sm !px-2.5"><Pencil size={14} aria-hidden /> 수정</Link>
-                  <form action={adminDeletePost}>
-                    <input type="hidden" name="id" value={p.id} />
-                    <ConfirmButton message={`'${p.title}' 글을 영구 삭제할까요? 되돌릴 수 없어요.`}>삭제</ConfirmButton>
-                  </form>
-                </div>
+                  {canBlock && (
+                    <button name="status" value="blocked" className="btn btn-outline btn-sm" title="작성자가 다시 공개할 수 없는 차단 상태로 바꿉니다">
+                      <ShieldBan size={14} aria-hidden /> 차단
+                    </button>
+                  )}
+                </form>
+                <Link href={`/post/${p.id}/edit`} className="btn btn-outline btn-sm">
+                  <Pencil size={14} aria-hidden /> 수정
+                </Link>
+                <form action={adminDeletePost}>
+                  <input type="hidden" name="id" value={p.id} />
+                  <ConfirmButton message={`'${p.title}' 글을 영구 삭제할까요? 되돌릴 수 없어요.`}>삭제</ConfirmButton>
+                </form>
               </div>
             </li>
           );

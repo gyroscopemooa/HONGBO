@@ -9,6 +9,7 @@ import { rateLimit } from "@/lib/ratelimit";
 import { store } from "@/lib/store";
 import { hasSurveyResponses, surveyStorageReady } from "@/lib/survey-store";
 import { parsePostInput, type FieldErrors } from "@/lib/validation";
+import { setThreadsConsent, screenThreadsPost } from "@/lib/threads-consent";
 
 export type ActionResult =
   | { ok: true; id?: number; message?: string }
@@ -37,19 +38,23 @@ export async function createPostAction(raw: unknown): Promise<ActionResult> {
   if ((await store.countAuthorPostsSince(user.id, oneDay)) >= LIMITS.postsPerDay) {
     return { ok: false, message: `하루에 등록할 수 있는 홍보글(${LIMITS.postsPerDay}개)을 모두 사용했어요.` };
   }
-  // 같은 링크 반복 등록 제한
-  if (parsed.data.externalUrl && (await store.findActiveByUrl(user.id, parsed.data.externalUrl))) {
+  // 동일 목적지·앱·복제 내용 반복 등록 제한
+  if (await store.findActiveDuplicate(user.id, parsed.data)) {
     return {
       ok: false,
-      message: "같은 링크로 등록한 홍보글이 이미 있어요. 기존 글을 수정하거나 '다시 홍보하기'를 이용해주세요.",
-      errors: { externalUrl: "이미 같은 링크로 등록한 홍보글이 있어요." },
+      message: "동일한 앱·상품·주소 또는 반복 내용의 공개 글이 이미 있어요. 내 홍보에서 기존 글을 수정하거나 '다시 홍보하기'를 이용해주세요.",
     };
   }
 
   const post = await store.createPost(user.id, parsed.data, postExpiryFromNow());
+  let message: string | undefined;
+  if (raw && typeof raw === "object" && "threadsConsent" in raw && raw.threadsConsent === true) {
+    try { await setThreadsConsent(post.id, user.id, true); }
+    catch { message = "글은 등록됐지만 SNS 홍보 동의 처리에 실패했습니다. 글 수정 화면에서 SNS 홍보 동의 상태를 다시 확인해주세요."; }
+  }
   await store.recordEvent({ type: "write_complete", postId: post.id, userId: user.id });
   revalidatePath("/", "layout");
-  return { ok: true, id: post.id };
+  return { ok: true, id: post.id, message };
 }
 
 /** 홍보글 수정 (작성자 본인 또는 관리자) */
@@ -72,17 +77,25 @@ export async function updatePostAction(id: number, raw: unknown): Promise<Action
     }
   }
 
-  if (post.authorId && parsed.data.externalUrl && (await store.findActiveByUrl(post.authorId, parsed.data.externalUrl, post.id))) {
+  if (post.authorId && (await store.findActiveDuplicate(post.authorId, parsed.data, post.id))) {
     return {
       ok: false,
-      message: "같은 링크로 등록한 다른 홍보글이 있어요.",
-      errors: { externalUrl: "이미 같은 링크로 등록한 홍보글이 있어요." },
+      message: "동일한 앱·상품·주소 또는 반복 내용의 다른 공개 글이 있어요. 내 홍보에서 중복 글을 정리하고 기존 글을 수정해주세요.",
     };
   }
 
   await store.updatePost(id, parsed.data);
+  let message: string | undefined;
+  const requestedConsent = raw && typeof raw === "object" && "threadsConsent" in raw ? raw.threadsConsent : undefined;
+  if (typeof requestedConsent === "boolean" && post.authorId === user.id && !post.isSeed) {
+    try { await setThreadsConsent(id, user.id, requestedConsent); }
+    catch { message = "글 수정은 저장됐지만 SNS 홍보 동의 변경에 실패했습니다. 수정 화면에서 동의 상태를 다시 확인해주세요."; }
+  } else {
+    // Editing without an explicit owner consent change must not grant consent.
+    try { await screenThreadsPost(id); } catch { /* Changed source hashes remain ineligible. */ }
+  }
   revalidatePath("/", "layout");
-  return { ok: true, id };
+  return { ok: true, id, message };
 }
 
 /** 홍보글 삭제 (작성자 본인) — 화면에서 숨기는 소프트 삭제 */
@@ -109,6 +122,10 @@ export async function renewPostAction(id: number): Promise<ActionResult> {
   }
   if (Date.now() - new Date(post.bumpedAt).getTime() < 24 * 3_600_000 && post.status === "active") {
     return { ok: false, message: "다시 홍보하기는 하루에 한 번만 할 수 있어요." };
+  }
+  if (user.status === "blocked") return { ok: false, message: "이용이 제한된 계정은 다시 홍보할 수 없어요." };
+  if (await store.findActiveDuplicate(user.id, post, post.id)) {
+    return { ok: false, message: "동일한 홍보 대상 또는 반복 내용의 공개 글이 있어요. 내 홍보에서 중복 글을 정리한 뒤 다시 홍보해주세요." };
   }
   await store.renewPost(id, postExpiryFromNow());
   revalidatePath("/", "layout");

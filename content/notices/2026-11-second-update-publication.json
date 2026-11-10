@@ -1,0 +1,37 @@
+{
+  "publishedAt": "2026-11-07T10:53:49.357688+00:00",
+  "verifiedAt": "2026-11-07T10:54:15.479Z",
+  "noticeId": 6,
+  "url": "https://www.thehongbo.com/notices#n-6",
+  "operation": "insert",
+  "sourceCommit": "2baab29",
+  "bodyLength": 2622,
+  "existingFirstUpdateId": 5,
+  "verification": {
+    "databaseReadBack": true,
+    "appRedeploymentRequired": false,
+    "reason": "Database-only notice content; the notices page renders at request time.",
+    "publicPages": [
+      {
+        "url": "https://www.thehongbo.com/notices#n-6",
+        "status": 200,
+        "title": true,
+        "body": true,
+        "anchor": true
+      },
+      {
+        "url": "https://thehongbo.com/notices#n-6",
+        "status": 200,
+        "title": true,
+        "body": true,
+        "anchor": true
+      }
+    ],
+    "browser": {
+      "url": "https://www.thehongbo.com/notices#n-6",
+      "pinned": true,
+      "expandedViaAnchor": true,
+      "allNineSectionsVisible": true
+    }
+  }
+}

@@ -16,7 +16,12 @@ import {
   SURVEY_QUESTION_MAX,
   SURVEY_OPTION_MAX,
   EXTRA_LINK_LABEL_MAX,
+  COUPON_CODE_MAX,
+  COUPON_NOTE_MAX,
   EXTRA_LINK_MAX,
+  EXTRA_NOTE_MAX,
+  EXTRA_NOTE_TITLE_MAX,
+  EXTRA_NOTE_BODY_MAX,
   CATEGORY_SLUGS,
   LIMITS,
   SNS_PLATFORMS,
@@ -48,6 +53,9 @@ const rawSchema = z.object({
   contact: str(400),
   extra: z
     .object({
+      notes: z.array(z.object({ title: z.string().max(200), body: z.string().max(2000) })).max(20).optional(),
+      couponCode: str(400),
+      couponNote: str(1000),
       playUrl: str(2100),
       appStoreUrl: str(2100),
       siteUrl: str(2100),
@@ -229,6 +237,28 @@ export function parsePostInput(raw: unknown): ParseResult {
   }
   if (benefitsFinal.length) extra.benefits = benefitsFinal;
 
+  const notes: Array<{ title: string; body: string }> = [];
+  if ((v.extra.notes ?? []).length > EXTRA_NOTE_MAX) errors.notes = `추가 안내는 최대 ${EXTRA_NOTE_MAX}개까지 등록할 수 있어요.`;
+  (v.extra.notes ?? []).forEach((note, i) => {
+    const title = note.title.replace(/\s+/g, " ").trim();
+    const body = note.body.replace(/\r\n/g, "\n").trim();
+    if (!title && !body) return;
+    if (!title || !body) errors[`notes.${i}`] = "안내 제목과 내용을 모두 입력해주세요.";
+    else if (title.length > EXTRA_NOTE_TITLE_MAX || body.length > EXTRA_NOTE_BODY_MAX) errors[`notes.${i}`] = `제목은 ${EXTRA_NOTE_TITLE_MAX}자, 내용은 ${EXTRA_NOTE_BODY_MAX}자까지 입력해주세요.`;
+    else notes.push({ title, body });
+  });
+  if (notes.length) extra.notes = notes;
+
+  const couponCode = benefitsFinal.includes("coupon") ? (v.extra.couponCode ?? "").trim() : "";
+  const couponNote = benefitsFinal.includes("coupon") ? (v.extra.couponNote ?? "").trim() : "";
+  if (couponCode.length > COUPON_CODE_MAX || /[\r\n\t]/.test(couponCode)) errors.couponCode = `쿠폰 코드는 줄바꿈 없이 ${COUPON_CODE_MAX}자까지 입력해주세요.`;
+  if (couponNote.length > COUPON_NOTE_MAX) errors.couponNote = `사용 안내는 ${COUPON_NOTE_MAX}자까지 입력해주세요.`;
+  if (couponNote && !couponCode) errors.couponCode = "사용 안내와 함께 제공할 쿠폰 코드를 입력해주세요.";
+  if (couponCode) {
+    extra.couponCode = couponCode;
+    if (couponNote) extra.couponNote = couponNote;
+  }
+
   // --- 추가 링크 (모든 카테고리 공통) ---
   const extraLinks: Array<{ label: string; url: string }> = [];
   v.extra.links.forEach((l, i) => {
@@ -376,7 +406,7 @@ export function parsePostInput(raw: unknown): ParseResult {
   if (contact && contact.length > LIMITS.contactMax) errors.contact = `연락처는 ${LIMITS.contactMax}자까지 입력할 수 있어요.`;
 
   // --- 금지 키워드 ---
-  const banned = findBannedKeyword(title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
+  const banned = findBannedKeyword(notes.map((n) => `${n.title} ${n.body}`).join(" "), couponCode, couponNote, title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
   if (banned) {
     errors.description = "운영정책상 등록할 수 없는 내용이 포함되어 있어요. 내용을 확인해주세요.";
   }

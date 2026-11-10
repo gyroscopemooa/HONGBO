@@ -6,6 +6,7 @@ import { CategoryBadge } from "@/components/CategoryBadge";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { ExternalCta } from "@/components/ExternalCta";
 import { Gallery } from "@/components/Gallery";
+import { getAppealStates } from "@/lib/post-appeals";
 import { SurveyParticipation } from "@/components/SurveyParticipation";
 import { YoutubeEmbed } from "@/components/YoutubeEmbed";
 import { BadgeKit } from "@/components/BadgeKit";
@@ -76,6 +77,8 @@ export default async function PostDetailPage({ params }: Props) {
   const likeCount = supabaseConfigured() ? (post.likeCount ?? 0) : await getLikeCount(post.id);
   const publicNow = isPostPublic(post);
   if (!publicNow && !canManage) notFound();
+  const appealState = isOwner && ["hidden", "blocked"].includes(post.status) ? (await getAppealStates([post.id]))[post.id] : undefined;
+  const secondStage = ["pdf_requested", "rejected"].includes(appealState ?? "");
 
   const cat = CATEGORY_MAP[post.category];
   const status = effectiveStatus(post);
@@ -126,6 +129,7 @@ export default async function PostDetailPage({ params }: Props) {
             {status === "expired"
               ? "노출 기간이 지나 목록에서 내려간 글이에요. '내 홍보'에서 다시 홍보하기를 누르면 다시 노출돼요."
               : "현재 숨김 처리된 글이에요. 작성자와 관리자에게만 보입니다."}
+            {isOwner && (post.status === "hidden" || post.status === "blocked") && <Link href={secondStage ? `/restoration?post=${post.id}` : `/appeals/${post.id}`} className="btn btn-outline ml-3">{secondStage ? "복원 신청하기" : "이의제기 · 처리 상태"}</Link>}
           </p>
         </div>
       )}
@@ -200,6 +204,13 @@ export default async function PostDetailPage({ params }: Props) {
               </dl>
             )}
 
+            {publicNow && post.extra.couponCode && (
+              <section aria-label="쿠폰 코드" className="mt-5 min-w-0 rounded-xl border border-brand-line bg-brand-soft p-3">
+                <h2 className="text-sm font-bold">쿠폰 코드</h2>
+                <CopyCodeButton code={post.extra.couponCode} />
+                {post.extra.couponNote && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-muted">{post.extra.couponNote}</p>}
+              </section>
+            )}
             <div className="mt-5 hidden space-y-2 lg:block">
               {publicNow && post.externalUrl && <ExternalCta href={post.externalUrl} postId={post.id} label={label} />}
               {publicNow &&
@@ -259,6 +270,13 @@ export default async function PostDetailPage({ params }: Props) {
               상세 설명
             </h2>
             <div className="prose-body">{post.description}</div>
+            {!!post.extra.notes?.length && <section aria-label="추가 안내" className="mt-6 space-y-3">
+              {post.extra.notes.map((note, i) => <section key={i} className="min-w-0 rounded-xl border border-line bg-soft/50 p-4 sm:p-5">
+                <h3 className="break-words text-base font-bold">{note.title}</h3>
+                <p className="mt-2 whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-ink-2">{note.body}</p>
+              </section>)}
+            </section>}
+
             {post.tags.length > 0 && (
               <ul className="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
                 {post.tags.map((t) => (

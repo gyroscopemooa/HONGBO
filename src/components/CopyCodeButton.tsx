@@ -26,7 +26,7 @@ export function CopyCodeButton({ code }: { code: string }) {
       className="mt-2 flex w-full items-center justify-between gap-3 rounded-lg border border-dashed border-[#d98e04] bg-white px-3 py-2.5 text-left"
       aria-label={`쿠폰 코드 ${code} 복사`}
     >
-      <span className="font-mono text-[16px] font-extrabold tracking-wide text-ink">{code}</span>
+      <span className="min-w-0 break-all font-mono text-[16px] font-extrabold tracking-wide text-ink">{code}</span>
       <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-bold text-[#8a5a0a]">
         {done ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
         {done ? "복사됐어요" : "복사"}
