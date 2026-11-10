@@ -955,11 +955,16 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
         </SectionCard>
 
         {/* 4. 이미지 */}
-        <SectionCard step={4} title="이미지를 올려주세요" desc="이미지는 자르지 않고 원본 해상도로 저장해요. 용량 압축은 적용되며, 목록에서만 16:9 썸네일로 보여요.">
-          <Field id="primaryImage" label="대표 이미지" error={errors.primaryImageUrl} hint="목록은 가운데를 기준으로 꽉 채우고, 상세·확대에서는 전체 사진을 보여줘요. 이전에 잘려 저장된 사진은 원본을 다시 올려주세요.">
+        <SectionCard step={4} title="이미지를 올려주세요" desc="JPG · PNG · WebP, 파일당 최대 25MB. 전체 이미지와 픽셀 크기를 유지하며 1MB 이하를 목표로 자동 압축해요. 이미지에 따라 더 클 수 있으며, 저장 한도는 장당 4MB예요.">
+          <Field id="primaryImage" label="대표 이미지" error={errors.primaryImageUrl} hint="권장 비율 16:9 · 1200×675px 또는 1600×900px. 다른 비율도 등록할 수 있어요. 목록에서는 중앙 기준 16:9로 표시하고, 상세·클릭 시 전체 사진을 보여줘요. 중요한 글자와 로고는 중앙에 배치해주세요.">
             <div className="max-w-[560px]"><ImageSlot keepOriginal value={f.primaryImageUrl} onChange={(u) => set("primaryImageUrl", u)} alt="대표 이미지 미리보기" onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} /></div>
+            {f.primaryImageUrl && <figure className="mt-3 max-w-[280px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={f.primaryImageUrl} alt="목록에서 표시될 대표 이미지 범위" className="aspect-video w-full rounded-lg border border-line object-cover" />
+              <figcaption className="mt-1.5 text-xs text-muted">목록 미리보기 · 16:9 (저장되는 사진은 잘리지 않아요)</figcaption>
+            </figure>}
           </Field>
-          <Field id="extraImages" label={`추가 이미지 (최대 ${LIMITS.extraImagesMax}장)`} optional error={errors.images} hint="자르지 않고 원본 비율 그대로 보여드려요. 큰 사진이나 세로 스크린샷도 그대로 올려도 돼요. (권장: 가로 1200px 이상)">
+          <Field id="extraImages" label={`추가 이미지 (최대 ${LIMITS.extraImagesMax}장)`} optional error={errors.images} hint="비율 자유 · 긴 변 1200px 이상 권장. 세로 사진과 긴 스크린샷도 자르지 않고 보여줘요. 파일당 최대 25MB, 압축 후 4MB 이하로 저장해요. 예전에 잘려 저장된 사진은 원본 파일을 다시 올려주세요.">
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               {f.images.map((url, i) => (
                 <ImageSlot key={url} size="sm" keepOriginal value={url} alt={`추가 이미지 ${i + 1}`} onChange={(u) => set("images", u ? f.images.map((x, idx) => (idx === i ? u : x)) : f.images.filter((_, idx) => idx !== i))} onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} />

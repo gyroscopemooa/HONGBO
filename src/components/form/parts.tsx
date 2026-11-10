@@ -131,6 +131,7 @@ export function ImageSlot({
               <>
                 <span className="text-sm font-semibold text-ink-2">클릭하거나 이미지를 끌어다 놓으세요</span>
                 <span className="text-xs">{keepOriginal ? "자르지 않고 전체 이미지 저장" : "16:9로 자동 크롭"} · JPG, PNG, WebP</span>
+                <span className="text-xs">파일당 최대 25MB · 자동 압축 후 4MB 이하</span>
               </>
             ) : (
               <span className="text-xs font-medium">추가</span>

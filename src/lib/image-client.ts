@@ -58,12 +58,26 @@ export async function processImage(file: Blob, opts: ProcessOptions = {}): Promi
 
   const toBlob = (type: string, q: number) => new Promise<Blob | null>((res) => canvas.toBlob(res, type, q));
   if (opts.keepOriginal && opts.preserveResolution) {
-    for (const quality of [0.9, 0.8, 0.7, 0.6]) {
+    // Prefer a small download without cropping or reducing the image dimensions.
+    const targetBytes = 1024 * 1024;
+    let smallest: Blob | null = null;
+    for (const quality of [0.86, 0.78, 0.7, 0.6]) {
       const blob = await toBlob("image/webp", quality);
-      if (blob && blob.type === "image/webp" && blob.size <= LIMITS.uploadMaxBytes) return blob;
+      if (!blob || blob.type !== "image/webp") continue;
+      if (!smallest || blob.size < smallest.size) smallest = blob;
+      if (blob.size <= targetBytes) return blob;
     }
-    const jpg = await toBlob("image/jpeg", 0.8);
-    if (jpg && jpg.size <= LIMITS.uploadMaxBytes) return jpg;
+    if (smallest && smallest.size <= LIMITS.uploadMaxBytes) return smallest;
+    // JPEG cannot preserve transparency, so only use it if WebP is unsupported.
+    if (!smallest) {
+      for (const quality of [0.86, 0.78, 0.7, 0.6]) {
+        const jpg = await toBlob("image/jpeg", quality);
+        if (!jpg) continue;
+        if (!smallest || jpg.size < smallest.size) smallest = jpg;
+        if (jpg.size <= targetBytes) return jpg;
+      }
+      if (smallest && smallest.size <= LIMITS.uploadMaxBytes) return smallest;
+    }
     throw new Error("원본 해상도를 유지한 파일이 4MB를 초과해요. 파일 용량을 줄여 다시 올려주세요. 이미지를 자동으로 자르거나 축소하지 않습니다.");
   }
   const webp = await toBlob("image/webp", 0.86);
@@ -82,7 +96,7 @@ export async function uploadImage(blob: Blob): Promise<string> {
   return data.url;
 }
 
-/** 파일 선택 → 자동 크롭 → 업로드 → URL */
+/** 파일 선택 → 비율 보존 또는 지정 비율 크롭 → 압축 → 업로드 → URL */
 export async function processAndUpload(file: Blob, opts: ProcessOptions = {}): Promise<string> {
   if (!file.type.startsWith("image/")) throw new Error("이미지 파일만 올릴 수 있어요.");
   if (file.size > 25 * 1024 * 1024) throw new Error("원본 이미지가 너무 커요. 25MB 이하로 올려주세요.");
