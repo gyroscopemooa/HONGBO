@@ -12,6 +12,11 @@
 - GitHub Actions run 42755912722: 결제 문제로 계정이 잠겨 job 자체가 시작되지 않았습니다. 코드 테스트 실패가 아닙니다.
 - Cloudflare build ae61fb12-e986-446a-b743-c52ad5550a49: OpenNext build 성공 후 `npx wrangler preview`가 `previews` 설정 부재로 실패했습니다. Previews Base 명령을 `npx opennextjs-cloudflare upload`로 수정했습니다. 이 명령은 설치된 OpenNext의 `wrangler versions upload` 경로이며 운영 트래픽을 전환하지 않습니다. Production 명령은 기존 `npx opennextjs-cloudflare deploy`를 유지했습니다.
 
+### 후속 확인
+
+- 브라우저 확인창을 처리한 뒤 관리자 숨김/복원을 UI에서도 확인했습니다(active → hidden 및 숨긴 글 목록 → active).
+- Cloudflare 새 Worker Previews 모델은 사용자 지정 명령에도 `wrangler preview` 실행이 필요합니다. 버전 업로드 방식 변경을 되돌리고 `wrangler preview`와 필수 `previews: {}` 설정으로 정정했습니다. 운영 비밀 키와 서비스 바인딩은 미리보기에 복제하지 않습니다. 따라서 PR 미리보기 배포 성공은 DB 연동 런타임 검증을 뜻하지 않으며, 별도 테스트 DB 연결 전에는 DB 기반 화면 검수 용도로 사용하지 않습니다. 근거: https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/ 및 https://developers.cloudflare.com/workers/previews/configuration/.
+
 아래 내용은 최초 PR 작성 시점의 기록이며 위 검증 결과가 최신입니다. 최종 배포 및 공개 URL 확인은 후속 기록을 따릅니다.
 
 ## 범위
