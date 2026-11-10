@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BadgePercent, Gift, PartyPopper, PencilLine, Sparkles, Star, Ticket, type LucideIcon } from "lucide-react";
+import { MessagesSquare, ArrowRight, BadgePercent, Gift, PartyPopper, PencilLine, Sparkles, Star, Ticket, type LucideIcon } from "lucide-react";
 import { BENEFITS, BENEFIT_PAGES, CATEGORIES, type CategorySlug } from "@/lib/constants";
 import { CategoryIcon } from "./CategoryIcon";
 
@@ -11,6 +11,7 @@ const ALL_TILE: Tile = { slug: "all", name: "전체", color: "#f04f4a", tint: "#
 export function CategoryTiles() {
   const tiles: Tile[] = [
     ALL_TILE,
+    { slug: "members", name: "회원 커뮤니티", color: "#4361c2", tint: "#eef2ff", href: "/talk", icon: <MessagesSquare size={28} aria-hidden /> },
     ...CATEGORIES.map((c) => ({ slug: c.slug, name: c.name, color: c.color, tint: c.tint, href: `/category/${c.slug}` })),
     { slug: "benefit-exclusive", name: "더홍보 전용", color: "#b7791f", tint: "linear-gradient(135deg,#fff3c4,#ffe08a)", href: "/benefit/exclusive", icon: <Star size={28} strokeWidth={2.1} fill="currentColor" aria-hidden /> },
     ...BENEFITS.map((b) => {

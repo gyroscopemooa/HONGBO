@@ -59,7 +59,7 @@ export function HomeBoards({ reviews, community, meetup }: { reviews: Review[]; 
           ))}
         </Board>
 
-        <Board title="커뮤니티 최신글" href="/community" icon={<BookOpen size={16} aria-hidden />} empty="아직 올라온 글이 없어요." count={community.length}>
+        <Board title="운영자 가이드 최신글" href="/community" icon={<BookOpen size={16} aria-hidden />} empty="아직 올라온 글이 없어요." count={community.length}>
           {community.map((c) => (
             <li key={c.id}>
               <Link href={`/community/${c.id}`} className={rowCls}>

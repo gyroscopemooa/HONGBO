@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { LogIn, LogOut, PencilLine, Search, ShieldCheck, UserRound } from "lucide-react";
+import { Bell, LogIn, LogOut, PencilLine, Search, ShieldCheck, UserRound } from "lucide-react";
 import { signOutAction } from "@/app/auth/actions";
 import { getCurrentUser } from "@/lib/auth";
+import { unreadMemberNotificationCount } from "@/lib/member-community-store";
 import { SITE } from "@/lib/constants";
 import { Logo } from "./Logo";
 
 export async function Header() {
   const user = await getCurrentUser();
+  const unread = user ? await unreadMemberNotificationCount(user.id).catch(() => 0) : 0;
 
   return (
     <header className="relative z-50 border-b border-line bg-white">
@@ -48,6 +50,7 @@ export async function Header() {
 
           {user ? (
             <>
+              <Link href="/talk/notifications" aria-label="커뮤니티 알림" title="커뮤니티 알림" className="relative flex size-9 shrink-0 items-center justify-center rounded-full text-ink-2 hover:bg-soft"><Bell size={18} aria-hidden />{unread > 0 && <span className="absolute right-0 top-0 rounded-full bg-brand px-1 text-[10px] text-white">{unread > 99 ? "99+" : unread}<span className="sr-only">개의 읽지 않은 알림</span></span>}</Link>
               {user.isAdmin && (
                 <Link href="/admin" aria-label="관리자" title="관리자" className="flex size-10 shrink-0 items-center justify-center rounded-full text-ink-2 hover:bg-soft sm:w-auto sm:gap-1.5 sm:rounded-lg sm:px-3">
                   <ShieldCheck size={16} aria-hidden />
