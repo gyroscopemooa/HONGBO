@@ -25,7 +25,7 @@ export function Gallery({ images, title }: { images: string[]; title: string }) 
   const current = images[idx] ?? images[0];
   return (
     <div>
-      <button type="button" aria-label={`이미지 ${idx + 1} 확대 보기`} aria-haspopup="dialog" onClick={() => { setOriginalSize(true); setOpen(true); }} className="group relative block w-full cursor-zoom-in rounded-2xl">
+      <button type="button" aria-label={`이미지 ${idx + 1} 확대 보기`} aria-haspopup="dialog" onClick={() => { setOriginalSize(false); setOpen(true); }} className="group relative block w-full cursor-zoom-in rounded-2xl">
         <div className="flex w-full items-center justify-center overflow-hidden rounded-2xl border border-line bg-soft">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img key={current} src={current} alt={`${title} 이미지 ${idx + 1}`} loading={idx === 0 ? "eager" : "lazy"} className="h-auto max-h-[80vh] w-full object-contain" />
@@ -42,7 +42,8 @@ export function Gallery({ images, title }: { images: string[]; title: string }) 
               <button type="button" aria-label="확대 이미지 닫기" onClick={() => setOpen(false)} className="flex size-10 items-center justify-center rounded-full hover:bg-white/10"><X size={22} /></button>
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-auto overscroll-contain p-2">
+          {originalSize && <p className="shrink-0 px-3 pt-2 text-xs text-white/70">원본 크기로 보고 있어요. 큰 이미지는 가로·세로로 스크롤해서 볼 수 있어요.</p>}
+          <div key={`${current}-${originalSize}`} className="min-h-0 flex-1 overflow-auto overscroll-contain p-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={current} alt={`${title} 이미지 ${idx + 1}`} className={originalSize ? "block h-auto max-w-none" : "h-full w-full object-contain"} />
           </div>

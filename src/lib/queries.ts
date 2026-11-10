@@ -109,7 +109,7 @@ async function loadHomeData() {
     getLiveAdPosts("premium"),
     getLiveBannerAds(),
     store.getPost(HOUSE_AD_POST_ID).catch(() => null),
-    store.listPosts({ publicOnly: true, benefit: "exclusive", sort: "latest", page: 1, pageSize: 5 }),
+    store.listPosts({ publicOnly: true, benefit: "exclusive", sort: "latest", page: 1, pageSize: 10 }),
   ]);
   // 운영자 고정 광고: 유료 광고가 자리를 다 채우지 않았을 때만 맨 앞에 넣습니다.
   const houseOk = house && isPostPublic(house) ? house : null;
