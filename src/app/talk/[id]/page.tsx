@@ -128,7 +128,7 @@ export default async function Page({
       {(post.details.acceptApplications || applications.length > 0) && (
         <MemberApplications
           postId={post.id}
-          closed={post.closed}
+          closed={post.closed || !post.details.acceptApplications}
           owner={user?.id === post.authorId || !!user?.isAdmin}
           userId={user?.id}
           applications={applications}

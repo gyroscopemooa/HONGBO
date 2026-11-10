@@ -19,7 +19,7 @@ export default async function Page({
   const query = one(p.q).slice(0, 60);
   const category = one(p.category);
   const purpose = one(p.purpose);
-  const page = Math.max(1, Math.min(10000, Number(one(p.page)) || 1));
+  const page = Math.max(1, Math.min(10000, Math.trunc(Number(one(p.page))) || 1));
   const { items, total } = await listMemberPosts({
     page,
     query,

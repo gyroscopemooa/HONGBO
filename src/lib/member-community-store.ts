@@ -71,7 +71,7 @@ export async function listMemberPosts({
   category?: string;
   purpose?: string;
 } = {}) {
-  const offset = (Math.max(1, Math.min(10000, page)) - 1) * 20;
+  const offset = (Math.max(1, Math.min(10000, Math.trunc(page) || 1)) - 1) * 20;
   const q = query
     .replace(/[%_,().\\]/g, " ")
     .trim()

@@ -1,5 +1,19 @@
 # 회원 커뮤니티 개발 보고서
 
+## 2026-11-10 운영 적용 및 추가 검증
+
+- Supabase 로그인 계정을 전환한 뒤 HONGBO 조직의 hongbo 프로젝트 `yqtqkwairbrlyifdiory`, 프로젝트 URL, GitHub 연결 `gyroscopemooa/HONGBO`가 더홍보 설정과 일치함을 확인했습니다. 다른 계정의 matda/transtream 프로젝트에는 쓰기를 실행하지 않았습니다.
+- 운영 SQL Editor에서 0013 마이그레이션 적용 성공. 기존 public 테이블 21개에 신규 회원 커뮤니티 테이블 5개를 추가했습니다. 기존 테이블의 삭제/변경은 없습니다.
+- 운영 DB의 service_role 트랜잭션 테스트에서 RLS, anon/authenticated 직접 테이블/RPC 접근 제한, 댓글/답글 알림, 수신자별 읽음, 답글 단계 제한, 중복 신청, 승인/취소/재신청, 마감 차단, 신고/숨김을 검증했습니다. 테스트 트랜잭션은 롤백했으며 기존 profiles 24건/posts 84건, member_posts 0건을 확인했습니다.
+- `scripts/test-member-supabase.mjs`: 명시한 프로젝트 ID와 환경변수 URL의 일치를 강제하는 수동 통합 테스트입니다. 실제 Supabase 임시 계정 3개의 로그인 세션과 로컬 프로덕션 서버를 사용해 Server Action의 소유권/관리자/차단 회원 검사, 분류 8개, 댓글/답글, 알림 분리/읽음, 비공개 신청/승인/취소/재신청/마감, 신고/숨김/복원, RLS를 통과했습니다. 이번 실행의 계정과 콘텐츠만 종료 시 정리했습니다. Google OAuth 브라우저 흐름을 테스트한 것은 아닙니다.
+- 분리 작업 경로에서 lint, typecheck, Next.js 프로덕션 빌드(webpack), 기존 회원 커뮤니티 회귀 테스트 통과. 루트 경로의 Turbopack 빌드도 통과했습니다. webpack은 작업 경로의 node_modules junction 제약 때문에 사용했습니다.
+- 실제 브라우저에서 로컬 회원 글 생성, 향수/피드백 분류, 비공개 신청 옵션, 390px 상세 화면, 다른 역할의 댓글, 신고 접수 및 관리자 신고 목록을 확인했습니다. 네이티브 숨김 확인창에서 브라우저 제어 도구가 멈춰 UI의 숨김/복원 완료 판정은 보류했고, 동일 동작은 실제 Supabase 세션 HTTP 통합 테스트에서 통과했습니다.
+- 수정: 소수 페이지 번호를 정수화하고, 참여 신청을 끈 글에서 취소 후 재신청 버튼을 표시하지 않도록 했습니다. lint에서 로컬 tmp 및 중첩 .wrangler 산출물을 제외했습니다.
+- GitHub Actions run 42755912722: 결제 문제로 계정이 잠겨 job 자체가 시작되지 않았습니다. 코드 테스트 실패가 아닙니다.
+- Cloudflare build ae61fb12-e986-446a-b743-c52ad5550a49: OpenNext build 성공 후 `npx wrangler preview`가 `previews` 설정 부재로 실패했습니다. Previews Base 명령을 `npx opennextjs-cloudflare upload`로 수정했습니다. 이 명령은 설치된 OpenNext의 `wrangler versions upload` 경로이며 운영 트래픽을 전환하지 않습니다. Production 명령은 기존 `npx opennextjs-cloudflare deploy`를 유지했습니다.
+
+아래 내용은 최초 PR 작성 시점의 기록이며 위 검증 결과가 최신입니다. 최종 배포 및 공개 URL 확인은 후속 기록을 따릅니다.
+
 ## 범위
 
 - 새 회원 게시판 `/talk`를 추가했습니다. 기존 홍보 카드, `/community` 운영자 가이드 및 `/meetup` 게시글은 보존합니다.
