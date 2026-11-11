@@ -1,3 +1,5 @@
+import { PlayVisitGuide } from "@/components/PlayVisitGuide";
+import { PLAY_LOCATIONS } from "@/data/play-locations";
 
 import { PlayConditionsSummary } from "@/components/PlayConditionsSummary";
 import { playMetadata, playDetailSchema } from "@/lib/play-seo";
@@ -34,6 +36,9 @@ export default async function PlayDetail({ params }: Props) {
     <PlayEventStatus place={p} initialDay={day} notice/>
     {p.schedulePending && <p className="play-note mb-5"><strong>일정 확인 중</strong><br/>{p.scheduleNote} 아래 날짜는 제공받은 참고 일정이며 확정된 개최 안내가 아닙니다.</p>}
     <div className="play-detail-art"><PlayVisual place={p} eager/></div><p className="play-muted mt-2 !text-xs">{photo ? `${photo.caption ?? "실제 장소 자료사진 · 실시간 모습이 아닙니다."} ${photo.fit === "contain" ? "" : photo.captured ? `촬영 ${photo.captured}` : "촬영일 미확인"}` : "장소의 분위기를 표현한 일러스트입니다."}</p>
+    <PlayVisitGuide conditions={p.conditions} address={p.address} region={p.area} title={p.title} location={PLAY_LOCATIONS[p.slug]}/>
+    {p.slug==="gyeonggi-rice-dessert-2026" && <p className="play-muted text-sm">교통·요금 출처: <a className="underline" href="https://suwonmesse.com/facilities_guide/parking/" target="_blank" rel="noopener noreferrer">수원메쎄 공식 주차 안내</a> · 2026-11-11 확인</p>}
+    {p.slug==="ulsan-culture-expo-2026" && <p className="play-muted text-sm">교통 출처: <a className="underline" href="https://www.uctf.or.kr/facility/ueco/location?lang=en" target="_blank" rel="noopener noreferrer">울산문화관광재단 UECO 오시는 길</a> · 2026-11-11 확인</p>}
     <h2>이렇게 즐겨보세요</h2><p className="play-muted">{p.companions.join(" · ")} 나들이를 생각하고 있다면, 아래 확인 사항과 공식 안내를 참고해 일정을 잡아보세요.</p>
     {p.guide && <p className="play-muted mt-3">{p.guide}</p>}
     <h2>가기 전에 확인할 것</h2><ol className="list-decimal pl-5">{p.tips.map(t=><li key={t}>{t}</li>)}</ol>
