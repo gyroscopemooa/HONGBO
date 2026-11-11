@@ -17,6 +17,7 @@ export interface PlayConditions {
  kind:PlayKind; subtype:string; notice:keyof typeof PLAY_NOTICE;
  cost:keyof typeof PLAY_COST; costDetails:string; visit:keyof typeof PLAY_VISIT;
  solo:keyof typeof PLAY_SOLO; minPeople?:number; maxPeople?:number;
+ parkingName?:string; parkingAddress?:string; parkingAccess?:string; parkingAlternative?:string;
  extraCosts?:string; transport?:string; parking?:string; outfit?:string; weatherNotice?:string; operatingHours?:string;
  eligibility:string; preparation:string; exceptions:string; benefitConditions:string;
 }
