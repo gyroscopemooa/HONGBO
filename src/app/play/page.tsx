@@ -1,3 +1,7 @@
+import { PLAY_REGIONS } from "@/data/play-regions";
+import { PLAY_TOURISM } from "@/data/play-tourism";
+import { PlayJsonLd } from "@/components/PlayJsonLd";
+import { playListSchema } from "@/lib/play-seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PlayVisual } from "@/components/PlayVisual";
@@ -10,18 +14,22 @@ import { PLAY_TAG, koreanDay } from "@/lib/play";
 import { store } from "@/lib/store";
 
 export const metadata: Metadata = {
-  title: "놀러가자 — 국내 데이트·가족 나들이·축제·혜택",
+  title: "국내 가볼 만한 곳·축제 일정·데이트·가족 나들이 | 놀러가자",
   description: "일상 가까운 작은 여행. 국내 명소, 테마파크, 축제, 숙소와 이용 혜택을 찾아보고 좋은 장소를 공유하세요.",
   alternates: { canonical: "/play" },
-  openGraph: { title: "놀러가자 | 더홍보", description: "이번 주말, 좋은 시간을 발견하세요.", url: "/play" },
+  openGraph: { title: "놀러가자 | 더홍보", description: "이번 주말, 좋은 시간을 발견하세요.", url: "/play", images: [{url:"/play/haeundae.jpg",width:1280,height:960,alt:"부산 해운대 바다"}] },
+  twitter: {card:"summary_large_image",title:"국내 여행지·축제 일정 | 놀러가자",description:"지역별 명소와 축제 일정, 데이트·가족 나들이 안내를 살펴보세요.",images:["/play/haeundae.jpg"]},
 };
 
 export default async function PlayPage() {
   const posts = await store.listPosts({ publicOnly: true, isSeed: false, tag: PLAY_TAG, pageSize: 6, sort: "latest" }).catch(()=>null);
   return <>
+    <PlayJsonLd data={playListSchema("국내 여행지·축제 안내", "/play", PLAY_PLACES)}/>
     <section className="play-hero"><div className="play-hero-copy"><span className="play-eyebrow">GOOD DAYS, CLOSE TO YOU</span><h1>잘 쉬고, 잘 놀고.<br/>우리, 놀러가자<span className="text-[#1762e8]">.</span></h1><p>둘이 떠나는 데이트부터 온 가족의 주말까지.<br/>멀리 가지 않아도, 좋은 하루는 시작되니까.</p><div className="play-hero-links"><a href="#explore" className="play-button">갈 만한 곳 찾아보기 ↗</a><a href="#shared" className="play-button secondary">함께 나누는 소식</a></div></div><PlayVisual place={PLAY_PLACES.find(p=>p.slug==="haeundae")!} eager className="play-hero-art"/></section>
     <div className="flex flex-wrap gap-x-7 gap-y-2 border-b border-[#d9e6f8] py-5 text-xs font-semibold text-[#59769a]"><span>✳ 국내부터 차근차근</span><span>↗ 공식 안내로 한 번 더 확인</span><span>♡ 작은 가게부터 큰 여행지까지</span></div>
     <PlayBanner/>
+    <section className="play-section" id="regional-guides"><div className="play-heading"><div><p className="play-eyebrow">NEARBY GETAWAYS</p><h2 className="mt-2">지역별로 찾아보는 국내 여행</h2></div></div><div className="play-grid">{PLAY_REGIONS.map(r=><Link key={r.slug} href={`/play/region/${r.slug}`} className="play-card"><div className="play-card-art"><PlayVisual place={PLAY_PLACES.find(p=>p.slug===r.hero)!}/></div><div className="play-card-body"><h3>{r.name} 가볼 만한 곳 →</h3><p>{r.description}</p></div></Link>)}</div></section>
+    <section className="play-section" aria-label="새로 더한 여행지"><div className="play-heading"><h2>새로 더한 여행지</h2></div><p className="play-muted mb-5">한국관광공사 대한민국 구석구석 안내를 참고해 정리했습니다. 장소별 사진과 방문 팁, 원문 출처를 함께 확인하세요.</p><div className="play-grid">{PLAY_TOURISM.map(p=><Link className="play-card" key={p.slug} href={`/play/${p.slug}`}><div className="play-card-art"><PlayVisual place={p}/></div><div className="play-card-body"><span className="play-eyebrow">{p.region} · {p.area}</span><h3>{p.title}</h3><p>{p.summary}</p></div></Link>)}</div></section>
     <PlayFestivalCalendar places={PLAY_PLACES} initialDay={koreanDay()}/>
     <PlayExplorer places={PLAY_PLACES} day={koreanDay()}/>
     <section id="shared" className="play-section"><div className="play-heading"><div><p className="play-eyebrow">SHARED BY OUR COMMUNITY</p><h2 className="mt-2">함께 나누는 장소와 소식</h2></div><Link href="/play/shared" className="text-sm font-bold">모두 보기 →</Link></div><p className="play-muted mb-5">이용자·업체가 직접 올리는 공개 홍보입니다. 행사 기간과 혜택 조건은 각 글에서 확인하세요.</p>
