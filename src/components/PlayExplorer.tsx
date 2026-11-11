@@ -40,7 +40,7 @@ export function PlayExplorer({ places, day }: { places: PlayPlace[]; day: string
         <button type="button" className="play-button secondary" onClick={reset}>초기화</button>
       </div>
       <div className="play-chips" aria-label="놀거리 종류">{["", ...PLAY_KINDS].map(k=><button key={k} type="button" className="play-chip" aria-pressed={kind===k} onClick={()=>setKind(k)}>{k || "전체"}</button>)}</div>
-      <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 text-xs text-[#62715f]">
+      <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 text-xs text-[#5e7390]">
         <label className="flex items-center gap-2"><input type="checkbox" checked={savedOnly} onChange={e=>setSavedOnly(e.target.checked)}/>이 기기에 찜한 곳 ({saved.length})</label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={ended} onChange={e=>setEnded(e.target.checked)}/>지난 행사도 보기</label>
         <span className="ml-auto" aria-live="polite">{filtered.length}개의 안내</span>
