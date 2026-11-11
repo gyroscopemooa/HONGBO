@@ -1,3 +1,4 @@
+import { unknownPlayEditorialPath, PLAY_NOT_FOUND_HTML } from "@/lib/play-routing";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -33,6 +34,7 @@ function landingVariant(request: NextRequest): { variant: "a" | "b"; set: boolea
 }
 
 export async function middleware(request: NextRequest) {
+  if (unknownPlayEditorialPath(request.nextUrl.pathname)) return new NextResponse(PLAY_NOT_FOUND_HTML, {status:404,headers:{"Content-Type":"text/html; charset=utf-8","X-Robots-Tag":"noindex, follow"}});
   const isLanding = request.nextUrl.pathname === "/" && request.method === "GET";
   const ab = isLanding ? landingVariant(request) : null;
   const finish = (res: NextResponse): NextResponse => {

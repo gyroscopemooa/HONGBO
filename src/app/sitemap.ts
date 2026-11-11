@@ -1,3 +1,4 @@
+import { PLAY_REGIONS } from "@/data/play-regions";
 import type { MetadataRoute } from "next";
 import { BENEFIT_PAGES, CATEGORIES } from "@/lib/constants";
 import { store } from "@/lib/store";
@@ -17,6 +18,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/posts`, lastModified: now, changeFrequency: "hourly", priority: 0.9 },
     { url: `${base}/community`, changeFrequency: "daily", priority: 0.8 },
     { url: `${base}/play`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/play/archive`, changeFrequency: "weekly", priority: 0.5 },
+    ...PLAY_REGIONS.map(r => ({url:`${base}/play/region/${r.slug}`,changeFrequency:"weekly" as const,priority:0.7})),
     ...PLAY_PLACES.map(p => ({ url: `${base}/play/${p.slug}`, lastModified: new Date(`${p.checkedAt}T00:00:00+09:00`), changeFrequency: "weekly" as const, priority: 0.7 })),
     { url: `${base}/reviews`, changeFrequency: "daily", priority: 0.7 },
     { url: `${base}/region`, lastModified: now, changeFrequency: "daily", priority: 0.6 },

@@ -7,6 +7,7 @@ export type PlayPlace = {
   slug: string; title: string; region: string; area: string; kind: PlayKind;
   companions: PlayCompanion[]; summary: string; mood: string; art: "sea" | "village" | "train" | "park" | "fireworks" | "stay";
   price: string; address: string; tips: string[]; source: string; sourceLabel: string;
+  guide?: string;
   schedulePending?: boolean; scheduleNote?: string;
   checkedAt: string; startDate?: string; endDate?: string; benefitUrl?: string;
 };
