@@ -119,8 +119,7 @@
 .play-carousel-dots button.on{width:26px;background:var(--play-blue)}
 @media(max-width:700px){.play-slide{flex-basis:100%;min-height:250px}}
 .play-hero{position:relative;background:radial-gradient(120% 140% at 0% 0%,#dfeaff 0%,#eef4ff 45%,#fff 100%);border:1px solid #dbe7fb;box-shadow:0 24px 60px -32px rgba(23,98,232,.35)}
-.play-hero .play-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:99px;background:#fff;border:1px solid #d5e4fa;letter-spacing:1.4px;font-size:11px}
-.play-hero .play-eyebrow:before{content:"";width:7px;height:7px;border-radius:99px;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18)}
+.play-hero .play-eyebrow{display:none}
 .play-hero h1{letter-spacing:-2.5px}
 .play-hero h1 span{background:linear-gradient(135deg,#1762e8,#7c5cff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .play-hero-art{border-radius:0 0 0 80px}

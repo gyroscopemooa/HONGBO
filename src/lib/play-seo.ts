@@ -7,7 +7,7 @@ export const absolutePlayUrl = (path: string) => new URL(path, siteUrl()).toStri
 export const safeJsonLd = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
 export function playMetadata(p: PlayPlace): Metadata {
  const title=`${p.title} · ${p.region} ${p.kind === "축제·행사" ? "일정·장소" : "위치·방문 안내"} | 놀러가자`;
- const description=`${p.summary} ${p.startDate ? playPeriod(p)+'. ' : ''}${p.address}. 비용과 방문 전 확인사항, 안내 출처를 확인하세요.`;
+ const description=`${p.summary} ${p.startDate || p.schedulePending ? playPeriod(p)+'. ' : ''}${p.address}. 비용과 방문 전 확인사항, 안내 출처를 확인하세요.`;
  const photo=playPhoto(p.slug);
  const images=photo ? [{url:photo.src,width:photo.width,height:photo.height,alt:photo.alt}] : undefined;
  return {title,description,alternates:{canonical:`/play/${p.slug}`},openGraph:{type:"website",locale:"ko_KR",title,description,url:`/play/${p.slug}`,images},twitter:{card:"summary_large_image",title,description,images:photo?[photo.src]:undefined}};
