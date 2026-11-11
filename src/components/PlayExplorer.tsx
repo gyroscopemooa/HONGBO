@@ -2,17 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { PLAY_COMPANIONS, PLAY_KINDS, filterPlayPlaces, playPeriod, playStatus, type PlayPlace } from "@/lib/play";
+import { PLAY_COMPANIONS, PLAY_KINDS, filterPlayPlaces, playPeriod, playStatus, playCountdown, sortPlayPlaces, type PlayPlace } from "@/lib/play";
 import { PlayVisual } from "./PlayVisual";
+import { usePlayDay } from "./usePlayDay";
 import { CalendarDays } from "lucide-react";
 
 const SAVE_KEY = "thehongbo.play.saved.v1";
-export function PlayExplorer({ places, day }: { places: PlayPlace[]; day: string }) {
+export function PlayExplorer({ places, day: initialDay }: { places: PlayPlace[]; day: string }) {
+  const day = usePlayDay(initialDay);
   const [q, setQ] = useState("");
   const [region, setRegion] = useState("");
   const [kind, setKind] = useState("");
   const [companion, setCompanion] = useState("");
-  const [ended, setEnded] = useState(false);
   const [savedOnly, setSavedOnly] = useState(false);
   const [saved, setSaved] = useState<string[]>([]);
   const [storageMessage, setStorageMessage] = useState("");
@@ -29,8 +30,8 @@ export function PlayExplorer({ places, day }: { places: PlayPlace[]; day: string
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)); setStorageMessage(""); }
     catch { setStorageMessage("이 브라우저에서는 찜을 보관할 수 없어 현재 화면에서만 유지돼요."); }
   }
-  const filtered = filterPlayPlaces(places, { q, region, kind, companion, ended }, day).filter(p => !savedOnly || saved.includes(p.slug));
-  const reset = () => { setQ(""); setRegion(""); setKind(""); setCompanion(""); setEnded(false); setSavedOnly(false); };
+  const filtered = sortPlayPlaces(filterPlayPlaces(places, { q, region, kind, companion }, day), day).filter(p => !savedOnly || saved.includes(p.slug));
+  const reset = () => { setQ(""); setRegion(""); setKind(""); setCompanion(""); setSavedOnly(false); };
   return <section id="explore" className="play-section">
     <div className="play-heading"><div><p className="play-eyebrow">FIND YOUR LITTLE GETAWAY</p><h2 className="mt-2">이번엔 어디로 갈까요?</h2></div><p className="play-muted">운영자가 정리한 국내 나들이 안내</p></div>
     <div className="play-filters">
@@ -43,14 +44,14 @@ export function PlayExplorer({ places, day }: { places: PlayPlace[]; day: string
       <div className="play-chips" aria-label="놀거리 종류">{["", ...PLAY_KINDS].map(k=><button key={k} type="button" className="play-chip" aria-pressed={kind===k} onClick={()=>setKind(k)}>{k || "전체"}</button>)}</div>
       <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 text-xs text-[#5e7390]">
         <label className="flex items-center gap-2"><input type="checkbox" checked={savedOnly} onChange={e=>setSavedOnly(e.target.checked)}/>이 기기에 찜한 곳 ({saved.length})</label>
-        <label className="flex items-center gap-2"><input type="checkbox" checked={ended} onChange={e=>setEnded(e.target.checked)}/>지난 행사도 보기</label>
+        <Link href="/play/archive" className="font-bold underline">지난 축제 기록 →</Link>
         <span className="ml-auto" aria-live="polite">{filtered.length}개의 안내</span>
       </div>
       {storageMessage && <p role="status" className="play-muted mt-3">{storageMessage}</p>}
     </div>
     {filtered.length ? <div className="play-grid">{filtered.map(p=><article className="play-card" key={p.slug}>
-      <Link href={`/play/${p.slug}`} tabIndex={-1} aria-hidden="true"><div className="play-card-art"><PlayVisual place={p}/><span className="play-badge">{playStatus(p, day)==="종료" ? "종료된 행사" : p.mood}</span></div></Link>
-      <div className="play-card-body"><span className="play-eyebrow !tracking-normal">{p.region} · {p.area} <span className="font-normal">/ {p.kind}</span></span><h3><Link href={`/play/${p.slug}`}>{p.title}</Link></h3><p>{p.summary}</p><div className="play-period"><CalendarDays size={16} aria-hidden/><span>{playPeriod(p)}</span></div>{p.startDate && <span className={`play-status ${playStatus(p, day) === "종료" ? "ended" : ""}`}>{playStatus(p, day)}</span>}<div className="play-card-bottom"><span>{p.companions.join(" · ")}</span><button type="button" className="play-save" aria-pressed={saved.includes(p.slug)} aria-label={`${p.title} ${saved.includes(p.slug) ? "찜 해제" : "찜하기"}`} onClick={()=>toggleSave(p.slug)}>{saved.includes(p.slug) ? "♥ 찜함" : "♡ 찜"}</button></div></div>
+      <Link href={`/play/${p.slug}`} tabIndex={-1} aria-hidden="true"><div className="play-card-art"><PlayVisual place={p}/><span className="play-badge">{p.startDate ? playCountdown(p, day) : p.mood}</span></div></Link>
+      <div className="play-card-body"><span className="play-eyebrow !tracking-normal">{p.region} · {p.area} <span className="font-normal">/ {p.kind}</span></span><h3><Link href={`/play/${p.slug}`}>{p.title}</Link></h3><p>{p.summary}</p><div className="play-period"><CalendarDays size={16} aria-hidden/><span>{playPeriod(p)}</span></div>{p.startDate && <span className={`play-status ${playStatus(p, day) === "종료" ? "ended" : ""}`}>{playCountdown(p, day)}</span>}<div className="play-card-bottom"><span>{p.companions.join(" · ")}</span><button type="button" className="play-save" aria-pressed={saved.includes(p.slug)} aria-label={`${p.title} ${saved.includes(p.slug) ? "찜 해제" : "찜하기"}`} onClick={()=>toggleSave(p.slug)}>{saved.includes(p.slug) ? "♥ 찜함" : "♡ 찜"}</button></div></div>
     </article>)}</div> : <div className="play-empty"><h3 className="text-xl font-bold">조건에 맞는 안내가 아직 없어요</h3><p className="play-muted mt-3">다른 지역이나 종류를 선택해보세요. 알고 있는 곳을 직접 공유해도 좋아요.</p><button type="button" onClick={reset} className="play-button secondary mt-5">전체 안내 보기</button></div>}
     <p className="play-muted mt-5 !text-xs">실제 장소 자료사진을 사용합니다. 촬영 시점에 따라 현재 모습과 다를 수 있습니다. 사진 출처는 아래에 표시하며, 찜은 현재 브라우저에만 저장됩니다.</p>
   </section>;

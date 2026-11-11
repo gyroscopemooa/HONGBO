@@ -3,6 +3,12 @@ const sa4 = { license: "CC BY-SA 4.0", licenseUrl: "https://creativecommons.org/
 const sa3 = { license: "CC BY-SA 3.0", licenseUrl: "https://creativecommons.org/licenses/by-sa/3.0/" };
 const cc0 = { license: "CC0 1.0", licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/" };
 export const PLAY_PHOTOS: Record<string, PlayPhoto> = {
+  "seoul-lantern-2026": {
+    ...sa4, width: 1280, height: 960, src: "/play/seoul-lantern.jpg", alt: "청계천 물 위에 빛나는 서울빛초롱축제의 푸른 조형물",
+    author: "Ethan Doyle White", title: "Blue Lanterns at the 2019 Seoul Lantern Festival", captured: "2019-11-06",
+    source: "https://commons.wikimedia.org/wiki/File:Blue_Lanterns_at_the_2019_Seoul_Lantern_Festival.jpg",
+    caption: "2019 서울빛초롱축제 자료사진 · 2026년 전시 구성과 다를 수 있습니다.",
+  },
   haeundae: {
     ...sa4, width: 1280, height: 960,
     src: "/play/haeundae.jpg", alt: "해운대 바다와 해변을 따라 이어진 부산의 건물들",

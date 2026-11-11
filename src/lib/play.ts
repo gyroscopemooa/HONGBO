@@ -31,9 +31,47 @@ export function koreanDay(now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
 export function playStatus(place: Pick<PlayPlace, "startDate" | "endDate">, day = koreanDay()) {
-  if (place.endDate && place.endDate < day) return "종료";
+  if ((place.endDate || place.startDate) && (place.endDate || place.startDate)! < day) return "종료";
   if (place.startDate && place.startDate > day) return "예정";
   return place.startDate ? "진행 중" : "상시 안내";
+}
+
+export function playCountdown(place: Pick<PlayPlace, "startDate" | "endDate">, day = koreanDay()): string {
+  const status = playStatus(place, day);
+  if (status === "종료") return "지난 축제";
+  if (!place.startDate) return status;
+  const days = Math.round((Date.parse(`${place.startDate}T00:00:00Z`) - Date.parse(`${day}T00:00:00Z`)) / 86400000);
+  return days > 0 ? `D-${days}` : days === 0 ? "D-DAY · 오늘 시작" : "진행 중";
+}
+
+/** Active events first, then soonest start; archived events newest end first. Never mutates input. */
+export function sortPlayPlaces(places: PlayPlace[], day = koreanDay()): PlayPlace[] {
+  const rank = (p: PlayPlace) => ({"진행 중":0,"예정":1,"상시 안내":2,"종료":3}[playStatus(p, day)]);
+  return [...places].sort((a,b) => rank(a)-rank(b) || (rank(a) === 3
+    ? (b.endDate || b.startDate || "").localeCompare(a.endDate || a.startDate || "")
+    : rank(a) === 0 ? (a.endDate || a.startDate || "").localeCompare(b.endDate || b.startDate || "")
+    : (a.startDate || "").localeCompare(b.startDate || "")));
+}
+
+export function playMonthLabel(month: string) { return `${month.slice(0,4)}년 ${Number(month.slice(5,7))}월`; }
+/** Include a multi-month event in every month it overlaps, including year boundaries. */
+export function playFestivalMonths(places: PlayPlace[], day = koreanDay(), archived = false) {
+  const groups = new Map<string, PlayPlace[]>();
+  const currentMonth = day.slice(0,7);
+  for (const p of sortPlayPlaces(places, day)) {
+    if (p.kind !== "축제·행사" || !p.startDate || !validPlayDate(p.startDate)) continue;
+    if ((playStatus(p, day) === "종료") !== archived) continue;
+    const end = p.endDate || p.startDate;
+    if (!validPlayDate(end) || end < p.startDate) continue;
+    let month = p.startDate.slice(0,7);
+    if (!archived && month < currentMonth) month = currentMonth;
+    while (month <= end.slice(0,7)) {
+      groups.set(month, [...(groups.get(month) || []), p]);
+      const [y,m] = month.split("-").map(Number);
+      month = `${m === 12 ? y+1 : y}-${String(m === 12 ? 1 : m+1).padStart(2,"0")}`;
+    }
+  }
+  return [...groups].sort(([a],[b]) => archived ? b.localeCompare(a) : a.localeCompare(b)).map(([month, items])=>({month,items}));
 }
 export function filterPlayPlaces(places: PlayPlace[], filters: { q?: string; region?: string; kind?: string; companion?: string; ended?: boolean }, day = koreanDay()) {
   const words = (filters.q ?? "").toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
