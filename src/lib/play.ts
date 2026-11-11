@@ -10,6 +10,22 @@ export type PlayPlace = {
   checkedAt: string; startDate?: string; endDate?: string; benefitUrl?: string;
 };
 
+export const PLAY_PERIOD_NOTE = "일정·기간";
+export function validPlayDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
+}
+export function playDateLabel(value: string): string {
+  if (!validPlayDate(value)) return "일정 확인 필요";
+  const weekday = new Intl.DateTimeFormat("ko-KR", { weekday: "short", timeZone: "Asia/Seoul" }).format(new Date(`${value}T00:00:00+09:00`));
+  return `${value.replaceAll("-", ".")} (${weekday})`;
+}
+export function playPeriod(place: Pick<PlayPlace, "startDate" | "endDate">): string {
+  if (place.startDate && place.endDate && place.startDate !== place.endDate) return `${playDateLabel(place.startDate)} ~ ${playDateLabel(place.endDate)}`;
+  if (place.startDate) return playDateLabel(place.startDate);
+  if (place.endDate) return `~ ${playDateLabel(place.endDate)}`;
+  return "상시 장소 안내 · 방문일 운영 확인";
+}
+
 /** Date-only event boundaries are Korean calendar days, inclusive of the last day. */
 export function koreanDay(now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);

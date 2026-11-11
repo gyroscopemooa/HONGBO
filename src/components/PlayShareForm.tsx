@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createPostAction } from "@/app/actions/posts";
 import { LIMITS, REGIONS } from "@/lib/constants";
-import { PLAY_COMPANIONS, PLAY_KINDS, PLAY_TAG } from "@/lib/play";
+import { PLAY_COMPANIONS, PLAY_KINDS, PLAY_TAG, PLAY_PERIOD_NOTE, playPeriod, validPlayDate } from "@/lib/play";
 import { processImage, uploadImage } from "@/lib/image-client";
 
 export function PlayShareForm() {
@@ -22,18 +22,23 @@ export function PlayShareForm() {
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<Record<string,string>>({});
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [periodType, setPeriodType] = useState("always");
+  const [startDate, setStartDate] = useState("");
   return <form method="post" onSubmit={e=>{
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const value = (key:string)=>String(data.get(key) ?? "").trim();
     setMessage(""); setErrors({}); setNeedsLogin(false);
+    const endDate = value("endDate");
+    if (periodType === "dated" && (!validPlayDate(startDate) || !validPlayDate(endDate) || endDate < startDate)) { setMessage("시작일과 종료일을 확인해주세요. 종료일은 시작일 이후여야 합니다."); return; }
+    const period = periodType === "dated" ? playPeriod({startDate, endDate}) : "상시 장소 안내 · 방문일 운영 확인";
     start(async()=>{
       try {
         const result = await createPostAction({ category: "offline", title: value("title"), shortDescription: value("shortDescription"),
           description: `${value("description")}\n\n[공유자 관계] ${value("relationship")}\n[방문·이용 조건] ${value("conditions")}`,
           region: value("region"), address: value("address"), primaryImageUrl: image || null, images: [],
           tags: [PLAY_TAG, value("kind"), value("companion")].filter(Boolean),
-          extra: { businessUrl: value("url"), benefits: value("benefit"), links: [] },
+          extra: { businessUrl: value("url"), benefits: value("benefit"), links: [], notes: [{title: PLAY_PERIOD_NOTE, body: period}] },
           threadsConsent: false,
         });
         if (!result.ok) { setMessage(result.message); setErrors(result.errors ?? {}); setNeedsLogin(result.code==="auth"); return; }
@@ -47,6 +52,8 @@ export function PlayShareForm() {
       <div className="grid gap-x-5 sm:grid-cols-2"><label>종류<select name="kind" required>{PLAY_KINDS.map(k=><option key={k}>{k}</option>)}</select></label><label>누구와 가기 좋은가요?<select name="companion"><option value="">누구나</option>{PLAY_COMPANIONS.map(c=><option key={c}>{c}</option>)}</select></label></div>
       <div className="grid gap-x-5 sm:grid-cols-2"><label>국내 지역<select name="region" required><option value="">지역 선택</option>{REGIONS.map(r=><option key={r}>{r}</option>)}</select></label><label>주소<input name="address" required maxLength={200} placeholder="찾아갈 수 있는 주소"/></label></div>
       <label>상세 안내<textarea name="description" required minLength={10} maxLength={3500} rows={7} placeholder="추천하는 이유, 즐기는 방법, 대중교통·주차, 아이 동반 시 확인할 점 등을 적어주세요."/></label>
+      <label>일정 구분<select name="periodType" value={periodType} onChange={e=>setPeriodType(e.target.value)}><option value="always">상시 장소 안내</option><option value="dated">기간이 정해진 행사·혜택</option></select></label>
+      {periodType === "dated" && <div className="grid gap-x-5 sm:grid-cols-2"><label>시작일<input type="date" name="startDate" value={startDate} onChange={e=>setStartDate(e.target.value)} required/></label><label>종료일<input type="date" name="endDate" min={startDate || undefined} required/></label></div>}
       <label>운영 시간·행사 기간·이용 조건<textarea name="conditions" required maxLength={600} rows={3} placeholder="날짜, 요금, 예약 필요 여부, 할인 대상과 제외일 등을 정확하게 적어주세요. 상시 장소라면 휴무일과 확인 방법을 적어주세요."/><small>행사 종료 후에는 내 홍보에서 수정하거나 내려주세요. 회원 글의 행사 날짜는 자동 판독하지 않습니다.</small></label>
       <label>공식 안내·예약·지도 URL<input name="url" type="url" required maxLength={2000} placeholder="https://"/><small>행사나 장소를 실제로 확인할 수 있는 공개 주소를 넣어주세요.</small></label>
       <div className="grid gap-x-5 sm:grid-cols-2"><label>혜택<select name="benefit"><option value="">별도 혜택 없음</option><option value="discount">할인</option><option value="event">이벤트</option><option value="coupon">쿠폰</option><option value="free">무료</option></select><small>실제로 제공하는 혜택만 선택하세요.</small></label><label>공유자와 장소의 관계<select name="relationship" required><option value="">선택해주세요</option><option>이용자 · 직접 운영하지 않음</option><option>업체 운영자 · 관계자</option><option>광고·협찬을 받은 소개</option></select></label></div>

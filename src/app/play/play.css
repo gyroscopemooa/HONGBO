@@ -1,4 +1,18 @@
 .play-page{--play-blue:#1762e8;--play-accent:#3797ff;background:#f5f9ff;color:#142b50;padding-bottom:60px}
+.play-photo{display:block;width:100%;height:100%;object-fit:cover;object-position:center 58%}
+.play-period{display:flex;align-items:flex-start;gap:7px;margin-top:14px;font-size:13px!important;font-weight:700;line-height:1.65!important;color:#245795!important}
+.play-period svg{flex-shrink:0;margin-top:3px}
+.play-status{display:inline-block;margin-top:8px;padding:3px 9px;border-radius:6px;background:#e8f2ff;color:#1c61bf;font-size:11px;font-weight:750}
+.play-status.ended{background:#eef0f4;color:#626f82}
+.play-banner-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px}
+.play-photo-banner{position:relative;isolation:isolate;min-height:260px;overflow:hidden;border-radius:20px;background:#123664;color:white!important}
+.play-photo-banner>.play-photo{position:absolute;inset:0;z-index:-2;transition:transform .3s}
+.play-photo-banner:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(6,28,59,.84),rgba(6,28,59,.35) 75%,rgba(6,28,59,.15))}
+.play-banner-copy{padding:30px;max-width:95%}.play-banner-kicker{font-size:11px;letter-spacing:1px;font-weight:700;color:#d6eaff}.play-banner-copy h2{font-size:27px;line-height:1.35;font-weight:850;margin:14px 0}.play-banner-copy p{font-size:12px;color:#e4efff}.play-banner-cta{display:inline-block;margin-top:18px;font-size:13px;font-weight:750;border-bottom:1px solid #a6ccff;padding-bottom:3px}
+.play-photo-credits{margin-top:36px;border-top:1px solid #dbe5f5;padding-top:20px;font-size:11px;line-height:1.9;color:#657994}.play-photo-credits a{text-decoration:underline}.play-photo-credits strong{display:block;margin-bottom:4px}
+.play-shared-card>.play-period{padding:10px 12px;margin-top:0;background:#eaf2ff;border-radius:0 0 12px 12px}
+@media(max-width:700px){.play-banner-grid{grid-template-columns:1fr}.play-photo-banner{min-height:240px}.play-banner-copy{padding:25px}.play-banner-copy h2{font-size:25px}}
+@media(prefers-reduced-motion:reduce){.play-photo-banner>.play-photo{transition:none}}
 .play-wrap{max-width:1200px;margin:auto;padding:0 24px}
 .play-masthead{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:27px 0}
 .play-wordmark{font-size:28px;font-weight:950;letter-spacing:-1.5px}
