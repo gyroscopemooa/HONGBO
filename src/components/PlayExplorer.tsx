@@ -35,8 +35,8 @@ export function PlayExplorer({ places, day }: { places: PlayPlace[]; day: string
     <div className="play-filters">
       <div className="play-search-row">
         <label><span className="sr-only">장소·지역 검색</span><input type="search" value={q} onChange={e=>setQ(e.target.value)} placeholder="해운대, 바다, 테마파크…" maxLength={80}/></label>
-        <label><span className="sr-only">지역</span><select value={region} onChange={e=>setRegion(e.target.value)}><option value="">모든 지역</option>{Array.from(new Set(places.map(p=>p.region))).map(r=><option key={r}>{r}</option>)}</select></label>
-        <label><span className="sr-only">동행</span><select value={companion} onChange={e=>setCompanion(e.target.value)}><option value="">누구와 함께?</option>{PLAY_COMPANIONS.map(c=><option key={c}>{c}</option>)}</select></label>
+        <label><span className="sr-only">지역</span><select aria-label="지역" value={region} onChange={e=>setRegion(e.target.value)}><option value="">모든 지역</option>{Array.from(new Set(places.map(p=>p.region))).map(r=><option key={r}>{r}</option>)}</select></label>
+        <label><span className="sr-only">동행</span><select aria-label="동행" value={companion} onChange={e=>setCompanion(e.target.value)}><option value="">누구와 함께?</option>{PLAY_COMPANIONS.map(c=><option key={c}>{c}</option>)}</select></label>
         <button type="button" className="play-button secondary" onClick={reset}>초기화</button>
       </div>
       <div className="play-chips" aria-label="놀거리 종류">{["", ...PLAY_KINDS].map(k=><button key={k} type="button" className="play-chip" aria-pressed={kind===k} onClick={()=>setKind(k)}>{k || "전체"}</button>)}</div>

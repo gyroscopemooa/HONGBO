@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,13 +11,18 @@ import { processImage, uploadImage } from "@/lib/image-client";
 
 export function PlayShareForm() {
   const router = useRouter();
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- prevent native form submission before hydration
+    setReady(true);
+  }, []);
   const [pending, start] = useTransition();
   const [imageBusy, setImageBusy] = useState(false);
   const [image, setImage] = useState("");
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<Record<string,string>>({});
   const [needsLogin, setNeedsLogin] = useState(false);
-  return <form onSubmit={e=>{
+  return <form method="post" onSubmit={e=>{
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const value = (key:string)=>String(data.get(key) ?? "").trim();
@@ -36,7 +41,7 @@ export function PlayShareForm() {
       } catch { setMessage("저장 결과를 확인하지 못했어요. 중복 등록을 피하려면 내 홍보에서 글이 저장됐는지 먼저 확인해주세요."); }
     });
   }}>
-    <fieldset disabled={pending || imageBusy}>
+    <fieldset disabled={!ready || pending || imageBusy}>
       <label>장소·소식 제목<input name="title" required minLength={2} maxLength={LIMITS.titleMax} placeholder="예: 비 오는 날에도 즐기는 우리 동네 도자기 공방"/></label>
       <label>한 줄 소개<input name="shortDescription" required minLength={2} maxLength={LIMITS.shortMax} placeholder="어떤 시간을 보낼 수 있는지 알려주세요"/></label>
       <div className="grid gap-x-5 sm:grid-cols-2"><label>종류<select name="kind" required>{PLAY_KINDS.map(k=><option key={k}>{k}</option>)}</select></label><label>누구와 가기 좋은가요?<select name="companion"><option value="">누구나</option>{PLAY_COMPANIONS.map(c=><option key={c}>{c}</option>)}</select></label></div>
@@ -56,6 +61,6 @@ export function PlayShareForm() {
       <label className="!flex items-start gap-3"><input type="checkbox" required className="!mt-1"/><span>공개 게시에 동의하며 장소·기간·혜택 정보를 확인했어요.<small>기존 더홍보 홍보글로 저장됩니다. 내 홍보에서 수정·삭제할 수 있으며 놀러가자 태그를 유지하면 이 공간에서도 표시됩니다.</small></span></label>
     </fieldset>
     {(message || Object.keys(errors).length>0) && <div role="alert" className="play-form-error"><p>{message}</p>{Object.entries(errors).map(([key,error])=><p key={key}>{error}</p>)}{needsLogin && <Link href="/auth?next=%2Fplay%2Fshare" className="underline">다시 로그인하기</Link>}<Link href="/mypage" className="mt-2 block underline">내 홍보 확인</Link></div>}
-    <button type="submit" disabled={pending || imageBusy} className="play-button disabled:opacity-50">{pending ? "게시하는 중…" : imageBusy ? "사진 업로드 중…" : "장소·소식 공개하기"}</button>
+    <button type="submit" disabled={!ready || pending || imageBusy} className="play-button disabled:opacity-50">{pending ? "게시하는 중…" : imageBusy ? "사진 업로드 중…" : "장소·소식 공개하기"}</button>
   </form>;
 }
