@@ -17,7 +17,7 @@ assert(!validPlayDate("2026-13-01"));
 assert(!filterPlayPlaces(PLAY_PLACES, {}, "2026-11-11").some(p=>p.slug===festival.slug));
 assert(filterPlayPlaces(PLAY_PLACES, {ended:true}, "2026-11-11").some(p=>p.slug===festival.slug));
 assert(filterPlayPlaces(PLAY_PLACES, {region:"부산", companion:"아이와", kind:"체험·놀거리", q:"바다"}, "2026-11-11").some(p=>p.slug==="blueline-park"));
-assert.equal(filterPlayPlaces(PLAY_PLACES, {region:"제주"}).length, 0);
+assert(filterPlayPlaces(PLAY_PLACES, {region:"제주"}, "2026-11-11").some(p=>p.slug==="jeju-citrus-2026"));
 assert.equal(new Set(PLAY_PLACES.map(p=>p.slug)).size, PLAY_PLACES.length);
 for (const p of PLAY_PLACES) { assert.equal(new URL(p.source).protocol, "https:"); if(p.benefitUrl) assert.equal(new URL(p.benefitUrl).protocol, "https:"); }
 const input = {category:"offline",title:"나들이 공방 안내",shortDescription:"아이와 함께 체험하는 공방",description:"직접 예약해서 방문할 수 있는 도자기 체험 안내입니다.",region:"부산",address:"부산 해운대구",tags:["놀러가자","체험·놀거리","아이와"],extra:{businessUrl:"https://www.bluelinepark.com/",benefits:"discount",links:[]}};
