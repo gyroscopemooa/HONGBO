@@ -1,3 +1,5 @@
+import { PLAY_KINDS, playBenefitValues } from "./play-conditions";
+import { playConditionsSchema } from "./play-conditions-validation";
 import { z } from "zod";
 import {
   APP_PLATFORMS,
@@ -53,6 +55,7 @@ const rawSchema = z.object({
   contact: str(400),
   extra: z
     .object({
+      play: playConditionsSchema.optional(),
       notes: z.array(z.object({ title: z.string().max(200), body: z.string().max(2000) })).max(20).optional(),
       couponCode: str(400),
       couponNote: str(1000),
@@ -100,7 +103,7 @@ function blankToNull(v: string | null | undefined): string | null {
 export function parsePostInput(raw: unknown): ParseResult {
   const shape = rawSchema.safeParse(raw);
   if (!shape.success) {
-    return { ok: false, errors: {}, message: "입력값을 확인해주세요." };
+    return { ok: false, errors: Object.fromEntries(shape.error.issues.map(i=>[i.path.join("."), i.message])), message: "입력값을 확인해주세요." };
   }
   const v = shape.data;
   const errors: FieldErrors = {};
@@ -126,6 +129,7 @@ export function parsePostInput(raw: unknown): ParseResult {
 
   // --- 링크 ---
   const extra: PostExtra = {};
+  if (v.extra.play) extra.play = v.extra.play;
   const linkField = (
     key: "externalUrl" | "mapUrl" | "playUrl" | "appStoreUrl" | "siteUrl" | "businessUrl",
     value: string | null | undefined,
@@ -151,7 +155,7 @@ export function parsePostInput(raw: unknown): ParseResult {
     else errors.videoUrl = "유튜브 영상 주소를 입력해주세요. (youtube.com, youtu.be)";
   }
 
-  const benefitList = (v.extra.benefits ?? "")
+  const benefitList = (v.extra.play ? playBenefitValues(v.extra.play).join(",") : (v.extra.benefits ?? ""))
     .split(",")
     .map((s) => s.trim())
     .filter((s) => (BENEFITS.map((b) => b.value) as string[]).includes(s));
@@ -379,6 +383,10 @@ export function parsePostInput(raw: unknown): ParseResult {
     const tag = t.replace(/^#+/, "").replace(/\s+/g, " ").trim().slice(0, LIMITS.tagMax);
     if (tag) tagSet.add(tag);
   }
+  if (v.extra.play && tagSet.has("놀러가자")) {
+    for (const kind of PLAY_KINDS) tagSet.delete(kind);
+    tagSet.add(v.extra.play.kind);
+  }
   const tags = Array.from(tagSet);
   if (tags.length > LIMITS.tagsMax) errors.tags = `태그는 최대 ${LIMITS.tagsMax}개까지 등록할 수 있어요.`;
 
@@ -406,7 +414,7 @@ export function parsePostInput(raw: unknown): ParseResult {
   if (contact && contact.length > LIMITS.contactMax) errors.contact = `연락처는 ${LIMITS.contactMax}자까지 입력할 수 있어요.`;
 
   // --- 금지 키워드 ---
-  const banned = findBannedKeyword(notes.map((n) => `${n.title} ${n.body}`).join(" "), couponCode, couponNote, title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
+  const banned = findBannedKeyword(v.extra.play ? Object.values(v.extra.play).join(" ") : "", notes.map((n) => `${n.title} ${n.body}`).join(" "), couponCode, couponNote, title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
   if (banned) {
     errors.description = "운영정책상 등록할 수 없는 내용이 포함되어 있어요. 내용을 확인해주세요.";
   }

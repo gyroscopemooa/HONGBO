@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { PlayConditionsFields } from "./PlayConditionsFields";
+import { EMPTY_PLAY_CONDITIONS, playBenefitValues, type PlayConditions } from "@/lib/play-conditions";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { CircleAlert, LoaderCircle, Plus, RotateCcw, Send, X } from "lucide-react";
@@ -46,6 +48,7 @@ import { Modal } from "./Modal";
 import { PostCard } from "./PostCard";
 
 export interface FormState {
+  play?: PlayConditions;
   category: CategorySlug | "";
   title: string;
   shortDescription: string;
@@ -145,6 +148,7 @@ export function postToFormState(p: Post): FormState {
   return {
     ...EMPTY,
     category: p.category,
+    play: p.extra.play,
     title: p.title,
     shortDescription: p.shortDescription,
     description: p.description,
@@ -161,7 +165,7 @@ export function postToFormState(p: Post): FormState {
     snsPlatform: p.category === "content" && p.platform ? p.platform : "youtube",
     usageType: p.extra.usageType ?? "",
     period: p.extra.period ?? "",
-    benefits: (p.extra.benefits ?? []).filter((b) => b !== EXCLUSIVE_SLUG),
+    benefits: p.extra.play ? playBenefitValues(p.extra.play) : (p.extra.benefits ?? []).filter((b) => b !== EXCLUSIVE_SLUG),
     exclusiveOn: !!p.extra.exclusive,
     exclusiveAgree: !!p.extra.exclusive,
     exclusiveReward: p.extra.exclusive?.reward ?? "",
@@ -202,6 +206,7 @@ function toPayload(f: FormState) {
     tags: f.tags,
     contact: f.contactPublic ? f.contact : null,
     extra: {
+      play: f.play,
       playUrl: f.playUrl,
       appStoreUrl: f.appStoreUrl,
       siteUrl: f.siteUrl,
@@ -624,6 +629,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
         )}
 
         {/* 3. 기본 정보 */}
+        {(f.play || f.tags.includes("놀러가자")) && <PlayConditionsFields value={f.play ?? {...EMPTY_PLAY_CONDITIONS}} onChange={value=>{set("play",value);set("benefits",playBenefitValues(value));}}/>}
         <SectionCard step={3} title="어떤 홍보인가요?" desc="짧고 분명할수록 눈에 잘 띄어요.">
           <Field id="title" label="제목" required error={errors.title} counter={{ now: f.title.length, max: LIMITS.titleMax }}>
             <input
@@ -647,13 +653,14 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
               className="field"
             />
           </Field>
-          <Field id="benefits" label="혜택이 있나요?" optional hint={`실제로 제공할 수 있는 혜택만 골라 주세요. 최대 ${BENEFIT_MAX}개까지 카드에 배지로 보여요. 허위 표시는 운영정책에 따라 삭제될 수 있어요.`}>
+          <Field id="benefits" label="혜택이 있나요?" optional hint={f.play ? "위 분류와 방문 조건의 소식 성격·비용 구분에 맞춰 자동 표시됩니다. 변경은 위 조건 입력에서 해주세요." : `실제로 제공할 수 있는 혜택만 골라 주세요. 최대 ${BENEFIT_MAX}개까지 카드에 배지로 보여요. 허위 표시는 운영정책에 따라 삭제될 수 있어요.`}>
             <div className="flex flex-wrap gap-2" role="group" aria-label="혜택 선택">
               {BENEFITS.map((b) => {
                 const on = f.benefits.includes(b.value);
                 return (
                   <button
                     key={b.value}
+                    disabled={!!f.play}
                     type="button"
                     aria-pressed={on}
                     onClick={() => set("benefits", on ? f.benefits.filter((x) => x !== b.value) : f.benefits.length >= BENEFIT_MAX ? f.benefits : [...f.benefits, b.value])}

@@ -1,9 +1,10 @@
+import { withPlayConditions } from "./play-conditions";
 import { PLAY_TOURISM } from "./play-tourism";
 import { PLAY_FESTIVALS } from "./play-festivals";
 import type { PlayPlace } from "@/lib/play";
 
 // Editorial guides, not paid listings or live inventory. Recheck sources before changing offers/dates.
-export const PLAY_PLACES: PlayPlace[] = [
+const EDITORIAL_PLACES: PlayPlace[] = [
   ...PLAY_FESTIVALS,
   ...PLAY_TOURISM,
   { slug: "seoul-lantern-2026", title: "2026 서울빛초롱축제", region: "서울", area: "청계천 일대", kind: "축제·행사", companions: ["데이트", "아이와", "친구와", "혼자"], summary: "청계천을 따라 빛 조형물을 만나는 겨울밤 산책. 연말부터 새해까지 이어지는 축제입니다.", mood: "빛으로 채우는 겨울밤", art: "fireworks", price: "무료 · 체험별 조건 확인", address: "서울 중구 청계천 청계광장~삼일교", startDate: "2026-12-11", endDate: "2027-01-31", tips: ["공식 안내 기준 매일 18:00~23:00입니다. 방문 전 변경 공지를 확인하세요.", "겨울 야외 행사이므로 방한 용품을 준비하고 혼잡 시 현장 안내를 따라주세요.", "사진은 과거 축제 자료이며 올해 전시 구성과 다를 수 있습니다."], source: "https://korean.visitseoul.net/events/2026SeoulLanternFestival/KOPi0rhml", sourceLabel: "서울관광 공식 서울빛초롱축제 안내", checkedAt: "2026-11-11" },
@@ -15,3 +16,5 @@ export const PLAY_PLACES: PlayPlace[] = [
   { slug: "busan-hotel", title: "부산 도심에서 쉬어가는 하루", region: "부산", area: "부산진구", kind: "숙소", companions: ["데이트", "아이와", "친구와", "혼자"], summary: "롯데호텔 부산의 객실과 패키지를 살펴보고, 우리에게 필요한 구성으로 비교해보세요.", mood: "쉬는 것도 여행", art: "stay", price: "날짜·인원·객실에 따라 변동", address: "부산 부산진구 롯데호텔 부산", tips: ["숙박일과 성인·아동 인원을 입력한 실제 총액으로 비교하세요.", "조식·부대시설·추가 인원 요금의 포함 여부를 확인하세요.", "무료 취소 마감과 환불 불가 조건을 확인하세요. 이 안내는 최저가나 할인 확정을 뜻하지 않아요."], source: "https://app.lottehotel.com/busan-hotel/ko", sourceLabel: "롯데호텔 부산 공식 홈페이지", checkedAt: "2026-11-11" },
   { slug: "busan-fireworks-2026", title: "2026 부산불꽃축제", region: "부산", area: "광안리 일대", kind: "축제·행사", companions: ["데이트", "아이와", "친구와"], summary: "광안리 일대에서 열리는 부산불꽃축제의 2026년 일정 기록입니다. 다음 회차는 공식 발표 후 안내해요.", mood: "부산의 밤", art: "fireworks", price: "관람 구역별 조건 확인", address: "부산 수영구 광안리해수욕장 일대", startDate: "2026-11-07", endDate: "2026-11-07", tips: ["이 안내의 날짜가 지났다면 지난 행사 기록이에요. 다음 회차 일정으로 사용하지 마세요.", "향후 행사 방문 전 좌석 판매, 교통 통제, 행사 변경 공지를 공식 주최 측에서 확인하세요."], source: "https://www.busan.go.kr/nbtnewsBU/1752768?curPage=11&srchBeginDt=&srchEndDt=&srchKey=&srchText=", sourceLabel: "부산광역시 제21회 부산불꽃축제 보도자료", checkedAt: "2026-11-11" },
 ];
+
+export const PLAY_PLACES: PlayPlace[] = EDITORIAL_PLACES.map(withPlayConditions);

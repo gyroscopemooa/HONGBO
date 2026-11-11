@@ -1,12 +1,14 @@
+import { PLAY_KINDS, matchesPlayConditions, type PlayConditions, type PlayConditionFilters, type PlayKind } from "./play-conditions";
+export { PLAY_KINDS };
+export type { PlayKind };
 export const PLAY_TAG = "놀러가자";
-export const PLAY_KINDS = ["명소·산책", "축제·행사", "테마파크", "체험·놀거리", "숙소"] as const;
-export const PLAY_COMPANIONS = ["데이트", "아이와", "친구와", "혼자"] as const;
-export type PlayKind = typeof PLAY_KINDS[number];
+export const PLAY_COMPANIONS = ["데이트", "아이와", "가족과", "친구와", "혼자", "단체", "반려동물과"] as const;
 export type PlayCompanion = typeof PLAY_COMPANIONS[number];
 export type PlayPlace = {
   slug: string; title: string; region: string; area: string; kind: PlayKind;
   companions: PlayCompanion[]; summary: string; mood: string; art: "sea" | "village" | "train" | "park" | "fireworks" | "stay";
   price: string; address: string; tips: string[]; source: string; sourceLabel: string;
+  conditions?: PlayConditions;
   guide?: string;
   schedulePending?: boolean; scheduleNote?: string;
   checkedAt: string; startDate?: string; endDate?: string; benefitUrl?: string;
@@ -78,11 +80,12 @@ export function playFestivalMonths(places: PlayPlace[], day = koreanDay(), archi
   }
   return [...groups].sort(([a],[b]) => archived ? b.localeCompare(a) : a.localeCompare(b)).map(([month, items])=>({month,items}));
 }
-export function filterPlayPlaces(places: PlayPlace[], filters: { q?: string; region?: string; kind?: string; companion?: string; ended?: boolean }, day = koreanDay()) {
+export function filterPlayPlaces(places: PlayPlace[], filters: { q?: string; region?: string; kind?: string; companion?: string; ended?: boolean; conditions?: PlayConditionFilters }, day = koreanDay()) {
   const words = (filters.q ?? "").toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   return places.filter(p => (filters.ended || playStatus(p, day) !== "종료")
     && (!filters.region || p.region === filters.region)
     && (!filters.kind || p.kind === filters.kind)
+    && matchesPlayConditions(p.conditions, filters.conditions ?? {})
     && (!filters.companion || p.companions.some(c => c === filters.companion))
-    && words.every(w => `${p.title} ${p.region} ${p.area} ${p.kind} ${p.summary} ${p.companions.join(" ")}`.toLocaleLowerCase().includes(w)));
+    && words.every(w => `${p.title} ${p.region} ${p.area} ${p.kind} ${p.summary} ${p.conditions?.subtype ?? ""} ${p.conditions?.eligibility ?? ""} ${p.companions.join(" ")}`.toLocaleLowerCase().includes(w)));
 }

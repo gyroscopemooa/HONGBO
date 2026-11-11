@@ -1,3 +1,4 @@
+import type { PlayConditions } from "./play-conditions";
 import type { CategorySlug } from "./constants";
 
 export type PostStatus = "active" | "hidden" | "blocked" | "expired" | "deleted";
@@ -23,6 +24,7 @@ export interface SurveyQuestion {
 }
 
 export interface PostExtra {
+  play?: PlayConditions;
   /** 추가 링크(이벤트 참여, 쿠폰 받기 등). 상세 페이지에서 버튼으로 보여줍니다. */
   links?: ExtraLink[];
   notes?: Array<{ title: string; body: string }>;

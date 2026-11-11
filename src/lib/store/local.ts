@@ -1,3 +1,4 @@
+import { matchesPlayConditions } from "../play-conditions";
 import { isDuplicatePost } from "../post-duplicates";
 import fs from "node:fs";
 import path from "node:path";
@@ -178,6 +179,7 @@ const isPublic = (p: Post, now: number) =>
 const popularity = (p: Post) => p.viewCount + p.clickCount * 3;
 
 function matches(p: Post, q: ListQuery, now: number): boolean {
+  if (q.play && !matchesPlayConditions(p.extra?.play,q.play)) return false;
   if (q.publicOnly && !isPublic(p, now)) return false;
   if (q.status) {
     if (q.status === "expired") {
