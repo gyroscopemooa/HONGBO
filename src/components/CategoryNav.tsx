@@ -102,6 +102,10 @@ function NavInner() {
           새 이야기
           {underline(pathname.startsWith("/talk"))}
         </Link>
+        <Link href="/play" className={linkCls(pathname.startsWith("/play"))} aria-current={pathname.startsWith("/play") ? "page" : undefined}>
+          <span className="font-extrabold text-[#24594e]">놀러가자</span>
+          {underline(pathname.startsWith("/play"))}
+        </Link>
         <div className="flex w-max shrink-0 items-center xl:hidden">
           {CATEGORIES.map((c) => {
             const active = activeCat === c.slug;

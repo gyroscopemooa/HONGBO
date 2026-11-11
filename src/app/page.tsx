@@ -139,6 +139,12 @@ export default async function HomePage() {
       </div>
       <CategoryTiles />
       <div className="wrap pb-5"><CommunityLatest limit={2} /></div>
+      <div className="wrap my-5">
+        <Link href="/play" className="flex items-center justify-between gap-4 rounded-2xl border border-[#dce5d4] bg-[#eef3e7] px-5 py-5 sm:px-7">
+          <div><span className="text-xs font-bold text-[#61785c]">더홍보의 새로운 나들이 공간</span><h2 className="mt-1 text-xl font-black text-[#24594e]">잘 쉬고, 잘 놀고. 우리, 놀러가자.</h2><p className="mt-1 text-sm text-[#61705a]">데이트 · 가족 나들이 · 축제 · 테마파크 · 숙소</p></div>
+          <span className="shrink-0 text-2xl text-[#24594e]" aria-hidden>↗</span>
+        </Link>
+      </div>
 
       <Carousel title="오늘의 인기 홍보" icon={<Flame className="text-brand" size={22} fill="currentColor" aria-hidden />} moreHref="/posts?sort=popular">
         {popular.slice(0, 12).map((p, i) => (
