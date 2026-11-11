@@ -53,3 +53,21 @@ assert.equal(playFestivalMonths([festival],"2026-11-07",true).length,0);
 assert.equal(playFestivalMonths([festival],"2026-11-08",true).length,1);
 assert.equal(playCountdown(near,koreanDay(new Date("2026-12-10T15:00:00Z"))),"D-DAY · 오늘 시작");
 console.log("Play calendar: D-8, start/end boundaries, single-day archive, immutable proximity sorting, month/year rollover passed.");
+import { PLAY_FESTIVALS } from "../src/data/play-festivals";
+import { playPhoto } from "../src/data/play-photos";
+import { existsSync } from "node:fs";
+assert.equal(PLAY_FESTIVALS.length,16);
+assert.equal(PLAY_FESTIVALS.filter(p=>p.schedulePending).length,8);
+for (const p of PLAY_FESTIVALS) {
+  const photo=playPhoto(p.slug);
+  assert(photo && existsSync(`public${photo.src}`),p.slug);
+  assert(photo.label && photo.caption);
+  if(p.schedulePending) {
+    assert.equal(playCountdown(p,"2026-11-11"),"일정 확인 중");
+    assert.equal(playFestivalMonths([p],"2026-11-11").length,0);
+    assert.equal(playFestivalMonths([p],"2027-03-01",true).length,0);
+    assert(playPeriod(p).includes("미확인"));
+  }
+}
+assert.equal(playCountdown(PLAY_FESTIVALS.find(p=>p.slug==='gstar-2026')!,"2026-11-11"),"D-8");
+console.log("Festival catalog: 16 additions have local photos; 8 pending schedules never produce D-day or confirmed months.");
