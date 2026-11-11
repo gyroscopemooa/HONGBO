@@ -1,3 +1,4 @@
+import { PLAY_VISIT_DETAILS } from "./play-visit-details";
 import { EMPTY_PLAY_CONDITIONS, type PlayConditions } from "@/lib/play-conditions";
 import type { PlayPlace } from "@/lib/play";
 const subtypes:Record<string,string>={
@@ -18,4 +19,4 @@ const known:Record<string,Partial<PlayConditions>>={
  'christmas-busan-2026':{cost:'paid',visit:'ticket',exceptions:'목~일 및 12월 21~25일 운영 안내 확인. 전체 기간 매일 운영하는 행사 아님.'},
  'korean-sool-2026':{eligibility:'주류 시음의 연령 기준·신분증 지참 여부 확인',preparation:'신분증·이동 교통편 확인',exceptions:'음주 후 운전 금지'},
 };
-export function withPlayConditions(p:PlayPlace):PlayPlace{return {...p,conditions:{...EMPTY_PLAY_CONDITIONS,kind:p.kind,subtype:subtypes[p.slug]??'',notice:p.kind==='축제·행사'?'festival':'visit',costDetails:p.price,...known[p.slug],...p.conditions}};}
+export function withPlayConditions(p:PlayPlace):PlayPlace{return {...p,conditions:{...EMPTY_PLAY_CONDITIONS,kind:p.kind,subtype:subtypes[p.slug]??'',notice:p.kind==='축제·행사'?'festival':'visit',costDetails:p.price,outfit:/바다|해변|불꽃|해맞이/.test(subtypes[p.slug]??p.title)?"복장 추천: 바람을 막는 겉옷과 미끄럽지 않은 운동화를 권장합니다. 야간에는 보온용 옷을 더 챙기세요.":"복장 추천: 걷기 편한 신발과 겹쳐 입을 수 있는 옷을 권장합니다. 실내외 기온 차이에 맞춰 겉옷을 조절하세요.",...known[p.slug],...p.conditions,...PLAY_VISIT_DETAILS[p.slug]}};}

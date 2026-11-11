@@ -17,6 +17,7 @@ export interface PlayConditions {
  kind:PlayKind; subtype:string; notice:keyof typeof PLAY_NOTICE;
  cost:keyof typeof PLAY_COST; costDetails:string; visit:keyof typeof PLAY_VISIT;
  solo:keyof typeof PLAY_SOLO; minPeople?:number; maxPeople?:number;
+ extraCosts?:string; transport?:string; parking?:string; outfit?:string; weatherNotice?:string; operatingHours?:string;
  eligibility:string; preparation:string; exceptions:string; benefitConditions:string;
 }
 export const EMPTY_PLAY_CONDITIONS:PlayConditions={kind:"명소·산책",subtype:"",notice:"visit",cost:"unknown",costDetails:"",visit:"unknown",solo:"unknown",eligibility:"",preparation:"",exceptions:"",benefitConditions:""};

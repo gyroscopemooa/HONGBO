@@ -1,3 +1,4 @@
+import { PlayVisitGuide } from "@/components/PlayVisitGuide";
 
 import { PlayConditionsSummary } from "@/components/PlayConditionsSummary";
 import type { Metadata } from "next";
@@ -165,7 +166,7 @@ export default async function PostDetailPage({ params }: Props) {
             <h1 className="mt-3 text-[22px] font-black leading-[1.3] tracking-[-0.04em] sm:text-[24px]">{post.title}</h1>
             <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{post.shortDescription}</p>
 
-            {post.tags.includes("놀러가자") && <PlayConditionsSummary conditions={post.extra.play} price={post.price}/>}
+            {post.tags.includes("놀러가자") && <><PlayConditionsSummary conditions={post.extra.play} price={post.price}/><PlayVisitGuide conditions={post.extra.play} address={post.address} region={post.region} title={post.title}/></>}
             {post.extra.exclusive && (
               <div className="mt-4 overflow-hidden rounded-xl bg-gradient-to-br from-[#ffe49a] via-[#f0b429] to-[#c9830a] p-[2px] shadow-[0_6px_20px_-6px_rgba(201,131,10,0.6)]">
               <div className="rounded-[10px] bg-gradient-to-b from-[#fffdf6] to-[#fff4d6] p-3.5">
