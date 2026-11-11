@@ -7,7 +7,7 @@
 - `/play/share`: 기존 계정으로 장소·소식을 공개 등록. 기존 서버 액션의 차단 계정·URL 검증·중복·속도 제한·이미지 업로드를 그대로 사용. 외부 SNS 홍보에 자동 동의하지 않는다.
 - `/play/shared`: 정확히 `놀러가자` 태그를 가진 공개·미만료·비시드 글을 DB에서 검색/지역 필터/페이지 이동. 기존 내 홍보에서 수정·삭제하며, 태그를 삭제하면 이 섹션에서도 제외된다. 기존 관리자 게시글 관리와 신고 기능 적용.
 
-편집 데이터는 `src/data/play.ts`에서 관리한다. 할인율·가짜 후기·방문 수를 만들지 않으며 공식 사이트에서 상품별 요금과 조건을 확인하도록 안내한다. 현재 편집 장소 7곳 모두 Wikimedia Commons의 실제 자료사진을 사용하며 하단에 사진별 저자·원문·라이선스(CC BY-SA 4.0/3.0 또는 CC0)를 표시한다. 호텔은 백화점과 호텔 외관, 축제는 과거 자료임을 별도 명시한다. 신규 장소에 사진이 없으면 SVG 일러스트로 대체한다. 사진은 실시간 모습이 아니다. 이미지 출처 기록은 public/play/ATTRIBUTION.md에 있다.
+편집 데이터는 `src/data/play.ts`에서 관리한다. 할인율·가짜 후기·방문 수를 만들지 않으며 공식 사이트에서 상품별 요금과 조건을 확인하도록 안내한다. 현재 편집 장소 8곳 모두 Wikimedia Commons의 실제 자료사진을 사용하며 하단에 사진별 저자·원문·라이선스(CC BY-SA 4.0/3.0 또는 CC0)를 표시한다. 호텔은 백화점과 호텔 외관, 축제는 과거 자료임을 별도 명시한다. 신규 장소에 사진이 없으면 SVG 일러스트로 대체한다. 사진은 실시간 모습이 아니다. 이미지 출처 기록은 public/play/ATTRIBUTION.md에 있다.
 
 편집 축제의 시작일·종료일은 한국 시간 날짜로 비교하며 종료일 당일까지 유효하다. 종료 행사는 기본 탐색에서 숨기고 `지난 행사도 보기`에서 확인한다. 회원 소식의 자유 형식 행사 기간은 자동 판독하지 않는다. 회원 작성 안내에 종료 후 수정·내림을 명시한다.
 
@@ -20,3 +20,12 @@
 - 편집 카드·상세·디자인 샘플에 요일을 포함한 일정 및 시작일 ~ 종료일을 표시한다. 날짜가 없는 장소는 상시 장소 안내와 방문일 운영 확인으로 구분한다.
 - 회원 공유 폼의 날짜는 기존 extra.notes의 `일정·기간` 항목에 저장하고 공유 목록 카드에 표시한다. 기존 수정 화면에서도 보존·수정할 수 있다. 회원 기간은 작성자 안내이며 자동 행사 상태 판정은 하지 않는다.
 - `/play/design`에 실제 장소 사진을 사용한 가로 배너 2개, 블루/화이트 카드, 실제 부산불꽃축제 날짜 예시를 제공한다. 배너는 내부 상세 안내로 연결되며 유료 광고나 확정 할인으로 표시하지 않는다.
+
+
+## Festival calendar
+- `/play#festivals`: ongoing first (nearest ending), upcoming by ascending start date with D-N / D-DAY; dated cards in the explorer use the same ordering.
+- `/play/archive`: ended festivals only, grouped by year/month with latest ended first. Original detail URLs and records are retained; no DB status mutation or scheduled job.
+- Monthly sections cover every month a festival overlaps. Active cross-year events appear in the current month and later overlap months. No hardcoded December layout.
+- Dates use Asia/Seoul, inclusive end dates, and a missing end means a one-day event. Client clock updates at Korean midnight and on focus/visibility return; initial server day avoids hydration differences.
+- Official Seoul Lantern Festival dates checked 2026-11-11: 2026-12-11 through 2027-01-31; official source stored with guide, photo is explicitly archival 2019.
+- Calendar classification applies to editorial festival guides. Member promotion posts retain the separate shared feed and existing publication/expiry rules.

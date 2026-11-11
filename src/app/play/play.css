@@ -99,3 +99,5 @@
 @media(prefers-reduced-motion:reduce){.play-card{transition:none}
 .play-card:hover{transform:none}
 }
+
+.play-month{scroll-margin-top:95px}.play-chips a[aria-current=page]{background:#1762e8;color:white!important;border-color:#1762e8}

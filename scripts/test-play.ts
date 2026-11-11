@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PLAY_PLACES } from "../src/data/play";
-import { filterPlayPlaces, koreanDay, playStatus, playPeriod, validPlayDate, PLAY_PERIOD_NOTE } from "../src/lib/play";
+import { filterPlayPlaces, koreanDay, playStatus, playPeriod, validPlayDate, PLAY_PERIOD_NOTE, playCountdown, sortPlayPlaces, playFestivalMonths } from "../src/lib/play";
 import { parsePostInput } from "../src/lib/validation";
 
 const festival = PLAY_PLACES.find(p=>p.slug==="busan-fireworks-2026")!;
@@ -30,3 +30,26 @@ assert(withPeriod.ok);
 assert.equal(withPeriod.data.extra.notes?.[0].body, "2026.11.07 (토) ~ 2026.11.08 (일)");
 assert(!parsePostInput({...input,extra:{businessUrl:"javascript:alert(1)"}}).ok);
 console.log("Play: Korean event boundaries, filters, content integrity and share validation passed.");
+
+const day = "2026-12-03";
+const near = {...festival,slug:"near",startDate:"2026-12-11",endDate:"2026-12-12"};
+const far = {...festival,slug:"far",startDate:"2027-01-03",endDate:"2027-01-05"};
+const running = {...festival,slug:"running",startDate:"2026-11-28",endDate:"2026-12-04"};
+const spanning = {...festival,slug:"spanning",startDate:"2026-12-11",endDate:"2027-01-31"};
+assert.equal(playCountdown(near,day),"D-8");
+assert.equal(playCountdown(near,"2026-12-11"),"D-DAY · 오늘 시작");
+assert.equal(playCountdown(near,"2026-12-12"),"진행 중");
+assert.equal(playCountdown(near,"2026-12-13"),"지난 축제");
+assert.equal(playStatus({...near,endDate:undefined},"2026-12-12"),"종료");
+const unordered=[far,festival,near,running];
+assert.deepEqual(sortPlayPlaces(unordered,day).map(p=>p.slug),["running","near","far",festival.slug]);
+assert.equal(unordered[0].slug,"far");
+assert.deepEqual(playFestivalMonths([spanning],day).map(g=>g.month),["2026-12","2027-01"]);
+assert.deepEqual(playFestivalMonths([spanning],"2027-01-01").map(g=>g.month),["2027-01"]);
+assert.equal(playFestivalMonths([spanning],"2027-02-01").length,0);
+assert.deepEqual(playFestivalMonths([spanning],"2027-02-01",true).map(g=>g.month),["2027-01","2026-12"]);
+assert.equal(playFestivalMonths([{...near,startDate:"2026-02-30"}],day).length,0);
+assert.equal(playFestivalMonths([festival],"2026-11-07",true).length,0);
+assert.equal(playFestivalMonths([festival],"2026-11-08",true).length,1);
+assert.equal(playCountdown(near,koreanDay(new Date("2026-12-10T15:00:00Z"))),"D-DAY · 오늘 시작");
+console.log("Play calendar: D-8, start/end boundaries, single-day archive, immutable proximity sorting, month/year rollover passed.");
