@@ -117,12 +117,14 @@ test('every post has an opener and finishes with a relevant question, after hash
   assert.ok(unknown.endsWith('?'));
 });
 
-test('use the advertised HTTPS destination and safely fall back for invalid URLs', () => {
+test('always link to the registered post ID, never the customer external URL', () => {
   const direct = 'https://play.google.com/store/apps/details?id=com.healthyroutine.app';
-  assert.ok(formatPromo({ ...original, external_url: direct }, site).includes(direct));
-  for (const external_url of ['javascript:alert(1)', 'https://user:password@example.com', 'invalid', 'https://example.com/' + 'x'.repeat(500)]) {
-    const copy = formatPromo({ ...original, external_url }, site);
-    assert.ok(copy.includes(`${site}/post/123`));
-    assert.ok(copy.endsWith('?'));
+  for (const post_id of [78, 123, '901']) {
+    for (const external_url of [direct, undefined, '', 'javascript:alert(1)', 'https://user:password@example.com', 'invalid', 'https://example.com/' + 'x'.repeat(500)]) {
+      const copy = formatPromo({ ...original, post_id, external_url }, site + '/');
+      assert.ok(copy.includes(`원문 보기: ${site}/post/${post_id}`));
+      assert.deepEqual(copy.match(/https?:\/\/[^\s]+/g), [`${site}/post/${post_id}`]);
+      assert.ok(copy.endsWith('?'));
+    }
   }
 });

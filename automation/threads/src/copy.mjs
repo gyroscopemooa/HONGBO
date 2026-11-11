@@ -47,14 +47,6 @@ function clipped(value, max) {
 function joinUrl(base, postId) {
   return base.replace(/\/+$/, "") + "/post/" + encodeURIComponent(String(postId));
 }
-function destination(post, siteUrl) {
-  try {
-    const url = new URL(post.external_url);
-    if (url.protocol === 'https:' && !url.username && !url.password && weightedLength(url.href) <= 120) return url.href;
-  } catch { /* Missing or invalid destination falls back to the public source. */ }
-  return joinUrl(siteUrl, post.post_id);
-}
-
 // A warm, slightly cheeky official account voice. Factual promotion always goes first.
 // Select by post ID so retrying does not unexpectedly change the copy.
 const OPENERS = [
@@ -134,7 +126,8 @@ const SIGNOFFS = [
 
 export function formatPromo(post, siteUrl, suggestedBody = "", context = {}) {
   const id = Number(post.post_id) || 0;
-  const link = destination(post, siteUrl);
+  // Always send readers to this registered post, not the customer's external site.
+  const link = joinUrl(siteUrl, post.post_id);
   // Freshness requires an explicit current source timestamp, never a bump timestamp.
   const published = Date.parse(post.published_at ?? '');
   const now = context.now ?? Date.now();
@@ -146,7 +139,7 @@ export function formatPromo(post, siteUrl, suggestedBody = "", context = {}) {
   const pool = fresh ? (event ? [...FRESH_OPENERS, ...EVENT_OPENERS] : FRESH_OPENERS) : OPENERS;
   const opener = pool[Math.abs(id) % pool.length] + "\n\n";
   const question = "\n\n" + promoQuestion(post);
-  const closer = "\n\n" + (link === joinUrl(siteUrl, post.post_id) ? '원문 보기: ' : '자세히 보기: ') + link +
+  const closer = "\n\n" + '원문 보기: ' + link +
     "\n\n" + SIGNOFFS[Math.abs(id) % SIGNOFFS.length] +
     "\n무료 홍보는 더홍보에서!";
   const titleRoom = Math.min(120, Math.max(0, MAX_THREADS_CHARS - weightedLength(opener + closer + question) - 64));

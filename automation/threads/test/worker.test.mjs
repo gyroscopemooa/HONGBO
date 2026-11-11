@@ -12,7 +12,7 @@ async function scenario(options={}) {
     if (options.fail && url.includes(options.fail)) throw new Error('secret-threads secret-db');
     let data;
     if (url.includes('/me?')) data={id:'42',username:options.wrong?'wrong':'iamthehongbo'};
-    else if (url.includes('/rest/v1/posts?')) data=[{published_at:'2026-01-01T00:00:00Z'}];
+    else if (url.includes('/rest/v1/posts?')) data=[{published_at:'2026-01-01T00:00:00Z', external_url:'https://customer.example/source'}];
     else if (url.endsWith('threads_claim_one')) data=[{...post,...options.post}];
     else if (url.endsWith('threads_prepare_publish')) data=options.ineligible?false:true;
     else if (url.endsWith('threads_complete')) data=true;
@@ -71,4 +71,13 @@ test('missing or expired token expiry blocks all network calls',async()=>{
 test('token health and sensitive patterns',()=>{
   assert.equal(tokenHealth({THREADS_TOKEN_EXPIRES_AT:new Date(Date.now()+86400000).toISOString()}),'expiring');
   for (const description of ['hello@example.com','계좌 123','900101-1234567','０１０－１２３４－５６７８']) assert.ok(hasSensitiveContent({description}));
+});
+
+test('worker draft and saved preview use the actual post number with an external customer URL present', async () => {
+  const {result, calls} = await scenario({post:{post_id:78, external_url:'https://customer.example/claimed'}});
+  assert.equal(result, 'published');
+  const draft = calls.find(c => c.url.endsWith('/threads')).body.text;
+  assert.deepEqual(draft.match(/https?:\/\/[^\s]+/g), ['https://www.thehongbo.com/post/78']);
+  assert.equal(calls.find(c => c.url.endsWith('threads_prepare_publish')).body.p_draft, draft);
+  assert.equal(new URL(calls.find(c => c.url.includes('/rest/v1/posts?')).url).searchParams.get('select'), 'published_at');
 });

@@ -172,3 +172,10 @@ Meta 개발 문서 본문은 이번 환경에서 HTTP 429로 차단됐다. 실�
 
 - 관리자 미리보기에도 published_at/external_url을 전달해 실제 게시 템플릿과 같은 최신 글 판단 및 목적지 선택을 사용한다. 기존 승인 상태와 과거 처리 내역은 변경하지 않는다.
 - 사이트 Worker hongbo에도 새 문구를 배포했다: f665625c-fc2d-4bcf-b7c6-b51abab79665. typecheck, 변경 페이지 ESLint, Next/OpenNext 빌드 통과. 전체 lint는 기존 tmp 및 하위 .wrangler의 임시 파일 오류로 실패했다.
+
+## 등록된 더홍보 글로 연결 (2026-11-12)
+
+- 최신 사용자 요청에 따라 자동 홍보 링크는 고객 external_url 대신 항상 `https://www.thehongbo.com/post/{post_id}`를 사용한다. 위 2026-11-08의 외부 링크 우선 기준을 대체한다. 예: 등록 글 78번은 `/post/78`로 연결한다.
+- Worker의 원문 추가 조회는 최신 문구 판단용 published_at만 읽는다. 관리자 미리보기는 같은 formatter를 사용한다. 기존 글의 external_url 데이터, 승인/동의/중복 방지 상태와 이미 공개된 Threads 게시물은 변경하지 않는다.
+- 검증: 전체 Threads 테스트 38개, typecheck, 변경 JS 파일 ESLint, Next production build, Worker dry-run 통과. 모든 게시 요청 테스트는 네트워크 mock으로만 수행했다.
+- 사이트 `hongbo`는 GitHub main push에 연결된 Cloudflare Workers Builds로 자동 배포된다. 별도 자동발행 Worker `hongbo-threads-promo`의 Git 연결은 확인되지 않았다. 사이트 빌드 성공을 자동발행 Worker 반영 완료로 간주하지 않는다. 별도 Worker 배포 시 현재 vars/cron을 먼저 확인하고 보존해야 한다.
