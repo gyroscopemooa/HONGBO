@@ -188,6 +188,7 @@ function matches(p: Post, q: ListQuery, now: number): boolean {
   }
   if (q.category && p.category !== q.category) return false;
   if (q.region && p.region !== q.region) return false;
+  if (q.tag && !p.tags.includes(q.tag)) return false;
   if (q.hasRegion && !p.region) return false;
   if (q.benefit) {
     const b = p.extra?.benefits ?? [];

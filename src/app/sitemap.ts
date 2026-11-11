@@ -3,6 +3,7 @@ import { BENEFIT_PAGES, CATEGORIES } from "@/lib/constants";
 import { store } from "@/lib/store";
 import { siteUrl } from "@/lib/utils";
 import { listCommunity } from "@/lib/community-store";
+import { PLAY_PLACES } from "@/data/play";
 
 // 새 홍보글이 등록되면 바로 반영되도록 요청 시점에 생성합니다.
 export const dynamic = "force-dynamic";
@@ -15,6 +16,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/`, lastModified: now, changeFrequency: "hourly", priority: 1 },
     { url: `${base}/posts`, lastModified: now, changeFrequency: "hourly", priority: 0.9 },
     { url: `${base}/community`, changeFrequency: "daily", priority: 0.8 },
+    { url: `${base}/play`, changeFrequency: "weekly", priority: 0.8 },
+    ...PLAY_PLACES.map(p => ({ url: `${base}/play/${p.slug}`, lastModified: new Date(`${p.checkedAt}T00:00:00+09:00`), changeFrequency: "weekly" as const, priority: 0.7 })),
     { url: `${base}/reviews`, changeFrequency: "daily", priority: 0.7 },
     { url: `${base}/region`, lastModified: now, changeFrequency: "daily", priority: 0.6 },
     ...CATEGORIES.map((c) => ({

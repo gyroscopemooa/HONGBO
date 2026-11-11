@@ -8,6 +8,8 @@ export interface ListQuery {
   /** 제목/한 줄 소개/상세 설명/태그 검색 */
   q?: string;
   region?: string;
+  /** Exact tag match for opt-in topic hubs. */
+  tag?: string;
   sort?: ListSort;
   page?: number;
   pageSize?: number;
