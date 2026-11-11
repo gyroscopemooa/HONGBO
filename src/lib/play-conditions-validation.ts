@@ -5,6 +5,7 @@ export const playConditionsSchema=z.object({
  kind:z.enum(PLAY_CATEGORIES.map(c=>c.name)),subtype:z.string().max(40).default(""),notice:z.enum(Object.keys(PLAY_NOTICE) as (keyof typeof PLAY_NOTICE)[]),
  cost:z.enum(Object.keys(PLAY_COST) as (keyof typeof PLAY_COST)[]),costDetails:text,visit:z.enum(Object.keys(PLAY_VISIT) as (keyof typeof PLAY_VISIT)[]),solo:z.enum(Object.keys(PLAY_SOLO) as (keyof typeof PLAY_SOLO)[]),
  minPeople:z.number().int().min(1).max(100000).optional(),maxPeople:z.number().int().min(1).max(100000).optional(),
+ parkingName:z.string().trim().max(300).optional(),parkingAddress:z.string().trim().max(300).optional(),parkingAccess:z.string().trim().max(300).optional(),parkingAlternative:z.string().trim().max(300).optional(),
  extraCosts:z.string().trim().max(300).optional(),transport:z.string().trim().max(300).optional(),parking:z.string().trim().max(300).optional(),outfit:z.string().trim().max(300).optional(),weatherNotice:z.string().trim().max(300).optional(),operatingHours:z.string().trim().max(300).optional(),
  eligibility:text,preparation:text,exceptions:text,benefitConditions:text,
 }).superRefine((c,ctx)=>{
