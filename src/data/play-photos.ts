@@ -1,6 +1,7 @@
 import { PLAY_LATEST_PHOTOS } from "./play-latest-photos";
 import { PLAY_TOURISM_PHOTOS } from "./play-tourism-photos";
 import { PLAY_FESTIVAL_PHOTOS } from "./play-festival-photos";
+import { PLAY_SPOT_PHOTOS } from "./play-spot-photos";
 export type PlayPhoto = { src: string; alt: string; author: string; title: string; captured: string; source: string; width: number; height: number; license?: string; licenseUrl?: string; label?: string; caption?: string; fit?: "contain"; creditNote?: string };
 const sa4 = { license: "CC BY-SA 4.0", licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/" };
 const sa3 = { license: "CC BY-SA 3.0", licenseUrl: "https://creativecommons.org/licenses/by-sa/3.0/" };
@@ -9,6 +10,7 @@ export const PLAY_PHOTOS: Record<string, PlayPhoto> = {
   ...PLAY_FESTIVAL_PHOTOS,
   ...PLAY_LATEST_PHOTOS,
   ...PLAY_TOURISM_PHOTOS,
+  ...PLAY_SPOT_PHOTOS,
   "seoul-lantern-2026": {
     ...sa4, width: 1280, height: 960, src: "/play/seoul-lantern.jpg", alt: "청계천 물 위에 빛나는 서울빛초롱축제의 푸른 조형물",
     author: "Ethan Doyle White", title: "Blue Lanterns at the 2019 Seoul Lantern Festival", captured: "2019-11-06",

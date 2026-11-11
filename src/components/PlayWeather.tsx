@@ -89,6 +89,23 @@ export function PlayWeather({ lat, lon, placeName, defaultDate }: { lat: number;
     });
   }, [data]);
 
+  const advice = useMemo(() => {
+    const mins = slots.map(x => x.min).filter((v): v is number => v != null);
+    const maxs = slots.map(x => x.max).filter((v): v is number => v != null);
+    if (!mins.length || !maxs.length) return null;
+    const lo = Math.min(...mins), hi = Math.max(...maxs);
+    const rain = Math.max(0, ...slots.map(x => x.rain ?? 0));
+    const codes = slots.map(x => x.code).filter((v): v is number => v != null);
+    const snow = codes.some(c => c >= 71 && c <= 77) || codes.some(c => c === 85 || c === 86);
+    const wear = hi <= 0 ? "패딩·목도리·장갑·핫팩" : hi <= 8 ? "두꺼운 패딩이나 코트에 목도리·장갑" : hi <= 15 ? "코트나 두꺼운 겉옷에 니트" : hi <= 21 ? "가벼운 겉옷과 긴팔" : hi <= 27 ? "얇은 긴팔이나 반팔에 가벼운 겉옷" : "통기성 좋은 반팔과 모자";
+    const items: string[] = [];
+    if (hi - lo >= 10) items.push("아침저녁과 낮 기온차가 커서 벗고 입기 쉬운 겹쳐 입기");
+    if (snow) items.push("눈 예보가 있어 미끄럼 방지 신발과 방수 장갑");
+    else if (rain >= 40) items.push(`강수확률 ${rain}%라 우산이나 우비, 방수 신발`);
+    if (hi >= 28) items.push("자외선 차단제·물·휴대용 선풍기");
+    if (lo <= 3) items.push("핫팩과 따뜻한 음료");
+    return { text: `${lo}~${hi}° 기준으로 ${wear}을(를) 추천해요.`, items };
+  }, [slots]);
   const saturday = addDays(today, ((6 - new Date(`${today}T12:00:00+09:00`).getDay() + 7) % 7) || 7);
   const quick: [string, string][] = [["오늘", today], ["내일", addDays(today, 1)], ["이번 토요일", saturday]];
   if (defaultDate && defaultDate >= today) quick.push(["행사 시작일", defaultDate]);
@@ -123,6 +140,13 @@ export function PlayWeather({ lat, lon, placeName, defaultDate }: { lat: number;
               </div>
             ))}
           </div>
+          {advice && (
+            <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/60 p-3 text-sm leading-6">
+              <strong className="text-blue-900">{date} 옷차림·준비물{data.mode === "climate" ? " (평균 기온 참고)" : ""}</strong>
+              <p className="mt-1">{advice.text}</p>
+              {advice.items.length > 0 && <ul className="mt-1 list-disc pl-5">{advice.items.map(i => <li key={i}>{i}</li>)}</ul>}
+            </div>
+          )}
           <p className="mt-3 text-xs leading-5 text-slate-600">
             {data.mode === "forecast" ? `${date} 시간대별 예보입니다(Open-Meteo). 예보는 바뀔 수 있으니 출발 전에 다시 확인하세요.` : "시간대별 예보는 오늘부터 약 16일까지만 제공돼요. 그 뒤 날짜는 최근 5년 같은 날짜의 평균 기온과 비가 온 해의 비율을 참고용으로 보여드리며, 실제 예보가 아닙니다."}
           </p>
