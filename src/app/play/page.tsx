@@ -1,3 +1,5 @@
+import { PLAY_LATEST_FESTIVALS } from "@/data/play-festivals-latest";
+import { PlayFreshFestivals } from "@/components/PlayFreshFestivals";
 
 import { PlayConditionsSummary } from "@/components/PlayConditionsSummary";
 import { PLAY_REGIONS } from "@/data/play-regions";
@@ -29,8 +31,10 @@ export default async function PlayPage() {
     <PlayJsonLd data={playListSchema("국내 여행지·축제 안내", "/play", PLAY_PLACES)}/>
     <section className="play-hero"><div className="play-hero-copy"><span className="play-eyebrow">GOOD DAYS, CLOSE TO YOU</span><h1>잘 쉬고, 잘 놀고.<br/>우리, 놀러가자<span className="text-[#1762e8]">.</span></h1><p>둘이 떠나는 데이트부터 온 가족의 주말까지.<br/>멀리 가지 않아도, 좋은 하루는 시작되니까.</p><div className="play-hero-links"><a href="#explore" className="play-button">갈 만한 곳 찾아보기 ↗</a><a href="#shared" className="play-button secondary">함께 나누는 소식</a></div></div><PlayVisual place={PLAY_PLACES.find(p=>p.slug==="haeundae")!} eager className="play-hero-art"/></section>
     <div className="flex flex-wrap gap-x-7 gap-y-2 border-b border-[#d9e6f8] py-5 text-xs font-semibold text-[#59769a]"><span>✳ 국내부터 차근차근</span><span>↗ 공식 안내로 한 번 더 확인</span><span>♡ 작은 가게부터 큰 여행지까지</span></div>
-    <nav className="play-chips" aria-label="놀러가자 바로가기"><a className="play-chip" href="#explore">지역·종류·이용 조건</a><a className="play-chip" href="#festivals">축제 달력</a><a className="play-chip" href="#regional-guides">지역별 여행</a></nav>
+    <nav className="play-chips" aria-label="놀러가자 바로가기"><a className="play-chip" href="#explore">지역·종류·이용 조건</a><a className="play-chip" href="#new-festivals">새로 더한 축제</a><a className="play-chip" href="#festivals">축제 달력</a><Link className="play-chip" href="/play/dates">커플 데이트 추천</Link><a className="play-chip" href="#regional-guides">지역별 여행</a></nav>
     <PlayBanner/>
+    <PlayFreshFestivals places={PLAY_PLACES.filter(p=>PLAY_LATEST_FESTIVALS.some(f=>f.slug===p.slug))} initialDay={koreanDay()}/>
+    <section className="play-invite" id="date-recommendations"><div><p className="play-eyebrow mb-2">A DAY FOR TWO</p><h2>커플 데이트, 오늘은 어디로?</h2><p className="play-muted">울산·부산·경주·포항부터 서울·대구까지.<br/>산책·야경·체험 명소 8곳과 둘이 즐기는 코스를 골라보세요.</p></div><Link href="/play/dates" className="play-button shrink-0">데이트 명소 추천 보기 →</Link></section>
     <PlayExplorer places={PLAY_PLACES} day={koreanDay()}/>
     <section className="play-section" id="regional-guides"><div className="play-heading"><div><p className="play-eyebrow">NEARBY GETAWAYS</p><h2 className="mt-2">지역별로 찾아보는 국내 여행</h2></div></div><div className="play-grid">{PLAY_REGIONS.map(r=><Link key={r.slug} href={`/play/region/${r.slug}`} className="play-card"><div className="play-card-art"><PlayVisual place={PLAY_PLACES.find(p=>p.slug===r.hero)!}/></div><div className="play-card-body"><h3>{r.name} 가볼 만한 곳 →</h3><p>{r.description}</p></div></Link>)}</div></section>
     <section className="play-section" aria-label="새로 더한 여행지"><div className="play-heading"><h2>새로 더한 여행지</h2></div><p className="play-muted mb-5">한국관광공사 대한민국 구석구석 안내를 참고해 정리했습니다. 장소별 사진과 방문 팁, 원문 출처를 함께 확인하세요.</p><div className="play-grid">{PLAY_PLACES.filter(p=>PLAY_TOURISM.some(t=>t.slug===p.slug)).map(p=><Link className="play-card" key={p.slug} href={`/play/${p.slug}`}><div className="play-card-art"><PlayVisual place={p}/></div><div className="play-card-body"><span className="play-eyebrow">{p.region} · {p.area}</span><h3>{p.title}</h3><p>{p.summary}</p><PlayConditionsSummary conditions={p.conditions} price={p.price} compact/></div></Link>)}</div></section>

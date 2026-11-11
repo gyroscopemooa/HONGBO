@@ -2,7 +2,7 @@ import { PLAY_PLACES } from "@/data/play";
 import { PLAY_REGIONS } from "@/data/play-regions";
 const detailSlugs = new Set(PLAY_PLACES.map(p=>p.slug));
 const regionSlugs = new Set<string>(PLAY_REGIONS.map(r=>r.slug));
-const sections = new Set(["archive","design","share","shared"]);
+const sections = new Set(["archive","design","share","shared","dates"]);
 /** Only editorial routes; member posts and other application routes keep their own routing. */
 export function unknownPlayEditorialPath(pathname: string): boolean {
  const parts=pathname.replace(/\/$/,"").split("/").filter(Boolean);

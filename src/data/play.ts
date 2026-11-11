@@ -1,3 +1,4 @@
+import { PLAY_LATEST_FESTIVALS } from "./play-festivals-latest";
 import { withPlayConditions } from "./play-conditions";
 import { PLAY_TOURISM } from "./play-tourism";
 import { PLAY_FESTIVALS } from "./play-festivals";
@@ -6,6 +7,7 @@ import type { PlayPlace } from "@/lib/play";
 // Editorial guides, not paid listings or live inventory. Recheck sources before changing offers/dates.
 const EDITORIAL_PLACES: PlayPlace[] = [
   ...PLAY_FESTIVALS,
+  ...PLAY_LATEST_FESTIVALS,
   ...PLAY_TOURISM,
   { slug: "seoul-lantern-2026", title: "2026 서울빛초롱축제", region: "서울", area: "청계천 일대", kind: "축제·행사", companions: ["데이트", "아이와", "친구와", "혼자"], summary: "청계천을 따라 빛 조형물을 만나는 겨울밤 산책. 연말부터 새해까지 이어지는 축제입니다.", mood: "빛으로 채우는 겨울밤", art: "fireworks", price: "무료 · 체험별 조건 확인", address: "서울 중구 청계천 청계광장~삼일교", startDate: "2026-12-11", endDate: "2027-01-31", tips: ["공식 안내 기준 매일 18:00~23:00입니다. 방문 전 변경 공지를 확인하세요.", "겨울 야외 행사이므로 방한 용품을 준비하고 혼잡 시 현장 안내를 따라주세요.", "사진은 과거 축제 자료이며 올해 전시 구성과 다를 수 있습니다."], source: "https://korean.visitseoul.net/events/2026SeoulLanternFestival/KOPi0rhml", sourceLabel: "서울관광 공식 서울빛초롱축제 안내", checkedAt: "2026-11-11" },
   { slug: "haeundae", title: "해운대, 바다를 따라 천천히", region: "부산", area: "해운대구", kind: "명소·산책", companions: ["데이트", "아이와", "친구와", "혼자"], summary: "거창한 계획 없이도 좋은 날. 해변을 걷고, 마음에 드는 풍경 앞에서 쉬어가세요.", mood: "바다가 필요한 날", art: "sea", price: "산책 중심 · 주변 시설 별도", address: "부산 해운대구 해운대해수욕장", tips: ["해변 산책과 물놀이는 달라요. 입수 가능 기간과 현장 통제를 따로 확인하세요.", "해변에서 쉬는 시간을 먼저 잡고 주변 식사·카페 일정을 더해보세요.", "바람이 강하거나 비가 오면 실내 일정으로 바꿀 수 있도록 준비하세요."], source: "https://www.haeundae.go.kr/tour/index.do?menuCd=DOM_000000302001002000", sourceLabel: "해운대구청 해수욕장 이용안내", checkedAt: "2026-11-11" },
