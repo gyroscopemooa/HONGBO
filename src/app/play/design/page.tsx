@@ -39,9 +39,14 @@ export default function PlayDesignSample() {
     </div>
     <section className="mt-10 rounded-2xl border border-[#d9e6f8] bg-white p-6">
       <p className="play-eyebrow">DATED EVENT</p><h2 className="mt-3 text-2xl font-black">기간이 있는 축제는 이렇게 보여요</h2>
+      <Link href={`/play/${festival.slug}`} className="mt-5 block overflow-hidden rounded-xl h-56"><PlayVisual place={festival}/></Link>
+      <p className="play-muted mt-2 !text-xs">과거 부산불꽃축제 자료사진 · 2026년 행사 현장 사진이 아닙니다.</p>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-5 rounded-xl bg-[#edf4ff] p-5"><div><h3 className="text-lg font-bold">{festival.title}</h3><p className="play-period"><CalendarDays size={16} aria-hidden/>{playPeriod(festival)}</p><span className={`play-status ${playStatus(festival) === "종료" ? "ended" : ""}`}>{playStatus(festival)}</span></div><Link className="play-button secondary" href={`/play/${festival.slug}`}>행사 기록 보기 →</Link></div>
       <p className="play-muted mt-4">공식 발표된 실제 날짜를 사용했습니다. 여러 날 열리는 행사는 시작일 ~ 종료일로 표시하며, 지난 행사를 진행 중으로 안내하지 않습니다.</p>
     </section>
+    <section className="play-section"><div className="play-heading"><h2>다른 장소도 사진으로 둘러보세요</h2></div><div className="play-grid">
+      {PLAY_PLACES.filter(p => ["huinnyeoul", "lotte-world", "eworld", "busan-hotel"].includes(p.slug)).map(place => <Link key={place.slug} href={`/play/${place.slug}`} className="play-card"><div className="play-card-art"><PlayVisual place={place}/></div><div className="play-card-body"><span className="play-muted">{place.region} · {place.kind}</span><h3>{place.title}</h3><p className="play-period"><CalendarDays size={16} aria-hidden/>{playPeriod(place)}</p></div></Link>)}
+    </div></section>
     <Link href="/play" className="play-button mt-6">적용된 놀러가자 보기 →</Link>
   </section>;
 }
