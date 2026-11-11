@@ -101,3 +101,6 @@
 }
 
 .play-month{scroll-margin-top:95px}.play-chips a[aria-current=page]{background:#1762e8;color:white!important;border-color:#1762e8}
+
+.play-detail-art{position:relative}
+.play-photo-label{position:absolute;bottom:10px;left:10px;right:10px;width:fit-content;max-width:calc(100% - 20px);padding:4px 8px;border-radius:6px;background:rgba(9,27,53,.8);color:#fff;font-size:11px;line-height:1.5;pointer-events:none}

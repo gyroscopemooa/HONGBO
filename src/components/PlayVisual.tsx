@@ -5,5 +5,5 @@ import { PlayArt } from "./PlayArt";
 
 export function PlayVisual({ place, className = "", eager = false }: { place: Pick<PlayPlace, "slug" | "art">; className?: string; eager?: boolean }) {
   const photo = playPhoto(place.slug);
-  return photo ? <Image src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} unoptimized loading={eager ? "eager" : "lazy"} className={`play-photo ${className}`}/> : <PlayArt art={place.art} className={className}/>;
+  return photo ? <><Image src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} unoptimized loading={eager ? "eager" : "lazy"} className={`play-photo ${className}`}/>{photo.label && <span className="play-photo-label">{photo.label}</span>}</> : <PlayArt art={place.art} className={className}/>;
 }
