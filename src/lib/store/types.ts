@@ -1,3 +1,4 @@
+import type { PlayConditionFilters } from "../play-conditions";
 import type { CategorySlug } from "../constants";
 import type { Ad, AdCreative, Banner, EventType, Notice, Post, PostInput, PostStatus, Profile, Report } from "../types";
 
@@ -10,6 +11,7 @@ export interface ListQuery {
   region?: string;
   /** Exact tag match for opt-in topic hubs. */
   tag?: string;
+  play?: PlayConditionFilters;
   sort?: ListSort;
   page?: number;
   pageSize?: number;

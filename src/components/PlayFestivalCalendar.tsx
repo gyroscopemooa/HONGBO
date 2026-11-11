@@ -1,5 +1,8 @@
 "use client";
+
+import { PlayConditionsSummary } from "@/components/PlayConditionsSummary";
 import Link from "next/link";
+import { REGIONS } from "@/lib/constants";
 import { useState } from "react";
 import { PlayVisual } from "./PlayVisual";
 import { usePlayDay } from "./usePlayDay";
@@ -7,18 +10,19 @@ import { playCountdown, playFestivalMonths, playMonthLabel, playPeriod, playStat
 
 export function PlayFestivalCalendar({places, initialDay, archived = false}: {places: PlayPlace[]; initialDay: string; archived?: boolean}) {
   const day = usePlayDay(initialDay);
+  const [region, setRegion] = useState("");
   const [nearby, setNearby] = useState(false);
-  const festivals = places.filter(p=>p.kind === "축제·행사" && p.startDate && (!nearby || ["부산","대구","경북","경남","울산"].includes(p.region)));
+  const festivals = places.filter(p=>p.kind === "축제·행사" && p.startDate && (!region || p.region===region) && (!nearby || ["부산","대구","경북","경남","울산"].includes(p.region)));
   const pending = festivals.filter(p=>p.schedulePending);
   const upcoming = sortPlayPlaces(festivals.filter(p=>playStatus(p,day)==="예정"),day);
   const ongoing = sortPlayPlaces(festivals.filter(p=>playStatus(p,day)==="진행 중"),day);
   const months = playFestivalMonths(festivals,day,archived);
   const pastCount = festivals.filter(p=>playStatus(p,day)==="종료").length;
   function card(p: PlayPlace) {
-    return <article className="play-card" key={p.slug} data-festival={p.slug}><Link href={`/play/${p.slug}`} className="play-card-art block"><PlayVisual place={p}/><span className="play-badge">{playCountdown(p,day)}</span></Link><div className="play-card-body"><span className="play-eyebrow !tracking-normal">{p.region} · {p.area}</span><h3><Link href={`/play/${p.slug}`}>{p.title}</Link></h3><p>{p.summary}</p><p className="play-period">{playPeriod(p)}</p><Link href={`/play/${p.slug}`} className="mt-4 inline-block text-sm font-bold">{archived ? "지난 기록 보기" : "축제 자세히 보기"} →</Link></div></article>;
+    return <article className="play-card" key={p.slug} data-festival={p.slug}><Link href={`/play/${p.slug}`} className="play-card-art block"><PlayVisual place={p}/><span className="play-badge">{playCountdown(p,day)}</span></Link><div className="play-card-body"><span className="play-eyebrow !tracking-normal">{p.region} · {p.area}</span><h3><Link href={`/play/${p.slug}`}>{p.title}</Link></h3><p>{p.summary}</p><PlayConditionsSummary conditions={p.conditions} price={p.price} compact/><p className="play-period">{playPeriod(p)}</p><Link href={`/play/${p.slug}`} className="mt-4 inline-block text-sm font-bold">{archived ? "지난 기록 보기" : "축제 자세히 보기"} →</Link></div></article>;
   }
   return <section id="festivals" className="play-section" aria-label="축제 일정">
-    <div className="play-chips mb-4" aria-label="축제 지역 범위"><button type="button" className="play-chip" aria-pressed={!nearby} onClick={()=>setNearby(false)}>전국</button><button type="button" className="play-chip" aria-pressed={nearby} onClick={()=>setNearby(true)}>울산 근처 · 부산·대구·경북·경남</button></div>
+    <div className="play-chips mb-4" aria-label="축제 지역 범위"><button type="button" className="play-chip" aria-pressed={!nearby&&!region} onClick={()=>{setNearby(false);setRegion("");}}>전국</button><button type="button" className="play-chip" aria-pressed={nearby} onClick={()=>{setNearby(true);setRegion("");}}>울산 근처 · 부산·대구·경북·경남</button><label className="min-w-36"><span className="sr-only">축제 지역</span><select aria-label="축제 지역" value={region} onChange={e=>{setRegion(e.target.value);setNearby(false);}}><option value="">전국 지역 선택</option>{REGIONS.map(r=><option key={r}>{r}</option>)}</select></label></div>
     <nav className="play-chips mb-6" aria-label="축제 분류"><Link className="play-button secondary" href="/play#festivals" aria-current={!archived ? "page" : undefined}>다가오는 축제</Link><Link className="play-button secondary" href="/play/archive" aria-current={archived ? "page" : undefined}>지난 축제 ({pastCount})</Link></nav>
     {archived ? <><h1 className="text-3xl font-black">지난 축제 기록</h1><p className="play-muted mt-3">종료된 행사는 기록으로 보관합니다. 다음 회차 일정과 구분해서 확인해주세요.</p></> : <>
       {ongoing.length > 0 && <section className="mb-9" aria-label="진행 중인 축제"><div className="play-heading"><h2>지금 즐길 수 있는 축제</h2><p className="play-muted">종료가 가까운 순</p></div><div className="play-grid">{ongoing.map(card)}</div></section>}
