@@ -1,3 +1,4 @@
+import { PostComments } from "@/components/PostComments";
 import { PlayVisitGuide } from "@/components/PlayVisitGuide";
 
 import { PlayConditionsSummary } from "@/components/PlayConditionsSummary";
@@ -303,6 +304,8 @@ export default async function PostDetailPage({ params }: Props) {
       {publicNow && post.extra.exclusive?.method === "survey" && (post.extra.exclusive.survey?.length ?? 0) > 0 && (
         <SurveyParticipation postId={post.id} questions={post.extra.exclusive.survey!} payout={post.extra.exclusive.payout} />
       )}
+
+      {publicNow && <PostComments postId={post.id} />}
 
       {related.items.length > 0 && (
         <section aria-label="같은 카테고리의 다른 홍보" className="mt-10">
