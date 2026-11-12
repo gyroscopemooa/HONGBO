@@ -39,7 +39,7 @@ export default async function ThreadsAdmin({ searchParams }: { searchParams: Pro
       <Link className={!showExcluded ? "font-bold underline" : "underline"} href="/admin/threads">검토 목록</Link>
       <Link className={showExcluded ? "font-bold underline" : "underline"} href="/admin/threads?excluded=1">비허용·삭제 목록 / 복구</Link>
     </div>
-    <p className="text-xs text-gray-500">승인 전 상세에서 원문·링크 미리보기를 확인하고 ‘검토’에 체크해주세요.</p>
+    <p className="text-xs text-gray-500">‘검토 승인’은 원문·링크 미리보기에 재게시하면 안 되는 개인정보·민감정보가 없음을 확인하고 자동 홍보를 허용하는 버튼입니다.</p>
     <div className="divide-y rounded-lg border">
     {visible.length === 0 && <p className="p-3 text-gray-500">해당 목록에 글이 없습니다.</p>}
     {visible.map(({ post, hash, consent }) => {
@@ -52,8 +52,7 @@ export default async function ThreadsAdmin({ searchParams }: { searchParams: Pro
           <span className="text-xs">{consent?.excluded ? "비허용" : blocked ? "차단" : hash && consent?.approved_hash === hash ? "승인" : "검토 필요"}</span>
           {hash && <ActionForm action={moderateThreadsPost} className="flex items-center gap-2 text-xs">
             <input type="hidden" name="post_id" value={post.id} /><input type="hidden" name="hash" value={hash} />
-            <label title="원문 전체와 링크 미리보기에 재게시하면 안 되는 개인정보·민감정보가 없음을 확인했습니다."><input type="checkbox" name="reviewed" aria-label={`${post.title} 개인정보·민감정보 검토 확인`} /> 검토</label>
-            <button className="rounded border px-2 py-1 disabled:opacity-40" name="decision" value="approve" disabled={blocked}>{showExcluded ? "복구·승인" : "승인"}</button>
+            <button className="rounded border px-2 py-1 disabled:opacity-40" name="decision" value="reviewed_approve" disabled={blocked}>{showExcluded ? "검토 후 복구·승인" : "검토 승인"}</button>
             {!showExcluded && <><button className="rounded border px-2 py-1" name="decision" value="exclude">비허용</button>
             <button className="rounded border px-2 py-1 text-red-700" name="decision" value="exclude" title="자동 홍보에서 제외하고 복구 가능한 삭제 목록으로 이동합니다. 원문과 게시 이력은 보존됩니다.">목록 삭제</button></>}
           </ActionForm>}
