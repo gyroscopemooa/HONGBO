@@ -179,3 +179,14 @@ Meta 개발 문서 본문은 이번 환경에서 HTTP 429로 차단됐다. 실�
 - Worker의 원문 추가 조회는 최신 문구 판단용 published_at만 읽는다. 관리자 미리보기는 같은 formatter를 사용한다. 기존 글의 external_url 데이터, 승인/동의/중복 방지 상태와 이미 공개된 Threads 게시물은 변경하지 않는다.
 - 검증: 전체 Threads 테스트 38개, typecheck, 변경 JS 파일 ESLint, Next production build, Worker dry-run 통과. 모든 게시 요청 테스트는 네트워크 mock으로만 수행했다.
 - 사이트 `hongbo`는 GitHub main push에 연결된 Cloudflare Workers Builds로 자동 배포된다. 별도 자동발행 Worker `hongbo-threads-promo`의 Git 연결은 확인되지 않았다. 사이트 빌드 성공을 자동발행 Worker 반영 완료로 간주하지 않는다. 별도 Worker 배포 시 현재 vars/cron을 먼저 확인하고 보존해야 한다.
+
+## 상세 링크 Worker 배포 및 카테고리 순환 (2026-11-12)
+
+- 원격 main 0721883f6fe90c1fe42fe38841d9ce71b56467d2의 Worker 코드를 별도 worktree에서 배포했다. 기존 로컬 작업 브랜치와 미추적 파일은 보존했다.
+- Worker 버전: 114395fb-0c6d-4a85-8760-374c5fae43f1, 배포 ID: 4ce2e68d-fa06-4bde-b7a6-eb5d343dd2f4. 2026-11-12 12:20 KST 배포, 트래픽 100%. 버전 태그 0721883.
+- 배포 명령: `wrangler deploy --config automation/threads/wrangler.jsonc --var AUTOPOST_ENABLED:true --keep-vars`. 기존 변수 6개 및 Secret 3개 이름을 배포 전후 대조했다. Secret 추가/교체/삭제 명령은 실행하지 않았다. Cron `*/10 * * * *`, 자동 ON, USE_AI/ALLOW_PAID_AI=false, 시작 시각과 토큰 발급/만료 시각 유지.
+- Cloudflare 공식 content/v2 읽기 API로 운영 번들에서 상세 글 링크 사용, 외부 목적지 선택 함수 제거, published_at만 추가 조회함을 확인했다.
+- 사용자 요청으로 발행 대상 카테고리를 순환한다. `sql/0003_category_rotation.sql`은 기존 예약 함수의 정렬만 바꾸며, 가장 오래 예약되지 않은 카테고리부터 선택한다. 같은 카테고리는 최초 등록순, 적격 글 없는 카테고리는 건너뛴다. 한 카테고리만 남으면 계속 발행한다. 실패/차단 예약도 순환 이력에 포함한다. 기존 글의 현재 카테고리를 기준으로 이력을 집계하며, 원문이 물리 삭제되면 해당 글의 카테고리 집계는 제외된다.
+- 운영 SQL Editor에서 기존 함수 정의를 대조한 뒤 0003을 적용했다. 줄바꿈 정규화 후 함수 본문 MD5 `a27689a2889bdc9677de92ebaebd8485` 일치 확인. service_role 실행 허용, anon/authenticated 차단 유지. 0001/0002 재실행 없음.
+- 운영 DB enabled=true, use_ai=false, daily_limit=6 유지. 확인 시점 적격 대기 글 0건. 다음 실제 발행 결과는 아직 미확인이다.
+- 격리 PostgreSQL 카테고리 순환/단일 카테고리 진행 및 기존 권한·동의·한도·중복 방지 테스트 포함 전체 40개 통과. Worker dry-run 통과. Threads 게시 API는 mock으로만 검증했으며 실제 시험 게시, 기존 게시물 수정/삭제, 운영 예약 RPC 수동 실행은 하지 않았다.

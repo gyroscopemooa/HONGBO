@@ -6,8 +6,8 @@ const actor='00000000-0000-0000-0000-000000000001';
 async function setup(){
  const db=new PGlite();
  await db.exec(`create role anon; create role authenticated; create role service_role;
- create table posts(id bigint primary key,author_id uuid,title text,short_description text,description text,contact text,address text,extra jsonb default '{}',external_url text,status text default 'active',is_seed boolean default false,published_at timestamptz default now(),bumped_at timestamptz default now(),expires_at timestamptz);`);
- for(const file of ['0001_threads_promotion.sql','0002_safe_queue.sql']) await db.exec(await readFile(new URL('../sql/'+file,import.meta.url),'utf8'));
+ create table posts(id bigint primary key,author_id uuid,category text default 'apps',title text,short_description text,description text,contact text,address text,extra jsonb default '{}',external_url text,status text default 'active',is_seed boolean default false,published_at timestamptz default now(),bumped_at timestamptz default now(),expires_at timestamptz);`);
+ for(const file of ['0001_threads_promotion.sql','0002_safe_queue.sql','0003_category_rotation.sql']) await db.exec(await readFile(new URL('../sql/'+file,import.meta.url),'utf8'));
  return db;
 }
 async function add(db,id,approve=true){
@@ -77,5 +77,30 @@ test('legacy ambiguous jobs cannot be manually resent and midnight reservations 
  await db.exec("update threads_promotion_settings set daily_limit=1; update threads_promotion_jobs set status='processing',claimed_at=date_trunc('day',now() at time zone 'Asia/Seoul') at time zone 'Asia/Seoul' - interval '1 second'");
  // A previous-day in-flight reservation is counted; stale executions are quarantined first.
  const rows=await claim(db);assert.equal(rows.length,0);
+ }finally{await db.close();}
+});
+
+test('category rotation serves eligible categories fairly and preserves oldest-first within category',async()=>{
+ const db=await setup();try{
+ await enable(db);await db.exec('update threads_promotion_settings set daily_limit=20');
+ for(let id=1;id<=6;id++) await add(db,id);
+ await db.exec("update posts set category=case when id<=3 then 'apps' when id<=5 then 'services' else 'events' end");
+ const ids=[];
+ for(let i=0;i<6;i++){
+  const [j]=await claim(db);ids.push(j.post_id);
+  await db.query("select threads_complete($1,$2,'blocked','TEST',null,null)",[j.post_id,j.lease]);
+ }
+ assert.deepEqual(ids,[1,4,6,2,5,3]);
+ assert.equal((await claim(db)).length,0);
+ }finally{await db.close();}
+});
+test('rotation skips ineligible categories without blocking a single available category',async()=>{
+ const db=await setup();try{
+ await enable(db);await add(db,1);await add(db,2);await add(db,3,false);
+ await db.exec("update posts set category='events' where id=3");
+ const [first]=await claim(db);assert.equal(first.post_id,1);
+ await db.query("select threads_complete($1,$2,'blocked','TEST',null,null)",[first.post_id,first.lease]);
+ assert.equal((await claim(db))[0].post_id,2);
+ assert.equal((await claim(db)).length,0);
  }finally{await db.close();}
 });
