@@ -10,7 +10,7 @@ export function ActionForm({ action, children, className }: {
   const [state, formAction, pending] = useActionState(action, INITIAL_THREADS_STATE);
   return <form action={formAction} aria-busy={pending}>
     <fieldset disabled={pending} className={className}>{children}</fieldset>
-    <p role="status" aria-live="polite" className={`mt-2 text-sm ${state.ok ? "text-green-700" : "text-red-700"}`}>
+    <p role="status" aria-live="polite" className={`${pending || state.message ? "mt-1" : "hidden"} text-xs ${state.ok ? "text-green-700" : "text-red-700"}`}>
       {pending ? "처리 중입니다…" : state.message}
     </p>
   </form>;
