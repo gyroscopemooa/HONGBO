@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowUpRight, MessagesSquare } from "lucide-react";
 type LatestData = { items: { id: number; title: string; category: string; createdAt: string }[]; failed: boolean };
-export function CommunityLatestView({ limit = 2, title, initial }: { limit?: 2 | 5; title: string; initial: LatestData }) {
+export function CommunityLatestView({ limit = 2, title, initial, play = [] }: { limit?: 2 | 5; title: string; initial: LatestData; play?: {id:number; title:string}[] }) {
   const [data, setData] = useState(initial);
   useEffect(() => {
     const controller = new AbortController();
@@ -34,6 +34,7 @@ export function CommunityLatestView({ limit = 2, title, initial }: { limit?: 2 |
         </li>)}
       </ul> : <p className="flex-1 py-6 text-sm leading-relaxed text-muted">{failed ? "새 이야기를 불러오지 못했어요. 커뮤니티에서 다시 확인해 주세요." : "아직 첫 이야기를 기다리고 있어요. 궁금한 점이나 경험을 나눠주세요."}</p>}
 
+      {play.length > 0 && <div className="mt-2 border-t border-line pt-2"><Link href="/play/shared" className="text-xs font-bold text-muted">놀러가자 최신글</Link><ul className="mt-1 divide-y divide-line">{play.map(post => <li key={post.id} className="min-w-0"><Link href={`/post/${post.id}`} className="block truncate rounded-lg py-2 text-[13px] hover:text-indigo-600" title={post.title}>{post.title}</Link></li>)}</ul></div>}
     </section>
   );
 }

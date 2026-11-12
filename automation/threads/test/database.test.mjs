@@ -6,8 +6,8 @@ const actor='00000000-0000-0000-0000-000000000001';
 async function setup(){
  const db=new PGlite();
  await db.exec(`create role anon; create role authenticated; create role service_role;
- create table posts(id bigint primary key,author_id uuid,category text default 'apps',title text,short_description text,description text,contact text,address text,extra jsonb default '{}',external_url text,status text default 'active',is_seed boolean default false,published_at timestamptz default now(),bumped_at timestamptz default now(),expires_at timestamptz);`);
- for(const file of ['0001_threads_promotion.sql','0002_safe_queue.sql','0003_category_rotation.sql']) await db.exec(await readFile(new URL('../sql/'+file,import.meta.url),'utf8'));
+ create table posts(id bigint primary key,author_id uuid,category text default 'apps',tags text[] default '{}',title text,short_description text,description text,contact text,address text,extra jsonb default '{}',external_url text,status text default 'active',is_seed boolean default false,published_at timestamptz default now(),bumped_at timestamptz default now(),expires_at timestamptz);`);
+ for(const file of ['0001_threads_promotion.sql','0002_safe_queue.sql','0003_category_rotation.sql','0004_play_latest.sql']) await db.exec(await readFile(new URL('../sql/'+file,import.meta.url),'utf8'));
  return db;
 }
 async function add(db,id,approve=true){
@@ -104,3 +104,5 @@ test('rotation skips ineligible categories without blocking a single available c
  assert.equal((await claim(db)).length,0);
  }finally{await db.close();}
 });
+
+test('play customer posts use newest publication first without bypassing consent',async()=>{const db=await setup();try{await enable(db);await add(db,1);await add(db,2);await add(db,3,false);await db.exec("update posts set tags=array['놀러가자'],published_at=now()-interval '1 hour'* (4-id)");for(const id of [1,2]) await db.query('select threads_moderate($1,$2,(select threads_source_hash(p) from posts p where id=$1),false)',[id,actor]);assert.equal((await claim(db))[0].post_id,2);}finally{await db.close();}});

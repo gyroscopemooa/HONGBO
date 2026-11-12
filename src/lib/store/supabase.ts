@@ -178,6 +178,8 @@ export const supabaseStore: Store = {
           .order("popularity", { ascending: false });
       }
       qb = qb.order("bumped_at", { ascending: false }).order("id", { ascending: false });
+    } else if (q.sort === "published") {
+      qb = qb.order("published_at", { ascending: false }).order("id", { ascending: false });
     } else {
       qb = qb.order("bumped_at", { ascending: false }).order("id", { ascending: false });
     }

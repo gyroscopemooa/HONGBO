@@ -2,7 +2,7 @@ import type { PlayConditionFilters } from "../play-conditions";
 import type { CategorySlug } from "../constants";
 import type { Ad, AdCreative, Banner, EventType, Notice, Post, PostInput, PostStatus, Profile, Report } from "../types";
 
-export type ListSort = "latest" | "popular";
+export type ListSort = "latest" | "published" | "popular";
 
 export interface ListQuery {
   category?: CategorySlug;

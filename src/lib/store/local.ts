@@ -225,6 +225,7 @@ function sortPosts(items: Post[], q: ListQuery): Post[] {
       return b.bumpedAt.localeCompare(a.bumpedAt) || b.id - a.id;
     });
   }
+  if (q.sort === "published") return items.sort((a,b) => b.publishedAt.localeCompare(a.publishedAt) || b.id-a.id);
   return items.sort((a, b) => b.bumpedAt.localeCompare(a.bumpedAt) || b.id - a.id);
 }
 
