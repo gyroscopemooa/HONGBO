@@ -1,0 +1,12 @@
+{
+  "name": "hongbo-auto-comments",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-11-01",
+  "ai": { "binding": "AI" },
+  "triggers": { "crons": ["*/2 * * * *"] },
+  "vars": {
+    "COMMENTS_ENABLED": "false",
+    "FREE_TIER_VERIFIED_UNTIL": "",
+    "AI_MODEL": "@cf/google/gemma-4-26b-a4b-it"
+  }
+}
