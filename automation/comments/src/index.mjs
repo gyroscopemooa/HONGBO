@@ -15,15 +15,15 @@ export function validateComment(value) {
   return s;
 }
 async function rpc(env, name, body) {
-  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/${name}`, {
-    method: 'POST', headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body), signal: AbortSignal.timeout(10000),
+  const res = await fetch('https://thehongbo.com/api/internal/auto-comments', {
+    method: 'POST', headers: { Authorization: `Bearer ${env.AUTO_COMMENTS_TOKEN}`, 'Content-Type': 'application/json' },
+    redirect: 'error', body: JSON.stringify({ action: name, ...body }), signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`RPC ${name}: ${res.status}`);
   return res.json();
 }
 export async function run(env) {
-  if (!freeOnlyEnabled(env) || !env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return;
+  if (!freeOnlyEnabled(env) || !env.AUTO_COMMENTS_TOKEN || env.AUTO_COMMENTS_TOKEN.length < 32) return;
   const claimed = await rpc(env, 'claim_auto_comment', {});
   const post = Array.isArray(claimed) ? claimed[0] : claimed;
   if (!post?.id) return;
