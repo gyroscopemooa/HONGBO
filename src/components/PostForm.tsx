@@ -83,6 +83,9 @@ export interface FormState {
   couponNote: string;
   videoUrl: string;
   price: string;
+  deliveryMethod: string;
+  deliveryPeriod: string;
+  saleMethod: string;
   region: string;
   tags: string[];
   contactPublic: boolean;
@@ -124,6 +127,9 @@ const EMPTY: FormState = {
   couponNote: "",
   videoUrl: "",
   price: "",
+  deliveryMethod: "",
+  deliveryPeriod: "",
+  saleMethod: "",
   region: "",
   tags: [],
   contactPublic: false,
@@ -182,6 +188,9 @@ export function postToFormState(p: Post): FormState {
     couponNote: p.extra.couponNote ?? "",
     videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
     price: p.price ?? "",
+    deliveryMethod: p.extra.deliveryMethod ?? "",
+    deliveryPeriod: p.extra.deliveryMethod ? (p.extra.deliveryPeriod ?? "") : "",
+    saleMethod: p.extra.saleMethod ?? "",
     region: p.region ?? "",
     tags: p.tags,
     contactPublic: !!p.contact,
@@ -207,6 +216,9 @@ function toPayload(f: FormState) {
     contact: f.contactPublic ? f.contact : null,
     extra: {
       play: f.play,
+      deliveryMethod: f.category === "products" ? f.deliveryMethod : "",
+      deliveryPeriod: f.category === "products" && f.deliveryMethod?.trim() ? f.deliveryPeriod : "",
+      saleMethod: f.category === "products" ? f.saleMethod : "",
       playUrl: f.playUrl,
       appStoreUrl: f.appStoreUrl,
       siteUrl: f.siteUrl,
@@ -614,9 +626,30 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                   </Field>
                 )}
                 {f.category === "products" && (
+                  <>
                   <Field id="price" label="가격" optional error={errors.price} hint="예) 12,900원 · 무료 · 가격 협의">
                     <input id="price" value={f.price} maxLength={LIMITS.priceMax} onChange={(e) => set("price", e.target.value)} placeholder="12,900원" className="field" />
                   </Field>
+                    <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+                      <Field id="deliveryMethod" label="배송방법" optional error={errors.deliveryMethod} hint="예시를 선택하거나 직접 입력해도 돼요. 비워두어도 등록할 수 있어요.">
+                        <input id="deliveryMethod" list="delivery-method-options" value={f.deliveryMethod ?? ""} maxLength={80} onChange={(e) => { set("deliveryMethod", e.target.value); if (!e.target.value.trim()) set("deliveryPeriod", ""); }} placeholder="예) 택배 · 직접 전달 · 방문 수령" className="field" />
+                        <datalist id="delivery-method-options">
+                          {["택배", "직접 전달", "방문 수령", "디지털 전송", "협의"].map(value => <option key={value} value={value} />)}
+                        </datalist>
+                      </Field>
+                      {!!f.deliveryMethod?.trim() && (
+                        <Field id="deliveryPeriod" label="평균 배송기간" optional error={errors.deliveryPeriod} hint="예상 소요기간을 알려주세요. 비워두어도 등록할 수 있어요.">
+                          <input id="deliveryPeriod" value={f.deliveryPeriod ?? ""} maxLength={80} onChange={(e) => set("deliveryPeriod", e.target.value)} placeholder="예) 결제 후 2~3일 · 영업일 기준 3~5일" className="field" />
+                        </Field>
+                      )}
+                      <Field id="saleMethod" label="판매방법" optional error={errors.saleMethod} hint="구매자가 어떻게 주문하면 되는지 알려주세요.">
+                        <input id="saleMethod" list="sale-method-options" value={f.saleMethod ?? ""} maxLength={80} onChange={(e) => set("saleMethod", e.target.value)} placeholder="예) 온라인 주문 · 직거래 · 문의 후 주문" className="field" />
+                        <datalist id="sale-method-options">
+                          {["온라인 주문", "직거래", "매장 구매", "문의 후 주문", "예약 판매", "협의"].map(value => <option key={value} value={value} />)}
+                        </datalist>
+                      </Field>
+                    </div>
+                  </>
                 )}
                 {f.category === "events" && (
                   <Field id="period" label="모집/행사 기간" optional hint="예) 상시 모집 · 매월 첫째 주 토요일">

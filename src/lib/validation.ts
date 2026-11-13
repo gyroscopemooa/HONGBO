@@ -56,6 +56,9 @@ const rawSchema = z.object({
   extra: z
     .object({
       play: playConditionsSchema.optional(),
+      deliveryMethod: str(200),
+      deliveryPeriod: str(200),
+      saleMethod: str(200),
       notes: z.array(z.object({ title: z.string().max(200), body: z.string().max(2000) })).max(20).optional(),
       couponCode: str(400),
       couponNote: str(1000),
@@ -130,6 +133,18 @@ export function parsePostInput(raw: unknown): ParseResult {
   // --- 링크 ---
   const extra: PostExtra = {};
   if (v.extra.play) extra.play = v.extra.play;
+  if (category === "products") {
+    for (const key of ["deliveryMethod", "saleMethod"] as const) {
+      const value = (v.extra[key] ?? "").replace(/\s+/g, " ").trim();
+      if (value.length > 80) errors[key] = "80자 이내로 입력해주세요.";
+      else if (value) extra[key] = value;
+    }
+  }
+  if (category === "products" && extra.deliveryMethod) {
+    const period = (v.extra.deliveryPeriod ?? "").replace(/\s+/g, " ").trim();
+    if (period.length > 80) errors.deliveryPeriod = "평균 배송기간은 80자 이내로 입력해주세요.";
+    else if (period) extra.deliveryPeriod = period;
+  }
   const linkField = (
     key: "externalUrl" | "mapUrl" | "playUrl" | "appStoreUrl" | "siteUrl" | "businessUrl",
     value: string | null | undefined,
@@ -414,7 +429,7 @@ export function parsePostInput(raw: unknown): ParseResult {
   if (contact && contact.length > LIMITS.contactMax) errors.contact = `연락처는 ${LIMITS.contactMax}자까지 입력할 수 있어요.`;
 
   // --- 금지 키워드 ---
-  const banned = findBannedKeyword(v.extra.play ? Object.values(v.extra.play).join(" ") : "", notes.map((n) => `${n.title} ${n.body}`).join(" "), couponCode, couponNote, title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
+  const banned = findBannedKeyword(extra.deliveryPeriod ?? "", extra.deliveryMethod ?? "", extra.saleMethod ?? "", v.extra.play ? Object.values(v.extra.play).join(" ") : "", notes.map((n) => `${n.title} ${n.body}`).join(" "), couponCode, couponNote, title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
   if (banned) {
     errors.description = "운영정책상 등록할 수 없는 내용이 포함되어 있어요. 내용을 확인해주세요.";
   }

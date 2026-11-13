@@ -112,6 +112,9 @@ export default async function PostDetailPage({ params }: Props) {
   if (usage) rows.push({ icon: <Info size={15} />, k: "이용 방식", v: usage });
   if (post.extra.period) rows.push({ icon: <CalendarClock size={15} />, k: "모집/행사 기간", v: post.extra.period });
   if (post.address) rows.push({ icon: <MapPin size={15} />, k: "주소", v: post.address });
+  if (post.category === "products" && post.extra.deliveryMethod) rows.push({ icon: <Info size={15} />, k: "배송방법", v: post.extra.deliveryMethod });
+  if (post.category === "products" && post.extra.deliveryMethod && post.extra.deliveryPeriod) rows.push({ icon: <CalendarClock size={15} />, k: "평균 배송기간", v: post.extra.deliveryPeriod });
+  if (post.category === "products" && post.extra.saleMethod) rows.push({ icon: <Info size={15} />, k: "판매방법", v: post.extra.saleMethod });
   if (post.contact) rows.push({ icon: <Phone size={15} />, k: "연락 방법", v: post.contact });
   if (author) rows.push({ icon: <UserRound size={15} />, k: "작성자", v: author.nickname });
 

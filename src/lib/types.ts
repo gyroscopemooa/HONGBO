@@ -25,6 +25,10 @@ export interface SurveyQuestion {
 
 export interface PostExtra {
   play?: PlayConditions;
+  /** 상품/판매 선택 안내. 생략하면 공개하지 않습니다. */
+  deliveryMethod?: string;
+  deliveryPeriod?: string;
+  saleMethod?: string;
   /** 추가 링크(이벤트 참여, 쿠폰 받기 등). 상세 페이지에서 버튼으로 보여줍니다. */
   links?: ExtraLink[];
   notes?: Array<{ title: string; body: string }>;
