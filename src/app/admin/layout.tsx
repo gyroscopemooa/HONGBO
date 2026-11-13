@@ -19,6 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     ["/admin/posts", "홍보글"],
     ["/admin/appeals", "이의제기"],
     ["/admin/threads", "Threads 홍보"],
+    ["/admin/auto-comments", "자동 댓글"],
     ["/admin/community", "운영자 가이드"],
     ["/admin/talk", "회원 커뮤니티"],
     ["/admin/reports", "신고", stats.openReports],
