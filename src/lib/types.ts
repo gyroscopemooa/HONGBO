@@ -79,6 +79,8 @@ export interface Post {
   clickCount: number;
   /** 공개 좋아요 수. 기존/로컬 게시글은 0으로 처리합니다. */
   likeCount?: number;
+  /** 공개 댓글 수 (삭제된 댓글 제외) */
+  commentCount?: number;
   publishedAt: string;
   /** "다시 홍보하기"로 갱신된 시각 — 최신순 정렬 기준 */
   bumpedAt: string;

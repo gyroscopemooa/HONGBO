@@ -11,7 +11,7 @@ import type { EventInput, ListResult, NewReport, Stats, Store } from "./types";
 
 type Row = Record<string, unknown>;
 
-const POST_SELECT = "*, post_images(image_url, sort_order)";
+const POST_SELECT = "*, post_images(image_url, sort_order), post_comments(count)";
 
 const sb = (): SupabaseClient => getAdminClient();
 const iso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -47,6 +47,7 @@ function toPost(r: Row): Post {
     viewCount: Number(r.view_count ?? 0),
     clickCount: Number(r.click_count ?? 0),
     likeCount: Number(r.like_count ?? 0),
+    commentCount: Number((r.post_comments as Array<{ count: number }> | null)?.[0]?.count ?? 0),
     publishedAt: r.published_at as string,
     bumpedAt: r.bumped_at as string,
     updatedAt: r.updated_at as string,
@@ -141,7 +142,7 @@ const escapeLike = (s: string) => s.replace(/[\\%_]/g, (m) => `\\${m}`);
 export const supabaseStore: Store = {
   async listPosts(q): Promise<ListResult> {
     const now = iso(new Date());
-    let qb = sb().from("posts").select(POST_SELECT, { count: "exact" });
+    let qb = sb().from("posts").select(POST_SELECT, { count: "exact" }).is("post_comments.deleted_at", null);
 
     if (q.publicOnly) qb = qb.eq("status", "active").or(`expires_at.is.null,expires_at.gt.${now}`);
     if (q.status) {
@@ -192,7 +193,7 @@ export const supabaseStore: Store = {
   },
 
   async getPost(id) {
-    const { data, error } = await sb().from("posts").select(POST_SELECT).eq("id", id).maybeSingle();
+    const { data, error } = await sb().from("posts").select(POST_SELECT).is("post_comments.deleted_at", null).eq("id", id).maybeSingle();
     if (error) fail("posts.get", error);
     return data ? toPost(data as Row) : null;
   },
@@ -293,7 +294,7 @@ export const supabaseStore: Store = {
   async findActiveDuplicate(authorId, input, excludeId) {
     // Page through all candidates: never silently skip members with many posts.
     for (let offset = 0; ; offset += 200) {
-      let qb = sb().from("posts").select(POST_SELECT)
+      let qb = sb().from("posts").select(POST_SELECT).is("post_comments.deleted_at", null)
         .eq("author_id", authorId).eq("status", "active")
         .or(`expires_at.is.null,expires_at.gt.${iso(new Date())}`)
         .order("id").range(offset, offset + 199);

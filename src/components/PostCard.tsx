@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Eye, MapPin, ThumbsUp } from "lucide-react";
+import { Eye, MapPin, MessageCircle, ThumbsUp } from "lucide-react";
 import { LIMITS, benefitLabels } from "@/lib/constants";
 import type { Post } from "@/lib/types";
 import { cn, formatCount, isWithinWeek, relativeTime } from "@/lib/utils";
@@ -51,11 +51,14 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
           {post.title}
         </h3>
         <p className="mt-1 line-clamp-1 text-[12.5px] text-muted">{post.shortDescription}</p>
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2.5">
-          <div className="flex min-w-0 items-center gap-2">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-2.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <CategoryBadge slug={post.category} />
             <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-muted" aria-label={`좋아요 ${post.likeCount ?? 0}개`}>
               <ThumbsUp size={12} aria-hidden /> {formatCount(post.likeCount ?? 0)}
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-muted" aria-label={`댓글 ${post.commentCount ?? 0}개`}>
+              <MessageCircle size={12} aria-hidden /> {formatCount(post.commentCount ?? 0)}
             </span>
           </div>
           {post.viewCount >= LIMITS.showViewsFrom ? (

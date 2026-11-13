@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { store } from "@/lib/store";
-import { isPostPublic } from "@/lib/queries";
+import { invalidateHomeData, isPostPublic } from "@/lib/queries";
 import { findBannedKeyword } from "@/lib/policy";
 import { rateLimit } from "@/lib/ratelimit";
 export type CommentResult={ok:boolean;message:string};
@@ -29,7 +29,8 @@ export async function savePostComment(_previous:CommentResult,form:FormData):Pro
  if(error)throw error;
  if(!data?.length)return {ok:false,message:"댓글이 없거나 변경할 권한이 없어요."};
  }
- revalidatePath("/post/"+postId);
+ invalidateHomeData();
+ revalidatePath("/", "layout");
  return {ok:true,message:mode==="delete"?"댓글을 삭제했어요.":mode==="edit"?"댓글을 수정했어요.":"댓글을 등록했어요."};
  }catch{return {ok:false,message:"댓글을 처리하지 못했어요. 잠시 후 다시 시도해주세요."};}
 }

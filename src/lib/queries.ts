@@ -88,6 +88,11 @@ export async function getTopAds(category?: string): Promise<Post[]> {
 const HOME_TTL_MS = 45_000;
 let homeCache: { at: number; data: ReturnType<typeof loadHomeData> } | null = null;
 
+/** 댓글 등 카드 통계 변경 후 같은 인스턴스의 홈 캐시를 무효화합니다. */
+export function invalidateHomeData() {
+  homeCache = null;
+}
+
 export function getHomeData() {
   const now = Date.now();
   if (homeCache && now - homeCache.at < HOME_TTL_MS) return homeCache.data;
