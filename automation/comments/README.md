@@ -4,7 +4,7 @@
 
 ## 기본값: OFF
 사이트 배포만으로 실행되지 않습니다. DB 0014 → 0015 마이그레이션, 별도 Cloudflare Worker 배포, secret 설정과 두 단계 활성화가 필요합니다.
-- Worker secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. 소스/브라우저 공개 금지.
+- Worker와 사이트 서버 secret: AUTO_COMMENTS_TOKEN (무작위 32바이트 이상). 공개 소스/브라우저 노출 금지. Worker에는 Supabase 관리자 키를 제공하지 않습니다. 고정 HTTPS thehongbo.com의 제한 API만 호출하며 리다이렉트는 차단합니다. API는 claim/finish 두 RPC만 허용하고 DB 일일 한도·중복·게시 상태 검증을 유지합니다.
 - Cloudflare **Workers Free 요금제** 및 모델 무료 지원을 실제 계정에서 확인해야 합니다. 도메인의 Free 요금제와 다릅니다. Paid 계정에는 활성화하지 않습니다.
 - 확인 후 COMMENTS_ENABLED=true, FREE_TIER_VERIFIED_UNTIL=현재부터 최대 24시간 이내 ISO시각 설정. 매일 재확인하지 않으면 자동 정지합니다. 계정 차원의 과금 차단이 검증되기 전 무기한 무인 무료 실행을 보장하지 않습니다.
 - DB 관리자 /admin/auto-comments 에서 별도 활성화. 일 50회 이하(실패도 차감), 요청당 최대 입력 2000자/출력160토큰. 유료 fallback 및 자동 재시도 없음.
