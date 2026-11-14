@@ -1,8 +1,10 @@
+import { won } from "@/lib/ads";
+import { HERO_TOTAL_SLOTS, heroCustomerCapacity } from "@/lib/hero-capacity";
+import { infl09SlideEnabled } from "@/lib/infl09";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { HeroAdPreview } from "@/components/HeroAdSlide";
 import { listHeroAds } from "@/lib/hero-ad-store";
-import { HERO_AD_SLOTS, HERO_PLANS, heroDepositor, heroPrice, isHeroLive, type HeroAd } from "@/lib/hero-ads";
-import { won } from "@/lib/ads";
+import { HERO_PLANS, heroPrice, isHeroLive, type HeroAd } from "@/lib/hero-ads";
 import { formatDate } from "@/lib/utils";
 import { adminApproveHeroAd, adminDeleteHeroAd, adminSetHeroAdLink } from "./actions";
 
@@ -16,8 +18,8 @@ function Row({ ad, children }: { ad: HeroAd; children: React.ReactNode }) {
       <div className="min-w-0 flex-1">
         <p className="line-clamp-1 font-bold">#{ad.id} {ad.title || ad.advertiser || "(제목 없음)"}</p>
         <p className="mt-0.5 text-[13px] text-muted">
-          {HERO_PLANS[ad.plan].label} ({won(heroPrice(ad.plan))}) · {DESIGN_LABEL[ad.designMode]} · 링크 {ad.linkMode === "url" ? ad.linkUrl : "협의 후 결정"}
-          {ad.status === "requested" && <> · 입금자명 <b className="text-ink-2">{heroDepositor(ad.id)}</b></>}
+          {HERO_PLANS[ad.plan].label} ({ad.freeTrial ? "무료 체험 7일" : won(heroPrice(ad.plan))}) · {DESIGN_LABEL[ad.designMode]} · 링크 {ad.linkMode === "url" ? ad.linkUrl : "협의 후 결정"}
+          {ad.status === "requested" && <> · {ad.freeTrial ? "입금 불필요 · 연장 불가" : "입금 확인 필요"}</>}
           {ad.endsAt && <> · {formatDate(ad.endsAt)}까지</>}
           {ad.advertiser && <> · 광고주 {ad.advertiser}</>}
         </p>
@@ -35,6 +37,7 @@ function Row({ ad, children }: { ad: HeroAd; children: React.ReactNode }) {
 
 export default async function AdminHeroAds({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
+  const capacity = heroCustomerCapacity(infl09SlideEnabled());
   const all = await listHeroAds().catch(() => null);
   if (!all) {
     return <p className="rounded-xl bg-brand-soft px-4 py-3 text-[14px] font-medium text-brand-dark">슬라이드 광고 테이블이 아직 없어요. supabase/migrations/0010_hero_ads.sql 을 먼저 실행해주세요.</p>;
@@ -46,11 +49,11 @@ export default async function AdminHeroAds({ searchParams }: { searchParams: Pro
     <div className="space-y-6">
       {error && <p role="alert" className="rounded-xl bg-brand-soft px-4 py-3 text-[14px] font-medium text-brand-dark">{error}</p>}
       <p className="text-[14px] text-muted">
-        홈 큰 슬라이드 광고 <b className="text-ink-2">{live.length}/{HERO_AD_SLOTS}</b>자리 사용 중. 입금(과 협의)이 끝나면 <b className="text-ink-2">승인</b>해 주세요. 승인한 시점부터 기간이 시작돼요. 이미지·문구·링크를 꼭 확인하세요.
+        홈 큰 슬라이드 광고 <b className="text-ink-2">{live.length}/{capacity}</b>자리 사용 중. 기본 안내와 인플공구 광고를 합쳐 최대 {HERO_TOTAL_SLOTS}개이며, 인플공구 노출 시 1자리를 사용합니다. 광고가 늘면 기본 안내가 줄고 종료되면 복원돼요. 신청 검토(유료는 입금 확인 및 협의)가 끝나면 <b className="text-ink-2">승인</b>해 주세요. 승인한 시점부터 기간이 시작돼요. 이미지·문구·링크를 꼭 확인하세요.
       </p>
 
       <section aria-label="승인 대기">
-        <h2 className="mb-2 font-extrabold">입금 확인·승인 대기 ({requested.length})</h2>
+        <h2 className="mb-2 font-extrabold">신청·승인 대기 ({requested.length})</h2>
         {requested.length === 0 ? (
           <p className="rounded-xl border border-dashed border-line px-4 py-6 text-center text-sm text-faint">대기 중인 신청이 없어요.</p>
         ) : (
@@ -64,7 +67,7 @@ export default async function AdminHeroAds({ searchParams }: { searchParams: Pro
                 </form>
                 <form action={adminDeleteHeroAd}>
                   <input type="hidden" name="id" value={ad.id} />
-                  <ConfirmButton message="이 신청을 거절(삭제)할까요?">거절</ConfirmButton>
+                  <ConfirmButton message="이 신청을 거절할까요? 무료 체험 이력은 재신청 방지를 위해 보관됩니다.">거절</ConfirmButton>
                 </form>
               </Row>
             ))}
@@ -87,7 +90,7 @@ export default async function AdminHeroAds({ searchParams }: { searchParams: Pro
                 </form>
                 <form action={adminDeleteHeroAd}>
                   <input type="hidden" name="id" value={ad.id} />
-                  <ConfirmButton message="노출을 중단하고 삭제할까요?">중단</ConfirmButton>
+                  <ConfirmButton message="노출을 중단할까요? 무료 체험 이력은 보관됩니다.">중단</ConfirmButton>
                 </form>
               </Row>
             ))}

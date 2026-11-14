@@ -1,5 +1,7 @@
 "use server";
 
+import { hasFreeAdTrial } from "@/lib/free-ad-trial";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
@@ -173,6 +175,8 @@ export async function adminApproveAd(formData: FormData) {
     const cur = (await store.listAds()).find((a) => a.id === id);
     if (cur && cur.status === "requested" && (cur.kind !== kind || cur.plan !== plan)) await store.reviseAd(id, { kind, plan });
   }
+  const candidate = (await store.listAds()).find(a => a.id === id);
+  if (candidate?.freeTrial && candidate.requestedBy && await hasFreeAdTrial(candidate.requestedBy, candidate.postId, { kind: "ad", id })) adsBack("다른 무료 신청 이력이 있어요. 중복 계정/게시물 여부를 검토해주세요.");
   const r = await store.activateAd(id);
   refresh();
   if (!r.ok) adsBack(r.error);

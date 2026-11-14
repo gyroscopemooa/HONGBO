@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Check, ImagePlus, LoaderCircle, X } from "lucide-react";
-import { AD_KIND_LABEL, AD_PLANS, AD_PRICES, won } from "@/lib/ads";
+import { AD_PLANS, AD_PRICES, won } from "@/lib/ads";
 import { CREATIVE_SUBTITLE_MAX, CREATIVE_TITLE_MAX } from "@/lib/ad-creative";
 import { processAndUpload, type ProcessOptions } from "@/lib/image-client";
 import type { AdCreative, Post } from "@/lib/types";
@@ -115,13 +115,18 @@ function toPreviewPost(p: AdBannerPost, ov: { image?: string; title?: string; su
 export function AdRequestForm({
   posts,
   action,
+  initialKind = "premium",
+  freeTrial = true,
 }: {
+  freeTrial?: boolean;
+  initialKind?: "premium" | "banner";
   posts: AdBannerPost[];
   action: (formData: FormData) => void | Promise<void>;
 }) {
   const [postId, setPostId] = useState(posts[0]?.id ?? 0);
-  const [kind, setKind] = useState<"premium" | "banner">("premium");
+  const kind = initialKind;
   const [plan, setPlan] = useState<"week" | "month">("month");
+
   const [bMode, setBMode] = useState<BannerMode>("auto");
   const [pMode, setPMode] = useState<PremiumMode>("auto");
   const [bannerImg, setBannerImg] = useState("");
@@ -159,17 +164,7 @@ export function AdRequestForm({
         </select>
       </label>
 
-      <fieldset>
-        <legend className="mb-1.5 text-[14px] font-bold text-ink-2">상품</legend>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {(["premium", "banner"] as const).map((k) => (
-            <label key={k} className={radioCard}>
-              <input type="radio" name="kind" value={k} checked={kind === k} onChange={() => setKind(k)} className="mt-1 accent-[#f04f4a]" />
-              {AD_KIND_LABEL[k]}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <input type="hidden" name="kind" value={kind} />
 
       {post && (
         <fieldset className="rounded-2xl border border-line bg-soft/60 p-4">
@@ -262,7 +257,10 @@ export function AdRequestForm({
         </fieldset>
       )}
 
-      <fieldset>
+      {freeTrial ? <>
+        <input type="hidden" name="plan" value="week" />
+        <p className="rounded-xl bg-brand-soft p-3 text-[14px] font-bold">무료 체험: 계정당 1회 · 게시물 1개 · 승인 후 7일<br /><span className="text-[13px] font-normal">같은 게시물 재신청과 무료 기간 연장은 불가해요. 이후 노출은 유료 광고로 문의해주세요.</span></p>
+      </> : (      <fieldset>
         <legend className="mb-1.5 text-[14px] font-bold text-ink-2">기간</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {(["week", "month"] as const).map((p) => (
@@ -275,13 +273,15 @@ export function AdRequestForm({
         </div>
       </fieldset>
 
+)}
+
       <ul className="space-y-1 text-[13px] text-muted">
-        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /> 신청하면 바로 입금 계좌가 안내돼요. 입금이 확인되어 승인된 시점부터 기간이 시작돼요.</li>
-        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /> 광고 카드에는 &quot;광고&quot; 표시가 붙어요. 운영정책에 어긋난 글·문구·이미지는 승인되지 않을 수 있어요.</li>
-        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /> 승인(노출 시작) 이후에는 환불이 어려워요. 자세한 기준은 <a href="/policy#ads-refund" className="underline">운영정책</a>을 확인해주세요.</li>
+        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /><span className="min-w-0">{freeTrial ? "무료 신청은 입금 없이 관리자 검토·승인 후 7일 동안 노출돼요." : "입금 확인과 관리자 검토·승인 후 선택한 기간 동안 노출돼요."}</span></li>
+        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /><span className="min-w-0">광고 카드에는 &quot;광고&quot; 표시가 붙어요. 운영정책에 어긋난 글·문구·이미지는 승인되지 않을 수 있어요.</span></li>
+        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /><span className="min-w-0">무료 노출이 끝나도 자동 결제되지 않아요. 자세한 기준은 <a href="/policy#ads-refund" className="underline">운영정책</a>을 확인해주세요.</span></li>
       </ul>
       <button className="btn btn-primary btn-lg" disabled={uploadMissing}>
-        광고 신청하기
+        {freeTrial ? "무료 광고 신청하기" : "광고 신청하기"}
       </button>
     </form>
   );

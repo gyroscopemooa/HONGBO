@@ -1,3 +1,4 @@
+import { freeAdTrialEnabled } from "@/lib/free-ad-trial";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Flame, Siren } from "lucide-react";
@@ -126,7 +127,7 @@ export default async function HomePage() {
           ))}
           {hasBannerRoom && (
             <li className="w-full shrink-0 snap-center">
-              <BannerPlaceholder priceText={`주 ${won(AD_PRICES.banner.week)} · 월 ${won(AD_PRICES.banner.month)}`} />
+              <BannerPlaceholder priceText={freeAdTrialEnabled() ? "계정당 1회 · 7일 무료 체험" : `주 ${won(AD_PRICES.banner.week)} · 월 ${won(AD_PRICES.banner.month)}`} />
             </li>
           )}
         </BannerSlider>

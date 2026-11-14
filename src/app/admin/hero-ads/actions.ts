@@ -1,9 +1,11 @@
 "use server";
 
+import { hasFreeAdTrial } from "@/lib/free-ad-trial";
+
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
-import { activateHeroAd, deleteHeroAd, setHeroAdLink } from "@/lib/hero-ad-store";
+import { listHeroAds, activateHeroAd, deleteHeroAd, setHeroAdLink } from "@/lib/hero-ad-store";
 import { normalizeExternalUrl } from "@/lib/url";
 
 const back = (error?: string): never => redirect(error ? `/admin/hero-ads?error=${encodeURIComponent(error)}` : "/admin/hero-ads");
@@ -25,6 +27,8 @@ export async function adminApproveHeroAd(formData: FormData) {
     if (!u.ok || !u.url) back(u.error ?? "링크 주소를 확인해주세요.");
     else await setHeroAdLink(id, u.url);
   }
+  const candidate = (await listHeroAds()).find(a => a.id === id);
+  if (candidate?.freeTrial && candidate.requestedBy && candidate.postId && await hasFreeAdTrial(candidate.requestedBy, candidate.postId, { kind: "hero", id })) back("다른 무료 신청 이력이 있어요. 중복 계정/게시물 여부를 검토해주세요.");
   const r = await activateHeroAd(id);
   refresh();
   back(r.ok ? undefined : r.error);

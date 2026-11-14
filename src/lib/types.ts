@@ -137,6 +137,8 @@ export interface Report {
  * - custom: 고객이 고른 배경 사진 + 직접 쓴 문구로 서비스가 배너를 구성
  */
 export interface AdCreative {
+  /** Server-owned campaign marker; never accepted from user creative JSON. */
+  freeTrial?: boolean;
   mode: "upload" | "custom";
   imageUrl?: string;
   title?: string;
@@ -147,6 +149,7 @@ export interface AdCreative {
 
 /** 유료 광고(상단 프리미엄 3칸 / 와이드 배너). 신청 → 운영자 승인(입금 확인) → 기간 동안 노출. */
 export interface Ad {
+  freeTrial?: boolean;
   id: number;
   postId: number;
   kind: "premium" | "banner";

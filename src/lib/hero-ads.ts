@@ -1,8 +1,7 @@
 import { findBannedKeyword } from "./policy";
 import { isAllowedImageUrl, normalizeExternalUrl } from "./url";
 
-/** 홈 대형 슬라이드(Hero) 광고 — 동시에 노출 가능한 수 */
-export const HERO_AD_SLOTS = 3;
+
 
 export const HERO_PLANS = {
   week: { label: "1주일", days: 7 },
@@ -31,7 +30,9 @@ export const heroTheme = (v: string | null | undefined) => HERO_THEMES.find((t) 
 export const HERO_LIMITS = { title: 40, subtitle: 80, button: 16, memo: 500, advertiser: 60 } as const;
 
 export interface HeroAd {
+  freeTrial?: boolean;
   id: number;
+  postId?: number | null;
   requestedBy: string | null;
   plan: HeroPlan;
   status: "requested" | "active";

@@ -551,10 +551,12 @@ export const localStore: Store = {
     );
   },
 
-  async requestAd({ postId, kind, plan, requestedBy, creative }) {
+  async requestAd({ postId, kind, plan, requestedBy, creative, freeTrial = false }) {
+    if (freeTrial) plan = "week";
     const db = load();
     const ad: Ad = {
       id: db.nextAdId++,
+      freeTrial,
       postId,
       kind,
       plan,
@@ -577,7 +579,7 @@ export const localStore: Store = {
     if (!ad || ad.status !== "requested") return;
     if (ad.kind !== kind) ad.creative = null;
     ad.kind = kind;
-    ad.plan = plan;
+    ad.plan = ad.freeTrial ? "week" : plan;
     save(db);
   },
 
@@ -585,6 +587,7 @@ export const localStore: Store = {
     const db = load();
     const ad = db.ads.find((a) => a.id === id);
     if (!ad) return { ok: false, error: "신청 내역을 찾을 수 없어요." };
+    if (ad.status === "active") return { ok: true };
     const live = db.ads.filter((a) => a.id !== id && a.kind === ad.kind && isAdLive(a));
     if (ad.kind === "premium") {
       const slot = nextFreeSlot(live);
@@ -603,7 +606,9 @@ export const localStore: Store = {
 
   async deleteAd(id) {
     const db = load();
-    db.ads = db.ads.filter((a) => a.id !== id);
+    const trial = db.ads.find(a => a.id === id && a.freeTrial);
+    if (trial) { trial.status = "active"; trial.startsAt ??= new Date(0).toISOString(); trial.endsAt = new Date(0).toISOString(); }
+    else db.ads = db.ads.filter((a) => a.id !== id);
     save(db);
   },
 

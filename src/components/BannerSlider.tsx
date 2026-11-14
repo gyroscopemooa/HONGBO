@@ -72,7 +72,7 @@ export function BannerSlider({ children, count, label }: { children: React.React
 export function BannerPlaceholder({ priceText }: { priceText: string }) {
   return (
     <Link
-      href="/advertise"
+      href="/advertise?type=banner#ad-application"
       className="flex aspect-[2.2/1] flex-col items-center justify-center gap-2 rounded-[20px] border border-dashed border-[#e0c070] bg-[#fffbee] text-center transition hover:bg-[#fff6d9] sm:aspect-[4/1]"
     >
       <span className="grid size-9 place-items-center rounded-full bg-[#ffe9a8] text-[#9a6b00]">

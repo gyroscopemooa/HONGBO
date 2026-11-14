@@ -101,6 +101,7 @@ function toBanner(r: Row): Banner {
 
 function toAd(r: Row): Ad {
   return {
+    freeTrial: (r.creative as AdCreative | null)?.freeTrial === true,
     id: Number(r.id),
     postId: Number(r.post_id),
     kind: r.kind as Ad["kind"],
@@ -507,11 +508,11 @@ export const supabaseStore: Store = {
     return opts?.liveOnly ? list.filter((a) => isAdLive(a)) : list;
   },
 
-  async requestAd({ postId, kind, plan, requestedBy, creative }) {
+  async requestAd({ postId, kind, plan, requestedBy, creative, freeTrial = false }) {
     const { data, error } = await sb()
       .from("ads")
       // creative 컬럼은 0007 마이그레이션이 필요하므로, 직접 제작/업로드일 때만 값을 보냅니다.
-      .insert({ post_id: postId, kind, plan, status: "requested", requested_by: requestedBy, ...(creative ? { creative } : {}) })
+      .insert({ post_id: postId, kind, plan: freeTrial ? "week" : plan, status: "requested", requested_by: requestedBy, ...(freeTrial ? { creative: { ...(creative ?? { mode: "custom" }), freeTrial: true } } : creative ? { creative } : {}) })
       .select("*")
       .single();
     if (error) fail("ads.request", error);
@@ -520,9 +521,10 @@ export const supabaseStore: Store = {
 
   async reviseAd(id, { kind, plan }) {
     const row: Record<string, unknown> = { kind, plan };
-    const { data: cur } = await sb().from("ads").select("kind").eq("id", id).maybeSingle();
+    const { data: cur } = await sb().from("ads").select("kind,creative").eq("id", id).maybeSingle();
+    if (cur && ((cur as Row).creative as AdCreative | null)?.freeTrial === true) row.plan = "week";
     // creative 컬럼이 없는 환경(0007 미적용)에서도 동작하도록, 상품이 바뀔 때만 건드립니다.
-    if (cur && (cur as Row).kind !== kind) row.creative = null;
+    if (cur && (cur as Row).kind !== kind) row.creative = ((cur as Row).creative as AdCreative | null)?.freeTrial ? { mode: "custom", freeTrial: true } : null;
     const { error } = await sb().from("ads").update(row).eq("id", id).eq("status", "requested");
     if (error) fail("ads.revise", error);
   },
@@ -532,6 +534,7 @@ export const supabaseStore: Store = {
     if (error) fail("ads.get", error);
     if (!data) return { ok: false, error: "신청 내역을 찾을 수 없어요." };
     const ad = toAd(data as Row);
+    if (ad.status === "active") return { ok: true };
     const { data: rows, error: e2 } = await sb().from("ads").select("*").eq("kind", ad.kind).eq("status", "active").neq("id", id);
     if (e2) fail("ads.live", e2);
     const live = (rows as Row[]).map(toAd).filter((a) => isAdLive(a));
@@ -552,6 +555,13 @@ export const supabaseStore: Store = {
   },
 
   async deleteAd(id) {
+    const { data: current, error: readError } = await sb().from("ads").select("creative,starts_at").eq("id", id).maybeSingle();
+    if (readError) fail("ads.get", readError);
+    if ((current?.creative as AdCreative | null)?.freeTrial) {
+      const { error } = await sb().from("ads").update({ status: "active", starts_at: current?.starts_at ?? new Date(0).toISOString(), ends_at: new Date(0).toISOString() }).eq("id",id);
+      if (error) fail("ads.endTrial",error);
+      return;
+    }
     const { error } = await sb().from("ads").delete().eq("id", id);
     if (error) fail("ads.delete", error);
   },

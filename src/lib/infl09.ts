@@ -19,3 +19,8 @@ export function infl09ApplyUrl(): string | null {
     return null;
   }
 }
+
+/** 홈 렌더링과 광고 승인 화면이 같은 인플공구 슬롯을 계산합니다. */
+export function infl09SlideEnabled(): boolean {
+  return Boolean(infl09ApplyUrl()) || process.env.NODE_ENV !== "production";
+}

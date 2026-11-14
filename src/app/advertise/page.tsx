@@ -1,3 +1,7 @@
+import { freeAdTrialEnabled } from "@/lib/free-ad-trial";
+import type { Ad } from "@/lib/types";
+import { HERO_TOTAL_SLOTS, heroCustomerCapacity } from "@/lib/hero-capacity";
+import { infl09SlideEnabled } from "@/lib/infl09";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Crown, GalleryHorizontal, Presentation } from "lucide-react";
@@ -5,10 +9,9 @@ import { requestAdAction } from "@/app/actions/ads";
 import { AdRequestForm } from "@/components/AdRequestForm";
 import { HeroAdRequestForm } from "@/components/HeroAdRequestForm";
 import { requestHeroAdAction } from "@/app/actions/hero-ads";
-import { HERO_AD_SLOTS, HERO_DESIGN_FEE, HERO_PLANS, HERO_PRICES, heroDepositor, heroPrice, isHeroLive, type HeroAd } from "@/lib/hero-ads";
+import { HERO_PLANS, heroDepositor, heroPrice, isHeroLive, type HeroAd } from "@/lib/hero-ads";
 import { listHeroAds } from "@/lib/hero-ad-store";
-import { AD_BANK, AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PAY_DAYS, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, adPrice, depositorName, won } from "@/lib/ads";
-import type { Ad } from "@/lib/types";
+import { AD_BANK, AD_PAY_DAYS, adPrice, depositorName, won, AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PLANS, AD_PREMIUM_SLOTS } from "@/lib/ads";
 import { getCurrentUser } from "@/lib/auth";
 import { contactEmail } from "@/lib/env";
 import { isPostPublic } from "@/lib/queries";
@@ -23,10 +26,16 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-const MAIL_BODY = ["광고할 홍보글 주소:", "희망 상품(프리미엄/배너):", "희망 기간(1주일/1개월):", "희망 시작일:", ""].join(String.fromCharCode(10));
+const MAIL_BODY = ["광고할 홍보글 주소:", "희망 상품(프리미엄/배너):", "무료 체험 기간: 승인 후 7일", "희망 시작일:", ""].join(String.fromCharCode(10));
+
+/** 한시 무료 모집 중에는 입금 정보를 노출하지 않습니다. 승인 절차는 유지합니다. */
+function FreeRequestNotice() {
+  return <div className="rounded-xl bg-[#f1fbf7] p-4 text-[14px] leading-relaxed text-[#0e7a63]">무료 신청이 접수됐어요. 입금은 필요하지 않으며, 운영자 검토·승인 후 7일 동안 노출돼요. 무료 기간 연장은 불가하며 이후 노출은 유료 광고로 문의해주세요.</div>;
+}
 
 /** 입금 안내 — 계좌, 금액, 입금자명, 승인 기준을 한 번에 보여줍니다. */
 function PaymentBox({ ad, title }: { ad: Ad; title?: string }) {
+  if (ad.freeTrial) return <FreeRequestNotice />;
   return (
     <div className="rounded-2xl border border-[#0e7a63]/30 bg-[#f1fbf7] p-5">
       <p className="text-[15px] font-extrabold text-[#0e7a63]">{title ?? "입금 안내"}</p>
@@ -46,6 +55,7 @@ function PaymentBox({ ad, title }: { ad: Ad; title?: string }) {
 }
 
 function HeroPaymentBox({ ad, title }: { ad: HeroAd; title?: string }) {
+  if (ad.freeTrial) return <FreeRequestNotice />;
   return (
     <div className="rounded-2xl border border-[#0e7a63]/30 bg-[#f1fbf7] p-5">
       <p className="text-[15px] font-extrabold text-[#0e7a63]">{title ?? "입금 안내"}</p>
@@ -64,8 +74,12 @@ function HeroPaymentBox({ ad, title }: { ad: HeroAd; title?: string }) {
   );
 }
 
-export default async function AdvertisePage({ searchParams }: { searchParams: Promise<{ requested?: string; heroRequested?: string; error?: string }> }) {
-  const { requested, heroRequested, error } = await searchParams;
+
+export default async function AdvertisePage({ searchParams }: { searchParams: Promise<{ requested?: string; heroRequested?: string; error?: string; type?: string }> }) {
+  const { requested, heroRequested, error, type } = await searchParams;
+  const freeTrial = freeAdTrialEnabled();
+  const capacity = heroCustomerCapacity(infl09SlideEnabled());
+  const selected = type === "banner" || type === "premium" ? type : "hero";
   const user = await getCurrentUser();
   // 광고 테이블이 아직 준비되지 않은 환경에서도 페이지가 깨지지 않도록 실패하면 빈 값으로 대체합니다.
   const safe = async <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
@@ -85,9 +99,9 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
   return (
     <div className="wrap max-w-[920px] py-7 sm:py-10">
       <header className="mb-7">
-        <h1 className="text-[28px] font-black tracking-[-0.045em] sm:text-[34px]">광고 상품</h1>
+        <h1 className="text-[28px] font-black tracking-[-0.045em] sm:text-[34px]">{freeTrial ? "광고 무료 체험 신청" : "광고 신청"}</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-muted">
-          홍보글 등록은 계속 무료예요. 더 많은 사람에게 보여주고 싶을 때만 선택하세요. 별도 이미지를 만들 필요 없이 이미 등록한 홍보글로 바로 신청할 수 있어요.
+          {freeTrial ? "한시 무료 체험: 계정당 1회 · 게시물 1개 · 승인 후 7일. 무료 기간 연장과 같은 게시물 재신청은 불가하며, 이후 노출은 유료 광고로 문의해주세요. 자동 결제는 없어요." : "원하는 광고 유형을 선택하면 해당 설명과 요금·신청서가 나와요. 신청 후 입금 확인과 관리자 승인을 거쳐 노출돼요."}
         </p>
       </header>
 
@@ -95,11 +109,11 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
         const ad = myAds.find((a) => String(a.id) === requested && a.status === "requested");
         return ad ? (
           <div className="mb-6">
-            <PaymentBox ad={ad} title="신청이 접수됐어요. 아래 계좌로 입금해주세요" />
+            <PaymentBox ad={ad} />
           </div>
         ) : (
           <p role="status" className="mb-6 rounded-xl bg-[#e9f9f3] px-4 py-3 text-[14px] font-medium text-[#0e7a63]">
-            신청이 접수됐어요. 아래 &quot;내 신청 내역&quot;에서 입금 안내를 확인해주세요.
+            신청이 접수됐어요. 아래 &quot;내 신청 내역&quot;에서 승인 상태를 확인해주세요.
           </p>
         );
       })()}
@@ -109,35 +123,23 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {(["premium", "banner"] as const).map((kind) => (
-          <section key={kind} className="rounded-2xl border border-line bg-white p-5 shadow-card">
-            <h2 className="flex items-center gap-2 text-[18px] font-extrabold tracking-[-0.03em]">
-              {kind === "premium" ? <Crown size={19} className="text-[#e0a100]" fill="currentColor" aria-hidden /> : <GalleryHorizontal size={19} className="text-brand" aria-hidden />}
-              {AD_KIND_LABEL[kind]}
-            </h2>
-            <p className="mt-1.5 text-[14px] leading-relaxed text-muted">
-              {kind === "premium"
-                ? `메인 최상단 "프리미엄 홍보" 영역에 ${AD_PREMIUM_SLOTS}칸 중 한 칸으로 고정돼요. 새로고침할 때마다 순서가 섞여 모두 공평하게 앞자리에 노출돼요.`
-                : `메인 상단에 가로로 크게 보이는 배너예요. 동시에 최대 ${AD_BANNER_SLOTS}개가 번갈아 노출돼요. 배너는 내 홍보글의 대표 이미지·제목·소개로 자동 제작돼요.`}
-            </p>
-            <ul className="mt-3 space-y-1.5 text-[14.5px]">
-              {(["week", "month"] as const).map((plan) => (
-                <li key={plan} className="flex items-center justify-between rounded-lg bg-soft px-3 py-2">
-                  <span className="font-medium text-ink-2">{AD_PLANS[plan].label}</span>
-                  <b className="tabular-nums">{won(AD_PRICES[kind][plan])}</b>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-[13px] text-muted">
-              현재 <b className="text-ink-2">{kind === "premium" ? `${premiumUsed}/${AD_PREMIUM_SLOTS}` : `${bannerUsed}/${AD_BANNER_SLOTS}`}</b> 사용 중
-              {(kind === "premium" ? premiumUsed >= AD_PREMIUM_SLOTS : bannerUsed >= AD_BANNER_SLOTS) && " · 가득 차서 대기 신청만 가능해요"}
-            </p>
-          </section>
+      <nav className="grid grid-cols-3 gap-2 sm:gap-4" aria-label="광고 유형 선택">
+        {([
+          { id: "hero", label: "홈 슬라이드", icon: Presentation, desc: "큰 화면에 순환 노출" },
+          { id: "banner", label: "와이드 배너", icon: GalleryHorizontal, desc: "가로형 배너 노출" },
+          { id: "premium", label: "상단 고정", icon: Crown, desc: "프리미엄 카드 고정" },
+        ] as const).map(({ id, label, icon: Icon, desc }) => (
+          <Link key={id} href={`/advertise?type=${id}#ad-application`} aria-current={selected === id ? "true" : undefined}
+            className={`min-w-0 rounded-xl border p-3 text-center transition sm:p-5 ${selected === id ? "border-brand bg-brand-soft ring-1 ring-brand" : "border-line bg-white hover:border-brand"}`}>
+            <Icon className="mx-auto mb-2 text-brand" size={23} aria-hidden />
+            <span className="block text-[13px] font-extrabold sm:text-[17px]">{label}</span>
+            <span className="mt-1 hidden text-[13px] text-muted sm:block">{desc}</span>
+            <span className="mt-2 block text-[12px] font-bold text-brand">{freeTrial ? "무료 체험 신청" : "요금·신청 보기"}</span>
+          </Link>
         ))}
-      </div>
-
-
+      </nav>
+      <div id="ad-application" className="scroll-mt-32">
+      {selected === "hero" && (
       <section id="hero-ad" className="mt-4 scroll-mt-20 rounded-2xl border border-line bg-white p-5 shadow-card sm:p-6" aria-label="홈 슬라이드 광고">
         <h2 className="flex items-center gap-2 text-[18px] font-extrabold tracking-[-0.03em]">
           <Presentation size={19} className="text-brand" aria-hidden />
@@ -145,33 +147,23 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
           <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[12px] font-bold text-brand-dark">NEW</span>
         </h2>
         <p className="mt-1.5 text-[14px] leading-relaxed text-muted">
-          메인 화면 중간의 큰 슬라이드에 내 광고가 들어가요. 홍보글이 없어도 신청할 수 있고, 지금 슬라이드처럼 <b className="text-ink-2">템플릿으로 만들거나</b>, <b className="text-ink-2">직접 만든 이미지</b>를 올리거나, <b className="text-ink-2">협의해서</b> 만들 수 있어요. 링크도 바로 연결하거나 협의 후 정할 수 있어요. 동시에 최대 {HERO_AD_SLOTS}개가 번갈아 노출돼요.
+          메인 화면 중간의 큰 슬라이드에 내 광고가 들어가요. 내가 등록한 홍보글 1개로 신청할 수 있고, 지금 슬라이드처럼 <b className="text-ink-2">템플릿으로 만들거나</b>, <b className="text-ink-2">직접 만든 이미지</b>를 올리거나, <b className="text-ink-2">협의해서</b> 만들 수 있어요. 링크도 바로 연결하거나 협의 후 정할 수 있어요. 사용자 광고는 최대 {capacity}개이며, 인플공구·기본 안내를 포함해 전체 최대 {HERO_TOTAL_SLOTS}개가 번갈아 노출돼요.
         </p>
-        <ul className="mt-3 grid gap-1.5 text-[14.5px] sm:grid-cols-2">
-          {(["week", "month"] as const).map((plan) => (
-            <li key={plan} className="flex items-center justify-between rounded-lg bg-soft px-3 py-2">
-              <span className="font-medium text-ink-2">{HERO_PLANS[plan].label}</span>
-              <b className="tabular-nums">{won(HERO_PRICES[plan])}</b>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-[13px] text-muted">
-          현재 <b className="text-ink-2">{liveHero.length}/{HERO_AD_SLOTS}</b> 사용 중 · 디자인 제작을 맡기면 {won(HERO_DESIGN_FEE)}부터 협의해요.
-        </p>
+        <p className="mt-3 text-[13px] text-muted">현재 <b>{liveHero.length}/{capacity}</b> 사용 중 · {freeTrial ? "계정당 1회 · 게시물 1개 · 7일 무료 체험" : "선택한 유료 기간 동안 노출"} · 운영자 승인 후 시작</p>
         {heroRequested && (() => {
           const ad = myHero.find((a) => String(a.id) === heroRequested && a.status === "requested");
           return ad ? (
-            <div className="mt-4"><HeroPaymentBox ad={ad} title="신청이 접수됐어요. 아래 계좌로 입금해주세요" /></div>
+            <div className="mt-4"><HeroPaymentBox ad={ad} /></div>
           ) : (
-            <p role="status" className="mt-4 rounded-xl bg-[#e9f9f3] px-4 py-3 text-[14px] font-medium text-[#0e7a63]">신청이 접수됐어요. 아래 &quot;내 슬라이드 광고&quot;에서 입금 안내를 확인해주세요.</p>
+            <p role="status" className="mt-4 rounded-xl bg-[#e9f9f3] px-4 py-3 text-[14px] font-medium text-[#0e7a63]">신청이 접수됐어요. 아래 &quot;내 슬라이드 광고&quot;에서 승인 상태를 확인해주세요.</p>
           );
         })()}
         {!user ? (
           <p className="mt-4 text-[14.5px] text-muted">
-            <Link href="/auth?next=%2Fadvertise" className="font-bold text-brand underline">로그인</Link>한 뒤 신청해주세요.
+            <Link href={`/auth?next=${encodeURIComponent(`/advertise?type=${selected}#ad-application`)}`} className="font-bold text-brand underline">로그인</Link>한 뒤 신청해주세요.
           </p>
         ) : (
-          <HeroAdRequestForm action={requestHeroAdAction} />
+          (!freeTrial || publicPosts.length) ? <HeroAdRequestForm freeTrial={freeTrial} posts={publicPosts} action={requestHeroAdAction} /> : <p className="mt-4">먼저 <Link href="/write" className="text-brand underline">홍보글을 등록</Link>해주세요.</p>
         )}
         {myHero.length > 0 && (
           <div className="mt-6" aria-label="내 슬라이드 광고">
@@ -182,39 +174,25 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
                   <span className="min-w-0 flex-1 truncate font-bold">{a.title || a.advertiser || `신청 #${a.id}`}</span>
                   <span className="text-muted">{HERO_PLANS[a.plan].label}</span>
                   <span className={a.status === "active" ? "font-bold text-[#0e7a63]" : "font-bold text-[#9a6b00]"}>
-                    {a.status === "active" && a.endsAt ? (isHeroLive(a) ? `${formatDate(a.endsAt)}까지 노출` : "기간 종료") : "입금 확인 대기"}
+                    {a.status === "active" && a.endsAt ? (isHeroLive(a) ? `${formatDate(a.endsAt)}까지 노출` : "기간 종료") : "검토·승인 대기"}
                   </span>
-                  {a.status === "requested" && <div className="basis-full pt-1"><HeroPaymentBox ad={a} title="입금 안내" /></div>}
+                  {a.status === "requested" && <div className="basis-full pt-1"><HeroPaymentBox ad={a} /></div>}
                 </li>
               ))}
             </ul>
           </div>
         )}
       </section>
+      )}
 
-      <section className="mt-7 rounded-2xl border border-[#f0b429]/50 bg-[#fffbee] p-5 sm:p-6" aria-label="구매 문의">
-        <h2 className="text-[18px] font-extrabold tracking-[-0.03em]">구매·결제 문의는 이메일로</h2>
-        <p className="mt-1.5 text-[14.5px] leading-relaxed text-ink-2">
-          아래에서 신청하시면 바로 입금 계좌가 안내돼요. 궁금한 점이나 결제 관련 문의는 이메일로 보내주세요.
-        </p>
-        {email ? (
-          <a
-            href={`mailto:${email}?subject=${encodeURIComponent("[더홍보 광고 문의]")}&body=${encodeURIComponent(MAIL_BODY)}`}
-            className="btn btn-outline mt-3 inline-flex"
-          >
-            {email} 로 문의하기
-          </a>
-        ) : (
-          <p className="mt-3 text-[13.5px] text-muted">문의 이메일을 준비하고 있어요. 아래 신청서를 남겨주시면 가입 계정으로 안내드릴게요.</p>
-        )}
-      </section>
-
+      {selected !== "hero" && (
       <section className="mt-5 rounded-2xl border border-line bg-white p-5 shadow-card sm:p-6" aria-label="광고 신청">
-        <h2 className="text-[18px] font-extrabold tracking-[-0.03em]">신청하기</h2>
+        <h2 className="text-[18px] font-extrabold tracking-[-0.03em]">{AD_KIND_LABEL[selected]} {freeTrial ? "무료 체험 신청" : "신청"}</h2>
+        <p className="mt-2 text-[14px] leading-relaxed text-muted">{selected === "premium" ? `메인 최상단 프리미엄 영역에 고정돼요. 현재 ${premiumUsed}/${AD_PREMIUM_SLOTS}칸 사용 중이에요.` : `홍보글의 사진과 문구로 만든 가로 배너가 번갈아 노출돼요. 현재 ${bannerUsed}/${AD_BANNER_SLOTS}자리 사용 중이에요.`} {freeTrial ? "검토·승인 후 7일 무료 체험이에요." : "입금 확인·승인 후 선택한 기간 동안 노출돼요."}</p>
         {!user ? (
           <p className="mt-3 text-[14.5px] text-muted">
             광고는 내가 쓴 홍보글로 신청해요.{" "}
-            <Link href="/auth?next=%2Fadvertise" className="font-bold text-brand underline">
+            <Link href={`/auth?next=${encodeURIComponent(`/advertise?type=${selected}#ad-application`)}`} className="font-bold text-brand underline">
               로그인
             </Link>
             한 뒤 신청해주세요.
@@ -228,7 +206,27 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
             해주세요.
           </p>
         ) : (
-          <AdRequestForm posts={publicPosts} action={requestAdAction} />
+          <AdRequestForm freeTrial={freeTrial} key={selected} initialKind={selected} posts={publicPosts} action={requestAdAction} />
+        )}
+      </section>
+
+      )}
+      </div>
+
+      <section className="mt-7 rounded-2xl border border-[#f0b429]/50 bg-[#fffbee] p-5 sm:p-6" aria-label="구매 문의">
+        <h2 className="text-[18px] font-extrabold tracking-[-0.03em]">광고 문의</h2>
+        <p className="mt-1.5 text-[14.5px] leading-relaxed text-ink-2">
+          무료 체험 이후 유료 광고 이용 가능 여부와 요금, 광고 제작·노출 관련 사항은 이메일로 문의해주세요.
+        </p>
+        {email ? (
+          <a
+            href={`mailto:${email}?subject=${encodeURIComponent("[더홍보 광고 문의]")}&body=${encodeURIComponent(MAIL_BODY)}`}
+            className="btn btn-outline mt-3 inline-flex"
+          >
+            {email} 로 문의하기
+          </a>
+        ) : (
+          <p className="mt-3 text-[13.5px] text-muted">문의 이메일을 준비하고 있어요. 아래 신청서를 남겨주시면 가입 계정으로 안내드릴게요.</p>
         )}
       </section>
 
@@ -243,11 +241,11 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
                   {AD_KIND_LABEL[a.kind]} · {AD_PLANS[a.plan].label}
                 </span>
                 <span className={a.status === "active" ? "font-bold text-[#0e7a63]" : "font-bold text-[#9a6b00]"}>
-                  {a.status === "active" && a.endsAt ? `${formatDate(a.endsAt)}까지 노출` : "입금 확인 대기"}
+                  {a.status === "active" && a.endsAt ? `${formatDate(a.endsAt)}까지 노출` : "검토·승인 대기"}
                 </span>
                 {a.status === "requested" && (
                   <div className="basis-full pt-1">
-                    <PaymentBox ad={a} title={`입금 안내 · ${titleOf(a.postId)}`} />
+                    <PaymentBox ad={a} />
                   </div>
                 )}
               </li>

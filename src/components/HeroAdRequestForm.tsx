@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { won } from "@/lib/ads";
-import { HERO_DESIGN_FEE, HERO_LIMITS, HERO_PLANS, HERO_PRICES, HERO_THEMES, type HeroDesignMode, type HeroLinkMode, type HeroPlan, type HeroTheme } from "@/lib/hero-ads";
+import { HERO_PLANS, HERO_PRICES, HERO_LIMITS, HERO_THEMES, type HeroDesignMode, type HeroLinkMode, type HeroTheme } from "@/lib/hero-ads";
 import type { ProcessOptions } from "@/lib/image-client";
 import { cn } from "@/lib/utils";
 import { ImagePicker } from "./AdRequestForm";
@@ -18,11 +18,12 @@ const field = "field w-full";
 const DESIGNS: Array<{ value: HeroDesignMode; title: string; desc: string }> = [
   { value: "template", title: "템플릿으로 만들기", desc: "제목·소개 문구와 색만 고르면 지금 보이는 슬라이드처럼 만들어 드려요." },
   { value: "image", title: "내 이미지 올리기", desc: "직접 만든 배너 이미지를 그대로 올려요. (가로로 긴 3:1)" },
-  { value: "discuss", title: "협의 후 제작", desc: `원하는 분위기를 알려주시면 운영자가 연락해 함께 정해요. 제작 대행은 ${won(HERO_DESIGN_FEE)}부터 협의해요.` },
+  { value: "discuss", title: "협의 후 제작", desc: "원하는 분위기를 알려주시면 운영자가 제작 가능 범위를 함께 정해요. 별도 비용은 사전 동의 없이 발생하지 않아요." },
 ];
 
-export function HeroAdRequestForm({ action }: { action: (fd: FormData) => void | Promise<void> }) {
-  const [plan, setPlan] = useState<HeroPlan>("week");
+export function HeroAdRequestForm({ action, posts, freeTrial = true }: { freeTrial?: boolean; posts: Array<{ id: number; title: string }>; action: (fd: FormData) => void | Promise<void> }) {
+
+  const [plan, setPlan] = useState<"week" | "month">("week");
   const [design, setDesign] = useState<HeroDesignMode>("template");
   const [link, setLink] = useState<HeroLinkMode>("url");
   const [theme, setTheme] = useState<HeroTheme>("violet");
@@ -37,6 +38,9 @@ export function HeroAdRequestForm({ action }: { action: (fd: FormData) => void |
 
   return (
     <form action={action} className="mt-4 space-y-5">
+      {freeTrial && <label className="block text-[14px] font-bold">광고할 홍보글
+        <select name="postId" required className="field mt-1.5">{posts.map(post => <option key={post.id} value={post.id}>{post.title}</option>)}</select>
+      </label>}
       <fieldset>
         <legend className="mb-1.5 text-[14px] font-bold text-ink-2">배너 만드는 방법</legend>
         <div className="grid gap-2 sm:grid-cols-3">
@@ -100,7 +104,7 @@ export function HeroAdRequestForm({ action }: { action: (fd: FormData) => void |
       {design === "discuss" && (
         <label className="block">
           <span className="mb-1 block text-[13.5px] font-bold text-ink-2">협의할 내용 <span className="font-normal text-muted">(최대 {HERO_LIMITS.memo}자)</span></span>
-          <textarea name="memo" required rows={4} maxLength={HERO_LIMITS.memo} className={field} placeholder="어떤 광고인지, 원하는 분위기·문구, 참고할 자료나 사이트를 적어주세요. 입금 확인 뒤 가입 이메일로 연락드려요." />
+          <textarea name="memo" required rows={4} maxLength={HERO_LIMITS.memo} className={field} placeholder="어떤 광고인지, 원하는 분위기·문구, 참고할 자료나 사이트를 적어주세요. 신청 확인 뒤 가입 이메일로 연락드려요." />
         </label>
       )}
 
@@ -141,7 +145,10 @@ export function HeroAdRequestForm({ action }: { action: (fd: FormData) => void |
         </label>
       )}
 
-      <fieldset>
+      {freeTrial ? <>
+        <input type="hidden" name="plan" value="week" />
+        <p className="rounded-xl bg-brand-soft p-3 text-[14px] font-bold">무료 체험: 계정당 1회 · 게시물 1개 · 승인 후 7일<br /><span className="text-[13px] font-normal">같은 게시물 재신청과 무료 기간 연장은 불가해요. 이후 노출은 유료 광고로 문의해주세요.</span></p>
+      </> : (      <fieldset>
         <legend className="mb-1.5 text-[14px] font-bold text-ink-2">기간</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {(["week", "month"] as const).map((p) => (
@@ -154,12 +161,14 @@ export function HeroAdRequestForm({ action }: { action: (fd: FormData) => void |
         </div>
       </fieldset>
 
+)}
+
       <ul className="space-y-1 text-[13px] text-muted">
-        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /> 신청하면 바로 입금 계좌가 안내돼요. 입금이 확인되어 승인된 시점부터 기간이 시작돼요.</li>
-        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /> 슬라이드에는 &quot;광고&quot; 표시가 붙어요. 운영정책에 어긋난 문구·이미지·링크는 승인되지 않을 수 있어요.</li>
-        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /> 승인(노출 시작) 이후에는 환불이 어려워요. 자세한 기준은 <a href="/policy#ads-refund" className="underline">운영정책</a>을 확인해주세요.</li>
+        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /><span className="min-w-0">{freeTrial ? "무료 신청은 입금 없이 관리자 검토·승인 후 7일 동안 노출돼요." : "입금 확인과 관리자 검토·승인 후 선택한 기간 동안 노출돼요."}</span></li>
+        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /><span className="min-w-0">슬라이드에는 &quot;광고&quot; 표시가 붙어요. 운영정책에 어긋난 문구·이미지·링크는 승인되지 않을 수 있어요.</span></li>
+        <li className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-brand" aria-hidden /><span className="min-w-0">무료 노출이 끝나도 자동 결제되지 않아요. 자세한 기준은 <a href="/policy#ads-refund" className="underline">운영정책</a>을 확인해주세요.</span></li>
       </ul>
-      <button className="btn btn-primary btn-lg" disabled={missingImage}>슬라이드 광고 신청하기</button>
+      <button className="btn btn-primary btn-lg" disabled={missingImage}>{freeTrial ? "무료 슬라이드 광고 신청하기" : "슬라이드 광고 신청하기"}</button>
     </form>
   );
 }

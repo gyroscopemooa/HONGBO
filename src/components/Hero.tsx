@@ -3,9 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { selectHeroSlides } from "@/lib/hero-capacity";
 import { HeroAdFace, type HeroAdView } from "./HeroAdSlide";
 
 const banners = [
+  { src: "/hero-banner-ad-apply.svg", alt: "광고 신청하시오. 홈 슬라이드, 와이드 배너, 상단 고정 광고 안내 및 신청" },
   {
     src: "/hero-banner.png",
     alt: "홍보하고, 알려보세요! 한 번 올리면 여러 사람에게 더홍보. 앱, 사이트, 가게, 상품, 모임까지 누구나 무료로 쉽고 빠르게 홍보할 수 있어요.",
@@ -90,13 +92,15 @@ function PaidSlide({ ad, active }: { ad: HeroAdView; active: boolean }) {
 
 export function Hero({ infl09, ads = [] }: { infl09?: { url: string | null; preview: boolean }; ads?: HeroAdView[] }) {
   const showInfl = Boolean(infl09 && (infl09.url || infl09.preview));
-  const adCount = ads.length;
-  const total = banners.length + (showInfl ? 1 : 0) + adCount;
+  const { ads: visibleAds, defaults: visibleBanners, total } = selectHeroSlides(ads, banners, showInfl);
+  const adCount = visibleAds.length;
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
+  // 광고 종료 등으로 장수가 줄어도 현재 표시 인덱스를 유효하게 유지합니다.
+  const activeIndex = total ? current % total : 0;
 
   useEffect(() => {
-    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (total < 2 || paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const timer = window.setInterval(() => {
       setCurrent((index) => (index + 1) % total);
@@ -118,19 +122,19 @@ export function Hero({ infl09, ads = [] }: { infl09?: { url: string | null; prev
       }}
     >
       <div className="relative mx-auto aspect-[2172/724] max-w-[1440px]">
-        {ads.map((ad, i) => (
-          <PaidSlide key={ad.id} ad={ad} active={current === i} />
+        {visibleAds.map((ad, i) => (
+          <PaidSlide key={ad.id} ad={ad} active={activeIndex === i} />
         ))}
-        {showInfl && <Infl09Slide url={infl09!.url} active={current === adCount} />}
-        {banners.map((banner, i) => {
+        {showInfl && <Infl09Slide url={infl09!.url} active={activeIndex === adCount} />}
+        {visibleBanners.map((banner, i) => {
           const index = i + adCount + (showInfl ? 1 : 0);
-          const active = index === current;
+          const active = index === activeIndex;
 
           return (
             <Link
               key={banner.src}
-              href="/write"
-              aria-label={`${banner.alt} 지금 홍보 작성하기`}
+              href={banner.src === "/hero-banner-ad-apply.svg" ? "/advertise" : "/write"}
+              aria-label={banner.alt}
               aria-hidden={!active}
               tabIndex={active ? 0 : -1}
               className={`absolute inset-0 transition-opacity duration-700 focus-visible:outline-4 focus-visible:-outline-offset-4 focus-visible:outline-brand ${
@@ -155,10 +159,10 @@ export function Hero({ infl09, ads = [] }: { infl09?: { url: string | null; prev
               key={index}
               type="button"
               aria-label={`${index + 1}번 배너 보기`}
-              aria-current={index === current ? "true" : undefined}
+              aria-current={index === activeIndex ? "true" : undefined}
               onClick={() => setCurrent(index)}
               className={`size-2.5 rounded-full transition-colors sm:size-3 ${
-                index === current ? "bg-brand" : "bg-slate-300 hover:bg-slate-400"
+                index === activeIndex ? "bg-brand" : "bg-slate-300 hover:bg-slate-400"
               }`}
             />
           ))}

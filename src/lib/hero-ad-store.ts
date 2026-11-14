@@ -1,9 +1,13 @@
+import { parseTrialMemo, trialMemo } from "./free-ad-trial";
 import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import { supabaseConfigured } from "./env";
 import { getAdminClient } from "./supabase/admin";
-import { HERO_AD_SLOTS, heroEndsAt, isHeroLive, type HeroAd, type HeroAdInput } from "./hero-ads";
+import { heroEndsAt, isHeroLive, type HeroAd, type HeroAdInput } from "./hero-ads";
+
+import { heroCustomerCapacity } from "./hero-capacity";
+import { infl09SlideEnabled } from "./infl09";
 
 const FILE = "hero-ads.json";
 const dataFile = () => path.join(process.cwd(), ".data", FILE);
@@ -25,6 +29,8 @@ const s = (v: unknown) => (typeof v === "string" ? v : null);
 function fromRow(r: Row): HeroAd {
   return {
     id: Number(r.id),
+    freeTrial: parseTrialMemo(s(r.memo)).freeTrial,
+    postId: parseTrialMemo(s(r.memo)).postId,
     requestedBy: s(r.requested_by),
     plan: r.plan as HeroAd["plan"],
     status: r.status as HeroAd["status"],
@@ -36,7 +42,7 @@ function fromRow(r: Row): HeroAd {
     imageUrl: s(r.image_url),
     linkMode: r.link_mode as HeroAd["linkMode"],
     linkUrl: s(r.link_url),
-    memo: s(r.memo),
+    memo: parseTrialMemo(s(r.memo)).memo,
     advertiser: s(r.advertiser),
     startsAt: s(r.starts_at),
     endsAt: s(r.ends_at),
@@ -61,7 +67,7 @@ export async function listHeroAds(opts: { requestedBy?: string; liveOnly?: boole
   return opts.liveOnly ? rows.filter((a) => isHeroLive(a)) : rows;
 }
 
-export async function requestHeroAd(input: HeroAdInput & { requestedBy: string | null }): Promise<HeroAd> {
+export async function requestHeroAd(input: HeroAdInput & { requestedBy: string | null; postId?: number; freeTrial?: boolean }): Promise<HeroAd> {
   if (supabaseConfigured()) {
     const { data, error } = await getAdminClient()
       .from("hero_ads")
@@ -76,7 +82,7 @@ export async function requestHeroAd(input: HeroAdInput & { requestedBy: string |
         image_url: input.imageUrl,
         link_mode: input.linkMode,
         link_url: input.linkUrl,
-        memo: input.memo,
+        memo: input.freeTrial && input.postId ? trialMemo(input.postId, input.memo) : input.memo,
         advertiser: input.advertiser,
       })
       .select("*")
@@ -90,13 +96,14 @@ export async function requestHeroAd(input: HeroAdInput & { requestedBy: string |
   return ad;
 }
 
-/** 입금 확인 후 승인 — 지금 시점부터 기간이 시작됩니다. 동시 노출 한도가 차 있으면 승인하지 않아요. */
+/** 검토 후 승인 — 지금 시점부터 기간이 시작됩니다. 동시 노출 한도가 차 있으면 승인하지 않아요. */
 export async function activateHeroAd(id: number): Promise<{ ok: true } | { ok: false; error: string }> {
   const all = await listHeroAds();
   const ad = all.find((a) => a.id === id);
   if (!ad) return { ok: false, error: "신청을 찾을 수 없어요." };
   if (ad.status === "active") return { ok: true };
-  if (all.filter((a) => isHeroLive(a)).length >= HERO_AD_SLOTS) return { ok: false, error: `슬라이드 광고 ${HERO_AD_SLOTS}자리가 모두 차 있어요. 노출 중인 광고가 끝난 뒤 승인해주세요.` };
+  const capacity = heroCustomerCapacity(infl09SlideEnabled());
+  if (all.filter((a) => isHeroLive(a)).length >= capacity) return { ok: false, error: `슬라이드 광고 ${capacity}자리가 모두 차 있어요. 노출 중인 광고가 끝난 뒤 승인해주세요.` };
   const now = new Date();
   const patch = { status: "active" as const, startsAt: now.toISOString(), endsAt: heroEndsAt(ad.plan, now) };
   if (supabaseConfigured()) {
@@ -109,6 +116,15 @@ export async function activateHeroAd(id: number): Promise<{ ok: true } | { ok: f
 }
 
 export async function deleteHeroAd(id: number) {
+  const ad = (await listHeroAds()).find(a => a.id === id);
+  if (ad?.freeTrial) {
+    const ended = { status: "active" as const, startsAt: ad.startsAt ?? new Date(0).toISOString(), endsAt: new Date(0).toISOString() };
+    if (supabaseConfigured()) {
+      const { error } = await getAdminClient().from("hero_ads").update({ status: ended.status, starts_at: ended.startsAt, ends_at: ended.endsAt }).eq("id",id);
+      if (error) throw error;
+    } else writeLocal(readLocal().map(a => a.id === id ? { ...a, ...ended } : a));
+    return;
+  }
   if (supabaseConfigured()) {
     const { error } = await getAdminClient().from("hero_ads").delete().eq("id", id);
     if (error) throw error;

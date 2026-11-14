@@ -2,7 +2,7 @@ import Link from "next/link";
 import { adminApproveAd, adminAssignAd, adminDeleteAd } from "../actions";
 import { AdBanner } from "@/components/AdBanner";
 import { ConfirmButton } from "@/components/ConfirmButton";
-import { AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, depositorName, isAdLive, won } from "@/lib/ads";
+import { AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, won, isAdLive } from "@/lib/ads";
 import { store } from "@/lib/store";
 import type { Ad, Post } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -21,8 +21,8 @@ function Row({ ad, title, post, children }: { ad: Ad; title: string; post?: Post
           #{ad.postId} {title}
         </Link>
         <p className="mt-0.5 text-[13px] text-muted">
-          {AD_KIND_LABEL[ad.kind]} · {AD_PLANS[ad.plan].label} ({won(AD_PRICES[ad.kind][ad.plan])})
-          {ad.status === "requested" && <> · 입금자명 <b className="text-ink-2">{depositorName(ad.id)}</b></>}
+          {AD_KIND_LABEL[ad.kind]} · {AD_PLANS[ad.plan].label} ({ad.freeTrial ? "무료 체험 7일" : won(AD_PRICES[ad.kind][ad.plan])})
+          {ad.status === "requested" && <> · {ad.freeTrial ? "입금 불필요 · 연장 불가" : "입금 확인 필요"}</>}
           {ad.slotNo != null && <> · {ad.slotNo}번 칸</>}
           {ad.endsAt && <> · {formatDate(ad.endsAt)}까지</>}
         </p>
@@ -72,11 +72,11 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
         </p>
       )}
       <p className="text-[14px] text-muted">
-        프리미엄 <b className="text-ink-2">{premiumLive}/{AD_PREMIUM_SLOTS}</b>칸 · 와이드 배너 <b className="text-ink-2">{bannerLive}/{AD_BANNER_SLOTS}</b>자리 사용 중. 입금을 확인한 뒤 <b className="text-ink-2">승인</b>하면 그 시점부터 기간이 시작돼요.
+        프리미엄 <b className="text-ink-2">{premiumLive}/{AD_PREMIUM_SLOTS}</b>칸 · 와이드 배너 <b className="text-ink-2">{bannerLive}/{AD_BANNER_SLOTS}</b>자리 사용 중. 무료 여부와 신청 내용을 검토한 뒤 <b className="text-ink-2">승인</b>하면 그 시점부터 기간이 시작돼요.
       </p>
 
       <section aria-label="승인 대기">
-        <h2 className="mb-2 font-extrabold">입금 확인·승인 대기 ({requested.length})</h2>
+        <h2 className="mb-2 font-extrabold">신청·승인 대기 ({requested.length})</h2>
         {requested.length === 0 ? (
           <p className="rounded-xl border border-dashed border-line px-4 py-6 text-center text-sm text-faint">대기 중인 신청이 없어요.</p>
         ) : (
@@ -89,15 +89,16 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
                     <option value="premium">{AD_KIND_LABEL.premium}</option>
                     <option value="banner">{AD_KIND_LABEL.banner}</option>
                   </select>
-                  <select name="plan" defaultValue={ad.plan} aria-label="기간" className="field !w-auto !py-1.5 text-[13px]">
+                  <select name="plan" disabled={ad.freeTrial} defaultValue={ad.freeTrial ? "week" : ad.plan} aria-label="기간" className="field !w-auto !py-1.5 text-[13px]">
                     <option value="week">{AD_PLANS.week.label}</option>
                     <option value="month">{AD_PLANS.month.label}</option>
                   </select>
+                  {ad.freeTrial && <input type="hidden" name="plan" value="week" />}
                   <button className="btn btn-primary btn-sm">승인</button>
                 </form>
                 <form action={adminDeleteAd}>
                   <input type="hidden" name="id" value={ad.id} />
-                  <ConfirmButton message="이 신청을 거절(삭제)할까요?">거절</ConfirmButton>
+                  <ConfirmButton message="이 신청을 거절할까요? 무료 체험 이력은 재신청 방지를 위해 보관됩니다.">거절</ConfirmButton>
                 </form>
               </Row>
             ))}
@@ -115,7 +116,7 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
               <Row key={ad.id} ad={ad} post={post} title={post?.title ?? "(삭제된 글)"}>
                 <form action={adminDeleteAd}>
                   <input type="hidden" name="id" value={ad.id} />
-                  <ConfirmButton message="노출을 중단하고 삭제할까요?">중단</ConfirmButton>
+                  <ConfirmButton message="노출을 중단할까요? 무료 체험 이력은 보관됩니다.">중단</ConfirmButton>
                 </form>
               </Row>
             ))}

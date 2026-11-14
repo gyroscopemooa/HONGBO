@@ -107,7 +107,7 @@ export interface Store {
 
   // ── ads ──
   listAds(opts?: { kind?: Ad["kind"]; status?: Ad["status"]; liveOnly?: boolean; requestedBy?: string }): Promise<Ad[]>;
-  requestAd(a: { postId: number; kind: Ad["kind"]; plan: Ad["plan"]; requestedBy: string | null; creative?: AdCreative | null }): Promise<Ad>;
+  requestAd(a: { freeTrial?: boolean; postId: number; kind: Ad["kind"]; plan: Ad["plan"]; requestedBy: string | null; creative?: AdCreative | null }): Promise<Ad>;
   /** 승인 전(requested) 신청의 상품·기간을 바꿉니다. 상품이 바뀌면 제작 정보(이미지·문구)는 지웁니다. */
   reviseAd(id: number, v: { kind: Ad["kind"]; plan: Ad["plan"] }): Promise<void>;
   /** 승인: 지금부터 기간만큼 노출. 프리미엄은 빈 칸을 자동 배정. 자리가 없으면 error */
