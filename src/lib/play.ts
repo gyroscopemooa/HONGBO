@@ -89,3 +89,39 @@ export function filterPlayPlaces(places: PlayPlace[], filters: { q?: string; reg
     && (!filters.companion || p.companions.some(c => c === filters.companion))
     && words.every(w => `${p.title} ${p.region} ${p.area} ${p.kind} ${p.summary} ${p.conditions?.subtype ?? ""} ${p.conditions?.eligibility ?? ""} ${p.companions.join(" ")}`.toLocaleLowerCase().includes(w)));
 }
+
+export const PLAY_SORTS = [
+  { id: "default", label: "추천순" },
+  { id: "latest", label: "최신등록순" },
+  { id: "deadline", label: "마감일순" },
+  { id: "dday", label: "D-day 가까운순" },
+  { id: "ongoing", label: "진행 중" },
+  { id: "longest", label: "기간 긴 순" },
+  { id: "past", label: "지난 행사순" },
+] as const;
+export type PlaySort = typeof PLAY_SORTS[number]["id"];
+const dayNum = (v?: string) => v ? Date.parse(`${v}T00:00:00Z`) / 86400000 : NaN;
+const endOf = (p: PlayPlace) => p.endDate || p.startDate || "";
+/** Sort/filter by the chosen mode. Items without a confirmed date always go last. Never mutates input. */
+export function sortPlayPlacesBy(places: PlayPlace[], sort: PlaySort, day = koreanDay()): PlayPlace[] {
+  const dated = (p: PlayPlace) => !p.schedulePending && !!(p.startDate || p.endDate);
+  const st = (p: PlayPlace) => playStatus(p, day);
+  const withIndex = places.map((p, i) => ({ p, i }));
+  const cmp = (key: (p: PlayPlace) => number) => (a: { p: PlayPlace; i: number }, b: { p: PlayPlace; i: number }) => {
+    const ka = key(a.p), kb = key(b.p);
+    if (Number.isNaN(ka) && Number.isNaN(kb)) return a.i - b.i;
+    if (Number.isNaN(ka)) return 1;
+    if (Number.isNaN(kb)) return -1;
+    return ka - kb || a.i - b.i;
+  };
+  const out = (arr: typeof withIndex) => arr.map(x => x.p);
+  switch (sort) {
+    case "latest": return out([...withIndex].sort((a, b) => b.p.checkedAt.localeCompare(a.p.checkedAt) || a.i - b.i));
+    case "deadline": return out(withIndex.filter(x => st(x.p) !== "종료").sort(cmp(p => dated(p) ? dayNum(endOf(p)) : NaN)));
+    case "dday": return out(withIndex.filter(x => st(x.p) !== "종료").sort(cmp(p => dated(p) && p.startDate ? Math.max(dayNum(p.startDate), dayNum(day)) : NaN)));
+    case "ongoing": return out(withIndex.filter(x => st(x.p) === "진행 중").sort(cmp(p => dayNum(endOf(p)))));
+    case "longest": return out(withIndex.filter(x => st(x.p) !== "종료").sort(cmp(p => dated(p) && p.startDate && p.endDate ? -(dayNum(p.endDate) - dayNum(p.startDate)) : NaN)));
+    case "past": return out(withIndex.filter(x => st(x.p) === "종료").sort((a, b) => endOf(b.p).localeCompare(endOf(a.p)) || a.i - b.i));
+    default: return sortPlayPlaces(places, day);
+  }
+}

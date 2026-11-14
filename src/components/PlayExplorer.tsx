@@ -5,7 +5,7 @@ import { REGIONS } from "@/lib/constants";
 import { PLAY_NOTICE, PLAY_COST, PLAY_VISIT, PLAY_SOLO, playSubtypes, type PlayConditionFilters } from "@/lib/play-conditions";
 import { PlayConditionsSummary } from "./PlayConditionsSummary";
 import { useEffect, useState } from "react";
-import { PLAY_COMPANIONS, PLAY_KINDS, filterPlayPlaces, playPeriod, playStatus, playCountdown, sortPlayPlaces, type PlayPlace } from "@/lib/play";
+import { PLAY_COMPANIONS, PLAY_KINDS, filterPlayPlaces, playPeriod, playStatus, playCountdown, sortPlayPlacesBy, PLAY_SORTS, type PlaySort, type PlayPlace } from "@/lib/play";
 import { PlayVisual } from "./PlayVisual";
 import { usePlayDay } from "./usePlayDay";
 import { CalendarDays } from "lucide-react";
@@ -18,6 +18,7 @@ export function PlayExplorer({ places, day: initialDay }: { places: PlayPlace[];
   const [kind, setKind] = useState("");
   const [conditions, setConditions] = useState<PlayConditionFilters>({});
   const [companion, setCompanion] = useState("");
+  const [sort, setSort] = useState<PlaySort>("default");
   const [expanded, setExpanded] = useState(false);
   const [savedOnly, setSavedOnly] = useState(false);
   const [saved, setSaved] = useState<string[]>([]);
@@ -35,8 +36,8 @@ export function PlayExplorer({ places, day: initialDay }: { places: PlayPlace[];
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)); setStorageMessage(""); }
     catch { setStorageMessage("이 브라우저에서는 찜을 보관할 수 없어 현재 화면에서만 유지돼요."); }
   }
-  const filtered = sortPlayPlaces(filterPlayPlaces(places, { q, region, kind, companion, conditions }, day), day).filter(p => !savedOnly || saved.includes(p.slug));
-  const reset = () => { setQ(""); setRegion(""); setKind(""); setCompanion(""); setSavedOnly(false); setConditions({}); setExpanded(false); };
+  const filtered = sortPlayPlacesBy(filterPlayPlaces(places, { q, region, kind, companion, conditions, ended: sort === "past" }, day), sort, day).filter(p => !savedOnly || saved.includes(p.slug));
+  const reset = () => { setQ(""); setRegion(""); setKind(""); setCompanion(""); setSavedOnly(false); setSort("default"); setConditions({}); setExpanded(false); };
   return <section id="explore" className="play-section">
     <div className="play-heading"><div><p className="play-eyebrow">FIND YOUR LITTLE GETAWAY</p><h2 className="mt-2">지역·종류·조건으로 찾아보기</h2></div><p className="play-muted">운영자가 정리한 국내 나들이 안내</p></div>
     <div className="play-filters">
@@ -57,6 +58,7 @@ export function PlayExplorer({ places, day: initialDay }: { places: PlayPlace[];
       </div>
       {storageMessage && <p role="status" className="play-muted mt-3">{storageMessage}</p>}
     </div>
+    <div className="play-chips mt-4" role="group" aria-label="정렬">{PLAY_SORTS.map(o=><button key={o.id} type="button" className="play-chip" aria-pressed={sort===o.id} onClick={()=>{setSort(o.id);setExpanded(false);}}>{o.label}</button>)}</div>
     {filtered.length ? <div className="play-grid">{(expanded ? filtered : filtered.slice(0,9)).map(p=><article className="play-card" key={p.slug}>
       <Link href={`/play/${p.slug}`} tabIndex={-1} aria-hidden="true"><div className="play-card-art"><PlayVisual place={p}/><span className="play-badge">{p.startDate ? playCountdown(p, day) : p.mood}</span></div></Link>
       <div className="play-card-body"><span className="play-eyebrow !tracking-normal">{p.region} · {p.area} <span className="font-normal">/ {p.kind}</span></span><h3><Link href={`/play/${p.slug}`}>{p.title}</Link></h3><p>{p.summary}</p><PlayConditionsSummary conditions={p.conditions} price={p.price} compact/><div className="play-period"><CalendarDays size={16} aria-hidden/><span>{playPeriod(p)}</span></div>{p.startDate && <span className={`play-status ${playStatus(p, day) === "종료" ? "ended" : ""}`}>{playCountdown(p, day)}</span>}<div className="play-card-bottom"><span>{p.companions.join(" · ")}</span><button type="button" className="play-save" aria-pressed={saved.includes(p.slug)} aria-label={`${p.title} ${saved.includes(p.slug) ? "찜 해제" : "찜하기"}`} onClick={()=>toggleSave(p.slug)}>{saved.includes(p.slug) ? "♥ 찜함" : "♡ 찜"}</button></div></div>
