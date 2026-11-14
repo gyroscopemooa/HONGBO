@@ -1,5 +1,8 @@
 import { PostComments } from "@/components/PostComments";
 import { PlayVisitGuide } from "@/components/PlayVisitGuide";
+import { PostLocationMap } from "@/components/PostLocationMap";
+import { BodyBlocks } from "@/components/BodyBlocks";
+import { LinkedText } from "@/components/LinkedText";
 
 import { PlayConditionsSummary } from "@/components/PlayConditionsSummary";
 import type { Metadata } from "next";
@@ -111,7 +114,7 @@ export default async function PostDetailPage({ params }: Props) {
   if (plat) rows.push({ icon: <Smartphone size={15} />, k: post.category === "content" ? "플랫폼" : "지원 환경", v: plat });
   if (usage) rows.push({ icon: <Info size={15} />, k: "이용 방식", v: usage });
   if (post.extra.period) rows.push({ icon: <CalendarClock size={15} />, k: "모집/행사 기간", v: post.extra.period });
-  if (post.address) rows.push({ icon: <MapPin size={15} />, k: "주소", v: post.address });
+  if (post.address) rows.push({ icon: <MapPin size={15} />, k: "주소", v: [post.address, post.extra.addressDetail].filter(Boolean).join(" ") });
   if (post.category === "products" && post.extra.deliveryMethod) rows.push({ icon: <Info size={15} />, k: "배송방법", v: post.extra.deliveryMethod });
   if (post.category === "products" && post.extra.deliveryMethod && post.extra.deliveryPeriod) rows.push({ icon: <CalendarClock size={15} />, k: "평균 배송기간", v: post.extra.deliveryPeriod });
   if (post.category === "products" && post.extra.saleMethod) rows.push({ icon: <Info size={15} />, k: "판매방법", v: post.extra.saleMethod });
@@ -152,7 +155,7 @@ export default async function PostDetailPage({ params }: Props) {
         </div>
 
         <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1" aria-label="홍보 정보">
-          <div className="rounded-2xl border border-line bg-white p-5 shadow-card sm:p-6 lg:sticky lg:top-[72px]">
+          <div className={post.address ? "rounded-2xl border border-line bg-white p-5 shadow-card sm:p-6" : "rounded-2xl border border-line bg-white p-5 shadow-card sm:p-6 lg:sticky lg:top-[72px]"}>
             <div className="flex flex-wrap items-center gap-1.5">
               <CategoryBadge slug={post.category} className="!text-[12.5px] !px-2 !py-1" />
               {post.region && (
@@ -270,6 +273,7 @@ export default async function PostDetailPage({ params }: Props) {
               </div>
             )}
           </div>
+          <PostLocationMap address={post.address} detail={post.extra.addressDetail} />
         </aside>
 
         <div className="min-w-0 lg:col-start-1 lg:row-start-2">
@@ -277,7 +281,8 @@ export default async function PostDetailPage({ params }: Props) {
             <h2 id="desc-title" className="mb-4 text-lg font-extrabold tracking-[-0.03em]">
               상세 설명
             </h2>
-            <div className="prose-body">{post.description}</div>
+            {post.extra.bodyFormat !== "rich" && <div className="prose-body"><LinkedText text={post.description} /></div>}
+            <BodyBlocks blocks={post.extra.bodyBlocks} />
             {!!post.extra.notes?.length && <section aria-label="추가 안내" className="mt-6 space-y-3">
               {post.extra.notes.map((note, i) => <section key={i} className="min-w-0 rounded-xl border border-line bg-soft/50 p-4 sm:p-5">
                 <h3 className="break-words text-base font-bold">{note.title}</h3>

@@ -15,6 +15,8 @@ export interface ProcessOptions {
   keepOriginal?: boolean;
   /** 자르지 않는 이미지의 원본 픽셀 크기를 보존합니다. */
   preserveResolution?: boolean;
+  /** 본문 등 용량 제한이 있는 이미지의 저장 상한 */
+  maxBytes?: number;
 }
 
 export async function processImage(file: Blob, opts: ProcessOptions = {}): Promise<Blob> {
@@ -57,6 +59,15 @@ export async function processImage(file: Blob, opts: ProcessOptions = {}): Promi
   bitmap.close?.();
 
   const toBlob = (type: string, q: number) => new Promise<Blob | null>((res) => canvas.toBlob(res, type, q));
+  if (opts.maxBytes) {
+    for (const quality of [0.86, 0.75, 0.6, 0.45]) {
+      const blob = await toBlob("image/webp", quality);
+      if (blob && blob.type === "image/webp" && blob.size <= opts.maxBytes) return blob;
+    }
+    const jpg = await toBlob("image/jpeg", 0.65);
+    if (jpg && jpg.size <= opts.maxBytes) return jpg;
+    throw new Error("본문 사진은 압축 후 350KB 이하여야 해요. 더 작은 사진을 선택해주세요.");
+  }
   if (opts.keepOriginal && opts.preserveResolution) {
     for (const quality of [0.9, 0.8, 0.7, 0.6]) {
       const blob = await toBlob("image/webp", quality);
@@ -73,9 +84,10 @@ export async function processImage(file: Blob, opts: ProcessOptions = {}): Promi
   return jpg;
 }
 
-export async function uploadImage(blob: Blob): Promise<string> {
+export async function uploadImage(blob: Blob, purpose?: "body"): Promise<string> {
   const fd = new FormData();
   fd.append("file", blob, blob.type === "image/webp" ? "image.webp" : "image.jpg");
+  if (purpose) fd.append("purpose", purpose);
   const res = await fetch("/api/upload", { method: "POST", body: fd });
   const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
   if (!res.ok || !data.url) throw new Error(data.error ?? "이미지 업로드에 실패했어요.");

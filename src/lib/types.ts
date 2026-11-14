@@ -23,7 +23,17 @@ export interface SurveyQuestion {
   allowOther?: boolean;
 }
 
+export interface BodyBlock {
+  id: string;
+  type: "text" | "image" | "youtube";
+  value: string;
+  caption?: string;
+}
+
 export interface PostExtra {
+  bodyFormat?: "rich";
+  bodyBlocks?: BodyBlock[];
+  addressDetail?: string;
   play?: PlayConditions;
   /** 상품/판매 선택 안내. 생략하면 공개하지 않습니다. */
   deliveryMethod?: string;

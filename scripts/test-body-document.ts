@@ -1,0 +1,21 @@
+import assert from "node:assert/strict";
+import { bodyDocument, documentBody } from "../src/lib/body-document";
+import { parsePostInput } from "../src/lib/validation";
+import type { BodyBlock } from "../src/lib/types";
+
+const legacy: BodyBlock[] = [{ id: "old", type: "image", value: "/uploads/old.webp", caption: "기존 사진 설명" }, { id: "old2", type: "text", value: "이어서 쓰는 안내 문장입니다." }];
+const migrated = documentBody(bodyDocument("예전 상세 설명이 여기에 있습니다.", legacy, false));
+assert.deepEqual(migrated.blocks.map(b => b.type), ["text", "image", "text"]);
+assert.equal(migrated.blocks[1].caption, "기존 사진 설명");
+const mediaFirst = [{ id: "first", type: "image" as const, value: "/uploads/first.webp" }, ...migrated.blocks];
+const roundTrip = documentBody(bodyDocument(migrated.description, mediaFirst, true));
+assert.equal(roundTrip.blocks[0].type, "image");
+assert.equal(roundTrip.description, migrated.description);
+assert.equal(roundTrip.blocks.filter(b => b.type === "image").length, 2);
+const base = { category: "websites", title: "본문 편집 안내", shortDescription: "사진과 영상 사용 안내입니다", description: roundTrip.description, externalUrl: "https://example.com", extra: { bodyFormat: "rich", bodyBlocks: roundTrip.blocks } };
+assert.equal(parsePostInput(base).ok, true);
+assert.equal(parsePostInput({ ...base, description: "본문과 다른 요약을 넣었습니다." }).ok, false);
+assert.equal(parsePostInput({ ...base, description: "짧음", extra: { bodyFormat: "rich", bodyBlocks: [{ id: "x", type: "image", value: "/uploads/a.webp" }] } }).ok, false);
+const longText = "가".repeat(4000);
+assert.equal(parsePostInput({ ...base, description: longText, extra: { bodyFormat: "rich", bodyBlocks: [{ id: "x", type: "text", value: longText }] } }).ok, true, "본문을 중복 계산하지 않음");
+console.log("Body document: legacy migration, captions, media-first order, roundtrip, summary consistency and length passed.");
