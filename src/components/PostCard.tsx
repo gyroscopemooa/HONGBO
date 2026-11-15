@@ -1,3 +1,4 @@
+import { SHOW_POST_SOCIAL } from "@/lib/features";
 import Link from "next/link";
 import { Eye, MapPin, MessageCircle, ThumbsUp } from "lucide-react";
 import { LIMITS, benefitLabels } from "@/lib/constants";
@@ -54,12 +55,14 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
         <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-2.5">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <CategoryBadge slug={post.category} />
+            {SHOW_POST_SOCIAL && <>
             <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-muted" aria-label={`좋아요 ${post.likeCount ?? 0}개`}>
               <ThumbsUp size={12} aria-hidden /> {formatCount(post.likeCount ?? 0)}
             </span>
             <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-muted" aria-label={`댓글 ${post.commentCount ?? 0}개`}>
               <MessageCircle size={12} aria-hidden /> {formatCount(post.commentCount ?? 0)}
             </span>
+            </>}
           </div>
           {post.viewCount >= LIMITS.showViewsFrom ? (
             <span className="inline-flex shrink-0 items-center gap-1 text-xs text-faint">

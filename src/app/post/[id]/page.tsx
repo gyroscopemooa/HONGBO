@@ -18,6 +18,7 @@ import { SurveyParticipation } from "@/components/SurveyParticipation";
 import { YoutubeEmbed } from "@/components/YoutubeEmbed";
 import { BadgeKit } from "@/components/BadgeKit";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { SHOW_POST_SOCIAL } from "@/lib/features";
 import { LikeButton } from "@/components/LikeButton";
 import { getLikeCount, isLiked } from "@/lib/likes-store";
 import { supabaseConfigured } from "@/lib/env";
@@ -256,7 +257,7 @@ export default async function PostDetailPage({ params }: Props) {
             <div className="mt-3 flex flex-wrap items-start gap-x-4 gap-y-2 [&_a]:whitespace-nowrap [&_button]:whitespace-nowrap">
               <CopyLinkButton path={`/post/${post.id}`} />
               <FavoriteButton postId={post.id} initial={favorited} loggedIn={!!user} />
-              <LikeButton postId={post.id} initial={liked} initialCount={likeCount} loggedIn={!!user} />
+              {SHOW_POST_SOCIAL && <LikeButton postId={post.id} initial={liked} initialCount={likeCount} loggedIn={!!user} />}
               <ReportButton postId={post.id} />
             </div>
 
@@ -313,7 +314,7 @@ export default async function PostDetailPage({ params }: Props) {
         <SurveyParticipation postId={post.id} questions={post.extra.exclusive.survey!} payout={post.extra.exclusive.payout} />
       )}
 
-      {publicNow && <PostComments postId={post.id} />}
+      {SHOW_POST_SOCIAL && publicNow && <PostComments postId={post.id} />}
 
       {related.items.length > 0 && (
         <section aria-label="같은 카테고리의 다른 홍보" className="mt-10">
