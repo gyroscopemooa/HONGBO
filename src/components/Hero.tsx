@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { MorphTooltip } from "./MorphTooltip";
 import { selectHeroSlides } from "@/lib/hero-capacity";
 import { HeroAdFace, type HeroAdView } from "./HeroAdSlide";
 
@@ -37,6 +38,8 @@ const banners = [
     alt: "좋은 이야기와 상품을 더 많은 사람에게. 가게, 서비스, 콘텐츠, 이벤트까지 한 번의 등록으로 널리 알려보세요.",
   },
 ] as const;
+
+const BANNER_LABELS = ["홍보하고, 알려보세요", "내 이야기를 더 많은 사람에게", "카테고리별로 자유롭게 홍보", "더 넓게 도달하는 홍보", "쉽게 발견되는 내 서비스", "무엇이든 올려 알리기", "한 번 등록으로 널리 알리기"];
 
 /** 인플09 협업 안내 슬라이드 — url 이 있으면 인플09 전용 신청 페이지로, 없으면(개발 미리보기) 비활성으로 보입니다. */
 function Infl09Slide({ url, active }: { url: string | null; active: boolean }) {
@@ -96,6 +99,14 @@ export function Hero({ infl09, ads = [] }: { infl09?: { url: string | null; prev
   const adCount = visibleAds.length;
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [tip, setTip] = useState(-1);
+  const dots = useRef<(HTMLButtonElement | null)[]>([]);
+  const getDot = useCallback((i: number) => dots.current[i] ?? null, []);
+  const tipLabels = [
+    ...ads.map((a) => a.title || "광고"),
+    ...(showInfl ? ["인플루언서 협업 광고 신청"] : []),
+    ...BANNER_LABELS,
+  ];
   // 광고 종료 등으로 장수가 줄어도 현재 표시 인덱스를 유효하게 유지합니다.
   const activeIndex = total ? current % total : 0;
 
@@ -153,12 +164,20 @@ export function Hero({ infl09, ads = [] }: { infl09?: { url: string | null; prev
           );
         })}
 
-        <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-white/75 px-3 py-2 shadow-sm backdrop-blur-sm sm:bottom-4">
+        <div
+          className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-white/75 px-3 py-2 shadow-sm backdrop-blur-sm sm:bottom-4"
+          onPointerLeave={() => setTip(-1)}
+        >
+          <MorphTooltip labels={tipLabels} getAnchor={getDot} active={tip} />
           {Array.from({ length: total }, (_, index) => (
             <button
               key={index}
               type="button"
-              aria-label={`${index + 1}번 배너 보기`}
+              ref={(el) => { dots.current[index] = el; }}
+              onPointerEnter={() => setTip(index)}
+              onFocus={() => setTip(index)}
+              onBlur={() => setTip(-1)}
+              aria-label={`${tipLabels[index] ?? index + 1} 배너 보기`}
               aria-current={index === activeIndex ? "true" : undefined}
               onClick={() => setCurrent(index)}
               className={`size-2.5 rounded-full transition-colors sm:size-3 ${
