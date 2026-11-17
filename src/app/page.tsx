@@ -114,7 +114,15 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <h1 className="sr-only">{SITE.name} - 앱·사이트·가게·상품을 마음껏 무료로 홍보하는 홍보 사이트</h1>
       <section aria-label="배너" className="wrap pt-5 sm:pt-7">
-        <BannerSlider count={bannerCount} label="추천 배너">
+        <BannerSlider
+          count={bannerCount}
+          label="추천 배너"
+          labels={[
+            ...bannerAds.map(({ post, creative }) => (creative?.title || post.title)),
+            ...bannerFill.map((p) => p.title),
+            ...(hasBannerRoom ? ["내 광고 배너를 여기에"] : []),
+          ]}
+        >
           {bannerAds.map(({ post, creative }) => (
             <li key={`ad-${post.id}`} className="w-full shrink-0 snap-center">
               <AdBanner post={post} creative={creative} />
