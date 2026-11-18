@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { adminApproveAd, adminAssignAd, adminDeleteAd } from "../actions";
+import { adminApproveAd, adminAssignAd, adminAssignPremiumAd, adminDeleteAd } from "../actions";
 import { AdBanner } from "@/components/AdBanner";
 import { ConfirmButton } from "@/components/ConfirmButton";
-import { AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, won, isAdLive } from "@/lib/ads";
+import { AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, won, isAdLive, isAdScheduled } from "@/lib/ads";
 import { store } from "@/lib/store";
 import type { Ad, Post } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -60,7 +60,8 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
   const all = await store.listAds();
   const requested = await withPost(all.filter((a) => a.status === "requested"));
   const live = await withPost(all.filter((a) => isAdLive(a)));
-  const ended = await withPost(all.filter((a) => a.status === "active" && !isAdLive(a)));
+  const scheduled = await withPost(all.filter((a) => isAdScheduled(a)));
+  const ended = await withPost(all.filter((a) => a.status === "active" && !isAdLive(a) && !isAdScheduled(a)));
   const premiumLive = live.filter((x) => x.ad.kind === "premium").length;
   const bannerLive = live.filter((x) => x.ad.kind === "banner").length;
 
@@ -124,6 +125,22 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
         )}
       </section>
 
+      {scheduled.length > 0 && (
+        <section aria-label="노출 예약">
+          <h2 className="mb-2 font-extrabold">노출 예약 ({scheduled.length})</h2>
+          <ul className="space-y-2">
+            {scheduled.map(({ ad, post }) => (
+              <Row key={ad.id} ad={ad} post={post} title={post?.title ?? "(삭제된 글)"}>
+                <form action={adminDeleteAd}>
+                  <input type="hidden" name="id" value={ad.id} />
+                  <ConfirmButton message="예약을 취소할까요?">취소</ConfirmButton>
+                </form>
+              </Row>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {ended.length > 0 && (
         <section aria-label="종료">
           <h2 className="mb-2 font-extrabold">기간 종료 ({ended.length})</h2>
@@ -139,6 +156,28 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
           </ul>
         </section>
       )}
+
+      <section aria-label="정사각 광고 직접 등록" className="rounded-2xl border border-line bg-white p-4">
+        <h2 className="font-extrabold">정사각 광고 직접 등록 (기간 지정)</h2>
+        <p className="mb-3 mt-1 text-[13px] text-muted">신청·승인 없이 글 번호와 노출 기간을 정해 바로 올려요. 시작일 0시부터 종료일 끝(한국 시간)까지 노출되고, 같은 기간에 {AD_PREMIUM_SLOTS}칸을 넘기면 등록되지 않아요.</p>
+        <form action={adminAssignPremiumAd} className="grid gap-3 sm:grid-cols-4">
+          <label className="text-xs font-semibold text-muted">
+            글 번호
+            <input name="postId" type="number" min={1} required className="field mt-1 !py-2" />
+          </label>
+          <label className="text-xs font-semibold text-muted">
+            시작일
+            <input name="startDate" type="date" required className="field mt-1 !py-2" />
+          </label>
+          <label className="text-xs font-semibold text-muted">
+            종료일 (포함)
+            <input name="endDate" type="date" required className="field mt-1 !py-2" />
+          </label>
+          <div className="flex items-end">
+            <button className="btn btn-primary btn-sm w-full">바로 올리기</button>
+          </div>
+        </form>
+      </section>
 
       <details className="rounded-2xl border border-dashed border-[#c9ced9] bg-soft/50 p-4" aria-label="직접 지정">
         <summary className="cursor-pointer font-extrabold">글 번호로 바로 지정 (제휴·협의 광고용)</summary>

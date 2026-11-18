@@ -3,7 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CategorySlug } from "../constants";
 import { getAdminClient } from "../supabase/admin";
-import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, adEndsAt, isAdLive, nextFreeSlot } from "../ads";
+import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, adEndsAt, isAdLive, nextFreeSlot, premiumCapacityError } from "../ads";
 import type { Ad, AdCreative, Banner, EventType, Notice, Post, PostExtra, PostInput, PostStatus, Profile, Report } from "../types";
 import type { EventInput, ListResult, NewReport, Stats, Store } from "./types";
 
@@ -551,6 +551,19 @@ export const supabaseStore: Store = {
       .update({ status: "active", slot_no: slotNo, starts_at: now.toISOString(), ends_at: adEndsAt(ad.plan, now) })
       .eq("id", id);
     if (e3) fail("ads.activate", e3);
+    return { ok: true };
+  },
+
+  async assignPremiumAd({ postId, startsAt, endsAt }) {
+    const { data: rows, error: e1 } = await sb().from("ads").select("*").eq("kind", "premium").eq("status", "active");
+    if (e1) fail("ads.live", e1);
+    const existing = (rows as Row[]).map(toAd);
+    const err = premiumCapacityError(existing, startsAt, endsAt);
+    if (err) return { ok: false, error: err };
+    const { error } = await sb()
+      .from("ads")
+      .insert({ post_id: postId, kind: "premium", plan: "week", status: "active", slot_no: nextFreeSlot(existing.filter((a) => isAdLive(a))), starts_at: startsAt, ends_at: endsAt, requested_by: null });
+    if (error) fail("ads.assign", error);
     return { ok: true };
   },
 

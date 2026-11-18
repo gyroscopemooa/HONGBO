@@ -207,3 +207,21 @@ export async function adminAssignAd(formData: FormData) {
   refresh();
   adsBack(r.ok ? undefined : r.error);
 }
+
+/** 정사각 프리미엄 광고를 시작일·종료일(한국 시간, 종료일 포함)을 직접 정해 바로 등록 — 신청·승인 없음 */
+export async function adminAssignPremiumAd(formData: FormData) {
+  await requireAdmin();
+  const postId = int(formData.get("postId"));
+  const from = String(formData.get("startDate") ?? "");
+  const to = String(formData.get("endDate") ?? "");
+  const date = /^\d{4}-\d{2}-\d{2}$/;
+  if (!postId || !date.test(from) || !date.test(to)) return adsBack("글 번호와 시작일·종료일을 확인해주세요.");
+  const startsAt = new Date(`${from}T00:00:00+09:00`);
+  const endsAt = new Date(new Date(`${to}T00:00:00+09:00`).getTime() + 86_400_000);
+  if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || endsAt <= startsAt) return adsBack("종료일은 시작일과 같거나 이후여야 해요.");
+  const post = await store.getPost(postId);
+  if (!post || post.status === "deleted") return adsBack("글 번호를 찾을 수 없어요.");
+  const r = await store.assignPremiumAd({ postId, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() });
+  refresh();
+  adsBack(r.ok ? undefined : r.error);
+}

@@ -113,6 +113,8 @@ export interface Store {
   /** 승인: 지금부터 기간만큼 노출. 프리미엄은 빈 칸을 자동 배정. 자리가 없으면 error */
   activateAd(id: number): Promise<{ ok: true } | { ok: false; error: string }>;
   deleteAd(id: number): Promise<void>;
+  /** 운영자가 기간(시작·종료)을 직접 정해 정사각 프리미엄 광고를 바로 등록합니다. 신청·승인 절차 없음. */
+  assignPremiumAd(a: { postId: number; startsAt: string; endsAt: string }): Promise<{ ok: true } | { ok: false; error: string }>;
 
   stats(): Promise<Stats>;
 }

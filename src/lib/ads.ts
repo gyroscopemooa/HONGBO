@@ -66,3 +66,34 @@ export function shuffle<T>(list: T[]): T[] {
  * 유료 광고가 3칸을 모두 채우면 자동으로 양보합니다. 글 번호는 운영 DB 기준이며, 글이 없으면 건너뜁니다.
  */
 export const HOUSE_AD_POST_ID = 41;
+
+/** 두 기간이 겹치는가 */
+export const overlaps = (aS: number, aE: number, bS: number, bE: number) => aS < bE && bS < aE;
+
+/** 기간 안에서 동시에 노출될 프리미엄 광고의 최대 개수(겹치는 구간 기준) */
+export function maxConcurrent(ranges: Array<{ s: number; e: number }>): number {
+  const ev = ranges.flatMap((r) => [[r.s, 1], [r.e, -1]] as const).sort((x, y) => x[0] - y[0] || x[1] - y[1]);
+  let cur = 0;
+  let max = 0;
+  for (const [, d] of ev) {
+    cur += d;
+    max = Math.max(max, cur);
+  }
+  return max;
+}
+
+/** 새 기간이 기존 프리미엄 광고와 겹쳐 동시 칸 수를 넘기는지 검사. 문제가 없으면 null */
+export function premiumCapacityError(existing: Array<Pick<Ad, "startsAt" | "endsAt">>, startsAt: string, endsAt: string): string | null {
+  const s = new Date(startsAt).getTime();
+  const e = new Date(endsAt).getTime();
+  const near = existing
+    .filter((a) => a.startsAt && a.endsAt)
+    .map((a) => ({ s: new Date(a.startsAt!).getTime(), e: new Date(a.endsAt!).getTime() }))
+    .filter((r) => overlaps(r.s, r.e, s, e))
+    .map((r) => ({ s: Math.max(r.s, s), e: Math.min(r.e, e) }));
+  return maxConcurrent([...near, { s, e }]) > AD_PREMIUM_SLOTS ? `그 기간에 프리미엄 ${AD_PREMIUM_SLOTS}칸이 이미 모두 차 있어요. 기간을 바꿔주세요.` : null;
+}
+
+/** 승인됐지만 아직 시작 전인(예약된) 광고인가 */
+export const isAdScheduled = (a: Pick<Ad, "status" | "startsAt">, now = Date.now()) =>
+  a.status === "active" && !!a.startsAt && new Date(a.startsAt).getTime() > now;

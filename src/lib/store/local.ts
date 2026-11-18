@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { CategorySlug } from "../constants";
 import { SEED_BANNERS, SEED_NOTICES, SEED_ORDER, SEED_POSTS, seedExternalUrl, seedImageUrl } from "@/data/seed";
-import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, adEndsAt, isAdLive, nextFreeSlot } from "../ads";
+import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, adEndsAt, isAdLive, nextFreeSlot, premiumCapacityError } from "../ads";
 import type { Ad, Banner, EventType, Notice, Post, Profile, Report } from "../types";
 import type { EventInput, ListQuery, ListResult, NewReport, Stats, Store } from "./types";
 
@@ -600,6 +600,16 @@ export const localStore: Store = {
     ad.status = "active";
     ad.startsAt = now.toISOString();
     ad.endsAt = adEndsAt(ad.plan, now);
+    save(db);
+    return { ok: true };
+  },
+
+  async assignPremiumAd({ postId, startsAt, endsAt }) {
+    const db = load();
+    const err = premiumCapacityError(db.ads.filter((a) => a.kind === "premium" && a.status === "active"), startsAt, endsAt);
+    if (err) return { ok: false, error: err };
+    const live = db.ads.filter((a) => a.kind === "premium" && isAdLive(a));
+    db.ads.push({ id: db.nextAdId++, postId, kind: "premium", plan: "week", status: "active", slotNo: nextFreeSlot(live), startsAt, endsAt, requestedBy: null, creative: null, createdAt: new Date().toISOString() });
     save(db);
     return { ok: true };
   },
