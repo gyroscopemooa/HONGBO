@@ -16,6 +16,8 @@ import { Gallery } from "@/components/Gallery";
 import { getAppealStates } from "@/lib/post-appeals";
 import { SurveyParticipation } from "@/components/SurveyParticipation";
 import { YoutubeEmbed } from "@/components/YoutubeEmbed";
+import { PostAdAdmin, type PostAdRow } from "@/components/PostAdAdmin";
+import { isAdLive, isAdScheduled } from "@/lib/ads";
 import { BadgeKit } from "@/components/BadgeKit";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { SHOW_POST_SOCIAL } from "@/lib/features";
@@ -37,7 +39,7 @@ import { effectiveStatus, isPostPublic } from "@/lib/queries";
 import { store } from "@/lib/store";
 import { formatCount, formatDate, getDomain, relativeTime, siteUrl } from "@/lib/utils";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ adError?: string }> };
 
 function parseId(v: string): number | null {
   return /^\d{1,12}$/.test(v) ? Number(v) : null;
@@ -68,12 +70,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function PostDetailPage({ params }: Props) {
+export default async function PostDetailPage({ params, searchParams }: Props) {
   const id = parseId((await params).id);
   if (!id) notFound();
   const [user, post] = await Promise.all([getCurrentUser(), store.getPost(id)]);
   if (!post || post.status === "deleted") notFound();
 
+  const adError = user?.isAdmin ? (await searchParams)?.adError : undefined;
+  const adRows: PostAdRow[] = user?.isAdmin
+    ? (await store.listAds({ kind: "premium" }))
+        .filter((a) => a.postId === post.id && a.status === "active" && a.startsAt && a.endsAt)
+        .map((a) => ({
+          id: a.id,
+          state: isAdLive(a) ? ("live" as const) : isAdScheduled(a) ? ("scheduled" as const) : ("ended" as const),
+          range: `${formatDate(a.startsAt!)} ~ ${formatDate(new Date(new Date(a.endsAt!).getTime() - 1))}`,
+        }))
+    : [];
   const isOwner = !!user && post.authorId === user.id;
   const canManage = isOwner || !!user?.isAdmin;
   const [favorited, liked] = user
@@ -265,6 +277,7 @@ export default async function PostDetailPage({ params }: Props) {
               <div className="mt-4 rounded-xl bg-soft p-3">
                 <p className="mb-2 text-xs font-semibold text-muted">{isOwner ? "내가 쓴 글" : "관리자 메뉴"}</p>
                 <OwnerActions postId={post.id} canRenew={isOwner} size="sm" redirectTo={isOwner ? "/mypage" : "/admin/posts"} />
+                {user?.isAdmin && <PostAdAdmin postId={post.id} ads={adRows} error={adError} />}
                 {isOwner && publicNow && <BadgeKit postId={post.id} origin={siteUrl()} />}
                 {post.extra.exclusive?.method === "survey" && (
                   <Link href={`/post/${post.id}/survey-results`} className="mt-2 inline-flex items-center rounded-lg border border-[#e6c77a] bg-white px-3 py-2 text-[13px] font-bold text-[#8a6105] hover:bg-[#fff7e0]">

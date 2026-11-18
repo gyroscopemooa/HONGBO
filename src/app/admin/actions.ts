@@ -162,7 +162,11 @@ export async function adminDeleteNotice(formData: FormData) {
 
 // ───────────── 광고 ─────────────
 
-const adsBack = (error?: string): never => redirect(error ? `/admin/ads?error=${encodeURIComponent(error)}` : "/admin/ads");
+const adsBack = (error?: string, returnTo?: string): never => {
+  // 글 상세에서 설정한 경우 그 글로 돌아갑니다. (내부 경로만 허용)
+  const base = returnTo && /^\/post\/\d+$/.test(returnTo) ? returnTo : "/admin/ads";
+  return redirect(error ? `${base}?adError=${encodeURIComponent(error)}` : base);
+};
 
 export async function adminApproveAd(formData: FormData) {
   await requireAdmin();
@@ -189,7 +193,7 @@ export async function adminDeleteAd(formData: FormData) {
   if (!id) return;
   await store.deleteAd(id);
   refresh();
-  adsBack();
+  adsBack(undefined, String(formData.get("returnTo") ?? ""));
 }
 
 /** 운영자가 글 번호로 광고를 바로 지정(신청 없이 승인까지) */
@@ -211,17 +215,18 @@ export async function adminAssignAd(formData: FormData) {
 /** 정사각 프리미엄 광고를 시작일·종료일(한국 시간, 종료일 포함)을 직접 정해 바로 등록 — 신청·승인 없음 */
 export async function adminAssignPremiumAd(formData: FormData) {
   await requireAdmin();
+  const returnTo = String(formData.get("returnTo") ?? "");
   const postId = int(formData.get("postId"));
   const from = String(formData.get("startDate") ?? "");
   const to = String(formData.get("endDate") ?? "");
   const date = /^\d{4}-\d{2}-\d{2}$/;
-  if (!postId || !date.test(from) || !date.test(to)) return adsBack("글 번호와 시작일·종료일을 확인해주세요.");
+  if (!postId || !date.test(from) || !date.test(to)) return adsBack("글 번호와 시작일·종료일을 확인해주세요.", returnTo);
   const startsAt = new Date(`${from}T00:00:00+09:00`);
   const endsAt = new Date(new Date(`${to}T00:00:00+09:00`).getTime() + 86_400_000);
-  if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || endsAt <= startsAt) return adsBack("종료일은 시작일과 같거나 이후여야 해요.");
+  if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || endsAt <= startsAt) return adsBack("종료일은 시작일과 같거나 이후여야 해요.", returnTo);
   const post = await store.getPost(postId);
-  if (!post || post.status === "deleted") return adsBack("글 번호를 찾을 수 없어요.");
+  if (!post || post.status === "deleted") return adsBack("글 번호를 찾을 수 없어요.", returnTo);
   const r = await store.assignPremiumAd({ postId, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() });
   refresh();
-  adsBack(r.ok ? undefined : r.error);
+  adsBack(r.ok ? undefined : r.error, returnTo);
 }
