@@ -20,7 +20,7 @@ const ROW = 5;
 export function PremiumGrid({ ads, fill }: { ads: Post[]; fill: Post[] }) {
   const freeTrial = freeAdTrialEnabled();
   const filler = fill.filter((p) => !ads.some((a) => a.id === p.id)).slice(0, Math.max(0, PREMIUM_MIN_SHOWN - ads.length));
-  const pinned = ads[0]?.adFree ? ads[0] : null;
+  const pinned = ads[0]?.adPinned ? ads[0] : null;
   const rest = pinned ? ads.slice(1) : ads;
   const total = ads.length + filler.length;
   const pageCount = Math.max(1, Math.ceil((total + 1) / PREMIUM_PAGE_SIZE));

@@ -77,7 +77,7 @@ export async function getLiveBannerAds(): Promise<Array<{ post: Post; creative: 
 
 /** 운영자 고정 광고를 항상 맨 앞에 둡니다(이미 목록에 있으면 앞으로 옮겨요). */
 function pinFirst(list: Post[], pinned: Post): Post[] {
-  return [{ ...pinned, adFree: true }, ...list.filter((p) => p.id !== pinned.id)];
+  return [{ ...pinned, adPinned: true }, ...list.filter((p) => p.id !== pinned.id)];
 }
 
 /** 전체/카테고리 목록 상단 "추천 홍보". 유료 광고가 자리를 다 채우지 않으면 운영자 고정 광고가 맨 앞에 들어갑니다(홈과 동일). */

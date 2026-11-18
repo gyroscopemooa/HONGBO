@@ -66,6 +66,8 @@ export interface PostExtra {
 export interface Post {
   /** 광고 노출용 표시 전용: 운영자가 직접 올린 무료 광고면 true (저장되지 않음) */
   adFree?: boolean;
+  /** 표시 전용: 운영자 고정(1번) 광고 */
+  adPinned?: boolean;
   id: number;
   authorId: string | null;
   category: CategorySlug;
