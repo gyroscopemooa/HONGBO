@@ -52,6 +52,13 @@ export function PostAdAdmin({ postId, ads, error }: { postId: number; ads: PostA
               지금부터 며칠 동안 (일)
               <input name="days" type="number" min={1} max={365} defaultValue={7} required className="field mt-1 !py-2" />
             </label>
+            <label className="block text-xs font-semibold text-muted">
+              카드 표시 문구
+              <select name="badge" defaultValue="recommend" className="field mt-1 !py-2">
+                <option value="recommend">추천 (유료 광고와 같은 형식)</option>
+                <option value="free">더홍보 지정 무료홍보</option>
+              </select>
+            </label>
             <button className="btn btn-primary btn-sm w-full">지금부터 올리기</button>
           </>
         )}

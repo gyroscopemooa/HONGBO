@@ -36,7 +36,7 @@ function Row({ ad, title, post, children }: { ad: Ad; title: string; post?: Post
           <div className="max-w-[640px]"><AdBanner post={post} creative={ad.creative} preview /></div>
         </div>
       )}
-      {ad.kind === "premium" && ad.creative?.mode === "custom" && (
+      {ad.kind === "premium" && ad.creative?.mode === "custom" && (ad.creative.imageUrl || ad.creative.title || ad.creative.subtitle) && (
         <div className="basis-full">
           <p className="mb-1 text-[12.5px] font-semibold text-muted">고정 광고 · 새 이미지·문구 (내용 확인 후 승인하세요)</p>
           <div className="flex items-start gap-3">
@@ -172,6 +172,13 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
           <label className="text-xs font-semibold text-muted">
             종료일 (포함)
             <input name="endDate" type="date" required className="field mt-1 !py-2" />
+          </label>
+          <label className="text-xs font-semibold text-muted sm:col-span-3">
+            카드 표시 문구
+            <select name="badge" defaultValue="recommend" className="field mt-1 !py-2">
+              <option value="recommend">추천 (유료 광고와 같은 형식)</option>
+              <option value="free">더홍보 지정 무료홍보</option>
+            </select>
           </label>
           <div className="flex items-end">
             <button className="btn btn-primary btn-sm w-full">바로 올리기</button>

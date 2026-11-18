@@ -223,7 +223,7 @@ export async function adminAssignPremiumAd(formData: FormData) {
   if (!post || post.status === "deleted") return adsBack("글 번호를 찾을 수 없어요.", returnTo);
   const startsAt = new Date();
   const endsAt = new Date(startsAt.getTime() + days * 86_400_000);
-  const r = await store.assignPremiumAd({ postId, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() });
+  const r = await store.assignPremiumAd({ postId, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString(), freeBadge: formData.get("badge") === "free" });
   refresh();
   adsBack(r.ok ? undefined : r.error, returnTo);
 }
@@ -241,7 +241,7 @@ export async function adminAssignPremiumAdDates(formData: FormData) {
   if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || endsAt <= startsAt) return adsBack("종료일은 시작일과 같거나 이후여야 해요.");
   const post = await store.getPost(postId);
   if (!post || post.status === "deleted") return adsBack("글 번호를 찾을 수 없어요.");
-  const r = await store.assignPremiumAd({ postId, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() });
+  const r = await store.assignPremiumAd({ postId, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString(), freeBadge: formData.get("badge") === "free" });
   refresh();
   adsBack(r.ok ? undefined : r.error);
 }

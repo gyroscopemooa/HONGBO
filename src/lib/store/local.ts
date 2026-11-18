@@ -604,12 +604,12 @@ export const localStore: Store = {
     return { ok: true };
   },
 
-  async assignPremiumAd({ postId, startsAt, endsAt }) {
+  async assignPremiumAd({ postId, startsAt, endsAt, freeBadge }) {
     const db = load();
     const err = premiumCapacityError(db.ads.filter((a) => a.kind === "premium" && a.status === "active"), startsAt, endsAt);
     if (err) return { ok: false, error: err };
     const live = db.ads.filter((a) => a.kind === "premium" && isAdLive(a));
-    db.ads.push({ id: db.nextAdId++, postId, kind: "premium", plan: "week", status: "active", slotNo: nextFreeSlot(live), startsAt, endsAt, requestedBy: null, creative: null, createdAt: new Date().toISOString() });
+    db.ads.push({ id: db.nextAdId++, postId, kind: "premium", plan: "week", status: "active", slotNo: nextFreeSlot(live), startsAt, endsAt, requestedBy: null, creative: freeBadge ? { mode: "custom", badge: "free" } : null, createdAt: new Date().toISOString() });
     save(db);
     return { ok: true };
   },

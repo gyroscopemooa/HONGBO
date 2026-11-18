@@ -154,6 +154,8 @@ export interface AdCreative {
   /** Server-owned campaign marker; never accepted from user creative JSON. */
   freeTrial?: boolean;
   mode: "upload" | "custom";
+  /** 운영자 직접 광고의 카드 배지: free면 "더홍보 지정 무료홍보", 없으면 "추천" */
+  badge?: "free";
   imageUrl?: string;
   title?: string;
   subtitle?: string;

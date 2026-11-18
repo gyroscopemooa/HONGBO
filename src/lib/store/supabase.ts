@@ -554,7 +554,7 @@ export const supabaseStore: Store = {
     return { ok: true };
   },
 
-  async assignPremiumAd({ postId, startsAt, endsAt }) {
+  async assignPremiumAd({ postId, startsAt, endsAt, freeBadge }) {
     const { data: rows, error: e1 } = await sb().from("ads").select("*").eq("kind", "premium").eq("status", "active");
     if (e1) fail("ads.live", e1);
     const existing = (rows as Row[]).map(toAd);
@@ -562,7 +562,7 @@ export const supabaseStore: Store = {
     if (err) return { ok: false, error: err };
     const { error } = await sb()
       .from("ads")
-      .insert({ post_id: postId, kind: "premium", plan: "week", status: "active", slot_no: nextFreeSlot(existing.filter((a) => isAdLive(a))), starts_at: startsAt, ends_at: endsAt, requested_by: null });
+      .insert({ post_id: postId, kind: "premium", plan: "week", status: "active", slot_no: nextFreeSlot(existing.filter((a) => isAdLive(a))), starts_at: startsAt, ends_at: endsAt, requested_by: null, ...(freeBadge ? { creative: { mode: "custom", badge: "free" } } : {}) });
     if (error) fail("ads.assign", error);
     return { ok: true };
   },

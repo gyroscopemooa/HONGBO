@@ -48,7 +48,7 @@ export async function getLiveAdPosts(kind: "premium" | "banner", category?: stri
       if (category && p.category !== category) continue;
       seen.add(p.id);
       // 프리미엄 카드는 직접 정한 이미지·문구가 있으면 덮어씌웁니다(링크는 원래 글 그대로).
-      list.push(kind === "premium" ? { ...applyPremiumCreative(p, a.creative), adFree: a.requestedBy == null } : p);
+      list.push(kind === "premium" ? { ...applyPremiumCreative(p, a.creative), adFree: a.creative?.badge === "free" } : p);
     }
     return kind === "premium" ? shuffle(list).slice(0, AD_PREMIUM_SLOTS) : shuffle(list);
   } catch {
