@@ -212,20 +212,17 @@ export async function adminAssignAd(formData: FormData) {
   adsBack(r.ok ? undefined : r.error);
 }
 
-/** 정사각 프리미엄 광고를 시작일·종료일(한국 시간, 종료일 포함)을 직접 정해 바로 등록 — 신청·승인 없음 */
+/** 정사각 프리미엄 광고를 "지금부터 N일"로 바로 등록 — 신청·승인 없음 */
 export async function adminAssignPremiumAd(formData: FormData) {
   await requireAdmin();
   const returnTo = String(formData.get("returnTo") ?? "");
   const postId = int(formData.get("postId"));
-  const from = String(formData.get("startDate") ?? "");
-  const to = String(formData.get("endDate") ?? "");
-  const date = /^\d{4}-\d{2}-\d{2}$/;
-  if (!postId || !date.test(from) || !date.test(to)) return adsBack("글 번호와 시작일·종료일을 확인해주세요.", returnTo);
-  const startsAt = new Date(`${from}T00:00:00+09:00`);
-  const endsAt = new Date(new Date(`${to}T00:00:00+09:00`).getTime() + 86_400_000);
-  if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || endsAt <= startsAt) return adsBack("종료일은 시작일과 같거나 이후여야 해요.", returnTo);
+  const days = int(formData.get("days"));
+  if (!postId || !days || days < 1 || days > 365) return adsBack("글 번호와 일수(1~365일)를 확인해주세요.", returnTo);
   const post = await store.getPost(postId);
   if (!post || post.status === "deleted") return adsBack("글 번호를 찾을 수 없어요.", returnTo);
+  const startsAt = new Date();
+  const endsAt = new Date(startsAt.getTime() + days * 86_400_000);
   const r = await store.assignPremiumAd({ postId, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() });
   refresh();
   adsBack(r.ok ? undefined : r.error, returnTo);

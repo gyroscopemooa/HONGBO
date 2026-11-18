@@ -48,17 +48,11 @@ export function PostAdAdmin({ postId, ads, error }: { postId: number; ads: PostA
         </select>
         {on && (
           <>
-            <div className="grid grid-cols-2 gap-2">
-              <label className="text-xs font-semibold text-muted">
-                시작일
-                <input name="startDate" type="date" required className="field mt-1 !py-2" />
-              </label>
-              <label className="text-xs font-semibold text-muted">
-                종료일 (포함)
-                <input name="endDate" type="date" required className="field mt-1 !py-2" />
-              </label>
-            </div>
-            <button className="btn btn-primary btn-sm w-full">광고 올리기</button>
+            <label className="block text-xs font-semibold text-muted">
+              지금부터 며칠 동안 (일)
+              <input name="days" type="number" min={1} max={365} defaultValue={7} required className="field mt-1 !py-2" />
+            </label>
+            <button className="btn btn-primary btn-sm w-full">지금부터 올리기</button>
           </>
         )}
       </form>

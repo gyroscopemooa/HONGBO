@@ -83,7 +83,7 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
         .map((a) => ({
           id: a.id,
           state: isAdLive(a) ? ("live" as const) : isAdScheduled(a) ? ("scheduled" as const) : ("ended" as const),
-          range: `${formatDate(a.startsAt!)} ~ ${formatDate(new Date(new Date(a.endsAt!).getTime() - 1))}`,
+          range: `${formatDate(a.startsAt!)} ~ ${formatDate(a.endsAt!)}`,
         }))
     : [];
   const isOwner = !!user && post.authorId === user.id;
