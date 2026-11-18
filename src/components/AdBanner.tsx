@@ -4,7 +4,6 @@ import { CATEGORY_MAP } from "@/lib/constants";
 import type { AdCreative, Post } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { BenefitBadges } from "./BenefitBadges";
-import { GlassLens } from "./GlassLens";
 import { NewBadge } from "./NewBadge";
 
 export type AdBannerPost = Pick<Post, "id" | "title" | "shortDescription" | "primaryImageUrl" | "category" | "extra"> & { publishedAt?: string };
@@ -48,7 +47,6 @@ export function AdBanner({
       <>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={creative.imageUrl} alt={post.title} className="absolute inset-0 size-full object-cover" loading="lazy" />
-        {!preview && <GlassLens src={creative.imageUrl} size={132} />}
         {badge}
       </>,
     );
@@ -63,8 +61,7 @@ export function AdBanner({
   return wrap(
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={img} alt="" className={cn("absolute inset-0 size-full object-cover", preview && "transition duration-500 group-hover:scale-[1.03]")} loading="lazy" />
-      {!preview && <GlassLens src={img} size={132} />}
+      <img src={img} alt="" className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]" loading="lazy" />
       <div
         className={cn("absolute inset-0", light ? "bg-gradient-to-r from-white/95 via-white/75 to-white/10" : "bg-gradient-to-r from-black/80 via-black/50 to-black/5")}
         aria-hidden

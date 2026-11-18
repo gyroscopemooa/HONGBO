@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MorphTooltip } from "./MorphTooltip";
 import { selectHeroSlides } from "@/lib/hero-capacity";
+import { GlassLens } from "./GlassLens";
 import { HeroAdFace, type HeroAdView } from "./HeroAdSlide";
 
 const banners = [
@@ -160,6 +161,7 @@ export function Hero({ infl09, ads = [] }: { infl09?: { url: string | null; prev
                 priority={i === 0 && !showInfl && adCount === 0}
                 className="block h-auto w-full"
               />
+              {active && <GlassLens src={banner.src} />}
             </Link>
           );
         })}

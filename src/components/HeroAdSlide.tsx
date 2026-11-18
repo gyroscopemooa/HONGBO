@@ -1,3 +1,4 @@
+import { GlassLens } from "./GlassLens";
 import { heroTheme, type HeroAd } from "@/lib/hero-ads";
 
 /** 화면에 필요한 값만 — 서버에서 클라이언트(Hero)로 넘길 수 있는 가벼운 형태 */
@@ -13,6 +14,7 @@ export function HeroAdFace({ ad }: { ad: HeroAdView }) {
         <span className={BADGE}>광고</span>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={ad.imageUrl} alt={ad.title ?? "광고"} className="absolute inset-0 size-full object-cover" loading="lazy" />
+        <GlassLens src={ad.imageUrl} />
       </>
     );
   }
