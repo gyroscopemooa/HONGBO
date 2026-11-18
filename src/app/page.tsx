@@ -15,7 +15,7 @@ import { HOME_FAQ, HomeFaq } from "@/components/HomeFaq";
 import { NoticeList } from "@/components/NoticeList";
 import { PostCard } from "@/components/PostCard";
 import { PostRow } from "@/components/PostRow";
-import { PremiumGrid } from "@/components/PremiumGrid";
+import { PREMIUM_MIN_SHOWN, PremiumGrid } from "@/components/PremiumGrid";
 import { PromoBanner } from "@/components/PromoBanner";
 import { HomeBoards } from "@/components/HomeBoards";
 import { RankList } from "@/components/RankList";
@@ -59,10 +59,10 @@ export default async function HomePage() {
   }));
 
   // 추천 영역(앞 3자리)에 나온 글은 배너에서 제외하고, 배너 자리가 남으면 최신 글로 채웁니다.
-  const premiumAds = premium.slice(0, AD_PREMIUM_SLOTS);
+  const premiumAds = premium;
   // 최신 글로 비는 자리를 채울 때는 "다시 홍보하기(끌어올리기)"로 위로 올라온 글은 제외하고, 새로 등록한 글만 씁니다.
   const fresh = latest.filter((p) => Math.abs(new Date(p.bumpedAt).getTime() - new Date(p.publishedAt).getTime()) < 60_000);
-  const premiumFill = fresh.filter((p) => !premiumAds.some((a) => a.id === p.id)).slice(0, AD_PREMIUM_SLOTS - premiumAds.length);
+  const premiumFill = fresh.filter((p) => !premiumAds.some((a) => a.id === p.id)).slice(0, Math.max(0, PREMIUM_MIN_SHOWN - premiumAds.length));
   const used = new Set([...premiumAds, ...premiumFill].map((p) => p.id));
   const bannerAds = adBanners.slice(0, AD_BANNER_SLOTS);
   const bannerFill = fresh

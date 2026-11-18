@@ -61,8 +61,8 @@ function demoAds(posts: Post[]): Ad[] {
     creative: null,
     createdAt: now.toISOString(),
   });
-  active.slice(0, AD_PREMIUM_SLOTS).forEach((p, i) => ads.push(mk(p, "premium", i % 2 ? "week" : "month", i + 1)));
-  active.slice(AD_PREMIUM_SLOTS, AD_PREMIUM_SLOTS + 2).forEach((p) => ads.push(mk(p, "banner", "month", null)));
+  active.slice(0, 3).forEach((p, i) => ads.push(mk(p, "premium", i % 2 ? "week" : "month", i + 1)));
+  active.slice(3, 5).forEach((p) => ads.push(mk(p, "banner", "month", null)));
   return ads;
 }
 
@@ -591,7 +591,7 @@ export const localStore: Store = {
     const live = db.ads.filter((a) => a.id !== id && a.kind === ad.kind && isAdLive(a));
     if (ad.kind === "premium") {
       const slot = nextFreeSlot(live);
-      if (slot == null) return { ok: false, error: `프리미엄 ${AD_PREMIUM_SLOTS}칸이 모두 차 있어요. 기존 광고가 끝나면 승인할 수 있어요.` };
+      if (live.length >= AD_PREMIUM_SLOTS) return { ok: false, error: `프리미엄 ${AD_PREMIUM_SLOTS}칸이 모두 차 있어요. 기존 광고가 끝나면 승인할 수 있어요.` };
       ad.slotNo = slot;
     } else if (live.length >= AD_BANNER_SLOTS) {
       return { ok: false, error: `와이드 배너 ${AD_BANNER_SLOTS}자리가 모두 차 있어요.` };

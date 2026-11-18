@@ -1,23 +1,39 @@
 import { freeAdTrialEnabled } from "@/lib/free-ad-trial";
 import Link from "next/link";
 import { Crown, Plus } from "lucide-react";
-import { AD_PREMIUM_SLOTS } from "@/lib/ads";
 import type { Post } from "@/lib/types";
+import { dailyPageOffset, PREMIUM_PAGE_SIZE } from "@/lib/ads";
 import { PostCard } from "./PostCard";
+import { PremiumSlider } from "./PremiumSlider";
 
-/** 맨 뒤에 남겨 두는 "내 홍보를 여기에" 안내 칸 수 */
-const PLACEHOLDERS = 2;
+/** 광고가 적을 때 최신 홍보글로 채워 최소로 보여 주는 카드 수 */
+export const PREMIUM_MIN_SHOWN = 3;
+/** PC에서 한 줄에 보이는 칸 수 — 이보다 적으면 "내 홍보를 여기에" 안내 칸으로 채워요(최소 1칸은 항상 맨 뒤에). */
+const ROW = 5;
 
 /**
- * 홈 상단 추천 영역 — 한 줄 5칸. 앞 3칸이 광고 자리이고, 광고가 없는 칸만 최신 홍보글이 채웁니다.
- * 뒤 2칸은 "내 홍보를 여기에" 안내 칸입니다.
- * 예) 광고 0개: 최신 3 + 안내 2 / 광고 1개: 광고 1 + 최신 2 + 안내 2 / 광고 3개: 광고 3 + 안내 2
+ * 홈 상단 추천 영역 — 운영자 고정 광고가 맨 앞, 그다음 노출 중인 광고 전부.
+ * 한 페이지는 10칸(2줄)이고 11개부터는 페이지 슬라이드로 자동 넘어가요. 뒤 페이지가 손해 보지 않게
+ * 날마다 시작 페이지가 바뀝니다(운영자 고정 광고는 항상 첫 칸). 광고가 3개보다 적으면 최신 홍보글이 채우고,
+ * 맨 뒤에는 "내 홍보를 여기에" 안내 칸이 항상 1~2개 붙어요.
  */
 export function PremiumGrid({ ads, fill }: { ads: Post[]; fill: Post[] }) {
   const freeTrial = freeAdTrialEnabled();
-  const shownAds = ads.slice(0, AD_PREMIUM_SLOTS);
-  const filler = fill.filter((p) => !shownAds.some((a) => a.id === p.id)).slice(0, AD_PREMIUM_SLOTS - shownAds.length);
-  const plus = PLACEHOLDERS;
+  const filler = fill.filter((p) => !ads.some((a) => a.id === p.id)).slice(0, Math.max(0, PREMIUM_MIN_SHOWN - ads.length));
+  const pinned = ads[0]?.adFree ? ads[0] : null;
+  const rest = pinned ? ads.slice(1) : ads;
+  const total = ads.length + filler.length;
+  const pageCount = Math.max(1, Math.ceil((total + 1) / PREMIUM_PAGE_SIZE));
+  const shift = dailyPageOffset(pageCount) * PREMIUM_PAGE_SIZE;
+  const rot = rest.length ? shift % rest.length : 0;
+  const ordered = [...(pinned ? [pinned] : []), ...rest.slice(rot), ...rest.slice(0, rot)];
+  const cards: Array<{ key: string; post?: Post; ad?: boolean }> = [
+    ...ordered.map((p) => ({ key: `ad-${p.id}`, post: p, ad: true })),
+    ...filler.map((p) => ({ key: `new-${p.id}`, post: p })),
+  ];
+  const plus = total < 4 ? 5 - total : total + 2 <= pageCount * PREMIUM_PAGE_SIZE ? 2 : 1;
+  for (let i = 0; i < plus; i++) cards.push({ key: `empty-${i}` });
+  const pages = Array.from({ length: Math.ceil(cards.length / PREMIUM_PAGE_SIZE) }, (_, i) => cards.slice(i * PREMIUM_PAGE_SIZE, (i + 1) * PREMIUM_PAGE_SIZE));
 
   return (
     <section aria-label="추천 홍보" className="wrap pt-5 sm:pt-7">
@@ -29,36 +45,34 @@ export function PremiumGrid({ ads, fill }: { ads: Post[]; fill: Post[] }) {
           상단 고정 신청하기
         </Link>
       </div>
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
-        {shownAds.map((p, i) => (
-          <li key={`ad-${p.id}`}>
-            <PostCard post={p} ad eager={i < 5} />
-          </li>
+      <PremiumSlider>
+        {pages.map((page, pi) => (
+          <ul key={pi} className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+            {page.map((c, i) => (
+              <li key={c.key}>
+                {c.post ? (
+                  <PostCard post={c.post} ad={c.ad} eager={pi === 0 && i < 5} />
+                ) : (
+                  <Link
+                    href="/advertise?type=premium#ad-application"
+                    className="flex h-full min-h-[190px] flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed border-[#e0c070] bg-[#fffbee] p-4 text-center transition hover:-translate-y-0.5 hover:bg-[#fff6d9]"
+                  >
+                    <span className="grid size-9 place-items-center rounded-full bg-[#ffe9a8] text-[#9a6b00]">
+                      <Plus size={18} aria-hidden />
+                    </span>
+                    <span className="text-[14px] font-bold text-ink-2">내 홍보를 여기에</span>
+                    <span className="text-[12px] leading-snug text-muted">
+                      {freeTrial ? "계정당 1회 · 7일 무료 체험" : "주 3만 원 · 월 5만 원"}
+                      <br />
+                      메인 최상단 고정
+                    </span>
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
         ))}
-        {filler.map((p) => (
-          <li key={`new-${p.id}`}>
-            <PostCard post={p} />
-          </li>
-        ))}
-        {Array.from({ length: plus }, (_, i) => (
-          <li key={`empty-${i}`}>
-            <Link
-              href="/advertise?type=premium#ad-application"
-              className="flex h-full min-h-[190px] flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed border-[#e0c070] bg-[#fffbee] p-4 text-center transition hover:-translate-y-0.5 hover:bg-[#fff6d9]"
-            >
-              <span className="grid size-9 place-items-center rounded-full bg-[#ffe9a8] text-[#9a6b00]">
-                <Plus size={18} aria-hidden />
-              </span>
-              <span className="text-[14px] font-bold text-ink-2">내 홍보를 여기에</span>
-              <span className="text-[12px] leading-snug text-muted">
-                {freeTrial ? "계정당 1회 · 7일 무료 체험" : "주 3만 원 · 월 5만 원"}
-                <br />
-                메인 최상단 고정
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      </PremiumSlider>
     </section>
   );
 }

@@ -75,12 +75,16 @@ export async function getLiveBannerAds(): Promise<Array<{ post: Post; creative: 
   }
 }
 
+/** 운영자 고정 광고를 항상 맨 앞에 둡니다(이미 목록에 있으면 앞으로 옮겨요). */
+function pinFirst(list: Post[], pinned: Post): Post[] {
+  return [{ ...pinned, adFree: true }, ...list.filter((p) => p.id !== pinned.id)];
+}
+
 /** 전체/카테고리 목록 상단 "추천 홍보". 유료 광고가 자리를 다 채우지 않으면 운영자 고정 광고가 맨 앞에 들어갑니다(홈과 동일). */
 export async function getTopAds(category?: string): Promise<Post[]> {
   const ads = await getLiveAdPosts("premium", category);
-  if (ads.length >= AD_PREMIUM_SLOTS) return ads;
   const house = await store.getPost(HOUSE_AD_POST_ID).catch(() => null);
-  if (house && isPostPublic(house) && (!category || house.category === category) && !ads.some((p) => p.id === house.id)) return [house, ...ads];
+  if (house && isPostPublic(house) && (!category || house.category === category)) return pinFirst(ads, house);
   return ads;
 }
 
@@ -116,9 +120,9 @@ async function loadHomeData() {
     store.getPost(HOUSE_AD_POST_ID).catch(() => null),
     store.listPosts({ publicOnly: true, benefit: "exclusive", sort: "latest", page: 1, pageSize: 10 }),
   ]);
-  // 운영자 고정 광고: 유료 광고가 자리를 다 채우지 않았을 때만 맨 앞에 넣습니다.
+  // 운영자 고정 광고: 항상 맨 앞(1번)에 고정합니다.
   const houseOk = house && isPostPublic(house) ? house : null;
-  const premiumOut = houseOk && premium.length < AD_PREMIUM_SLOTS && !premium.some((p) => p.id === houseOk.id) ? [houseOk, ...premium] : premium;
+  const premiumOut = houseOk ? pinFirst(premium, houseOk) : premium;
   const bannersOut =
     houseOk && adBanners.length < AD_BANNER_SLOTS && !adBanners.some((b) => b.post.id === houseOk.id) ? [{ post: houseOk, creative: null }, ...adBanners] : adBanners;
   return { popular, latest: latest.items, sideBanners: side, stripBanners: strip, notices, premium: premiumOut, adBanners: bannersOut, exclusive };

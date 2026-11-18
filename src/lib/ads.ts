@@ -1,7 +1,9 @@
 import type { Ad } from "./types";
 
-/** 프리미엄 상단 광고 칸 수 (처음엔 3칸만 공개) */
-export const AD_PREMIUM_SLOTS = 3;
+/** 프리미엄(정사각) 광고 동시 노출 가능 수 — 넘치면 홈에서 가로 슬라이드로 움직여요 */
+export const AD_PREMIUM_SLOTS = 20;
+/** DB의 slot_no 컬럼이 1~10만 허용해서, 칸 번호는 10번까지만 매겨요 */
+export const AD_SLOT_NO_MAX = 10;
 /** 와이드 배너 동시 노출 가능 수 (홈에서 로테이션) */
 export const AD_BANNER_SLOTS = 3;
 
@@ -47,7 +49,7 @@ export function isAdLive(a: Pick<Ad, "status" | "startsAt" | "endsAt">, now = Da
 /** 사용 중이 아닌 가장 낮은 프리미엄 칸 번호. 모두 차 있으면 null */
 export function nextFreeSlot(liveAds: Array<Pick<Ad, "kind" | "slotNo">>): number | null {
   const used = new Set(liveAds.filter((a) => a.kind === "premium" && a.slotNo != null).map((a) => a.slotNo));
-  for (let i = 1; i <= AD_PREMIUM_SLOTS; i++) if (!used.has(i)) return i;
+  for (let i = 1; i <= AD_SLOT_NO_MAX; i++) if (!used.has(i)) return i;
   return null;
 }
 
@@ -97,3 +99,15 @@ export function premiumCapacityError(existing: Array<Pick<Ad, "startsAt" | "ends
 /** 승인됐지만 아직 시작 전인(예약된) 광고인가 */
 export const isAdScheduled = (a: Pick<Ad, "status" | "startsAt">, now = Date.now()) =>
   a.status === "active" && !!a.startsAt && new Date(a.startsAt).getTime() > now;
+
+/** 추천 홍보 한 페이지(2줄)에 담는 카드 수 */
+export const PREMIUM_PAGE_SIZE = 10;
+
+/**
+ * 페이지가 여러 개일 때 날마다(한국 시간) 어느 페이지부터 보여 줄지 정해 앞·뒤 페이지 광고가 고르게 앞자리를 나눠 갖게 해요.
+ * 같은 날에는 모든 방문자에게 같은 순서예요.
+ */
+export function dailyPageOffset(pages: number, now = Date.now()): number {
+  if (pages < 2) return 0;
+  return Math.floor((now + 9 * 3_600_000) / 86_400_000) % pages;
+}

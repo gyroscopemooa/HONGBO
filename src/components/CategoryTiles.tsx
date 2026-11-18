@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { MessagesSquare, ArrowRight, BadgePercent, Gift, PartyPopper, PencilLine, Sparkles, Star, Ticket, type LucideIcon } from "lucide-react";
+import { MessagesSquare, ArrowRight, BadgePercent, Gift, PartyPopper, PencilLine, HandHeart, Star, Ticket, type LucideIcon } from "lucide-react";
 import { BENEFITS, BENEFIT_PAGES, CATEGORIES, type CategorySlug } from "@/lib/constants";
 import { CategoryIcon } from "./CategoryIcon";
 
-const BENEFIT_ICONS: Record<string, LucideIcon> = { event: PartyPopper, discount: BadgePercent, coupon: Ticket, free: Sparkles, gift: Gift };
+const BENEFIT_ICONS: Record<string, LucideIcon> = { event: PartyPopper, discount: BadgePercent, coupon: Ticket, free: HandHeart, gift: Gift };
 
 type Tile = { slug: string; name: string; color: string; tint: string; href: string; icon?: React.ReactNode };
 const ALL_TILE: Tile = { slug: "all", name: "전체", color: "#f04f4a", tint: "#fff0ef", href: "/posts" };

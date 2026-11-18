@@ -541,7 +541,7 @@ export const supabaseStore: Store = {
     let slotNo: number | null = null;
     if (ad.kind === "premium") {
       slotNo = nextFreeSlot(live);
-      if (slotNo == null) return { ok: false, error: `프리미엄 ${AD_PREMIUM_SLOTS}칸이 모두 차 있어요. 기존 광고가 끝나면 승인할 수 있어요.` };
+      if (live.length >= AD_PREMIUM_SLOTS) return { ok: false, error: `프리미엄 ${AD_PREMIUM_SLOTS}칸이 모두 차 있어요. 기존 광고가 끝나면 승인할 수 있어요.` };
     } else if (live.length >= AD_BANNER_SLOTS) {
       return { ok: false, error: `와이드 배너 ${AD_BANNER_SLOTS}자리가 모두 차 있어요.` };
     }
