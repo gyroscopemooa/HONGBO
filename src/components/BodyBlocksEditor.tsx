@@ -149,6 +149,7 @@ export function BodyBlocksEditor({ description, blocks, rich, onChange, onBusyCh
     </div>
     <input ref={input} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" tabIndex={-1} onChange={event => { const file = event.target.files?.[0]; if (editor && file) void upload(editor, file); }} />
     <p className="text-xs leading-relaxed text-muted">사진은 Ctrl+V·마우스 붙여넣기·드래그로 넣을 수 있어요. 유튜브 주소는 붙여넣거나 입력 후 Enter를 누르세요. 사진 최대 6장·장당 350KB, 영상 최대 3개.</p>
+    <p className="text-xs leading-relaxed text-muted">본문에는 필요한 위치에 사진·유튜브를 넣을 수 있어서, 사용법이나 매장 소개를 &lsquo;설명 → 사진 → 설명 → 영상&rsquo; 순서로 보여줄 수 있어요. (상단 갤러리와 영상은 따로 올릴 수 있어요.) 오프라인 매장 홍보는 주소를 입력하면 지도가 추가되고, 다른 카테고리도 방문할 수 있는 곳이 있으면 주소를 넣어 지도 위치를 보여줄 수 있어요.</p>
     {busy && <p role="status" className="text-sm text-muted">사진을 압축하고 업로드하는 중이에요…</p>}
     {(message || errors.bodyBlocks || Object.entries(errors).find(([key]) => /^(extra\.)?bodyBlocks/.test(key))?.[1]) && <p role="alert" className="text-sm text-brand-dark">{message || errors.bodyBlocks || Object.entries(errors).find(([key]) => /^(extra\.)?bodyBlocks/.test(key))?.[1]}</p>}
   </div>;

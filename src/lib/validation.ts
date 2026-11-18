@@ -171,7 +171,7 @@ export function parsePostInput(raw: unknown): ParseResult {
     if (plainText.trim() !== description) errors.bodyBlocks = "본문과 저장할 설명이 일치하지 않아요. 내용을 다시 확인해주세요.";
   }
   const addressDetail = blankToNull(v.extra.addressDetail);
-  if (category === "offline" && addressDetail) {
+  if (addressDetail) {
     if (!blankToNull(v.address)) errors.address = "상세주소와 함께 기본 주소를 입력해주세요.";
     extra.addressDetail = addressDetail;
   }
@@ -352,7 +352,7 @@ export function parsePostInput(raw: unknown): ParseResult {
 
   let externalUrl: string | null = null;
   let mapUrl: string | null = null;
-  let address: string | null = blankToNull(v.address);
+  const address: string | null = blankToNull(v.address);
   let platform: string | null = null;
   let price: string | null = blankToNull(v.price);
 
@@ -420,10 +420,9 @@ export function parsePostInput(raw: unknown): ParseResult {
 
   if (category !== "products") price = null;
   else if (price && price.length > LIMITS.priceMax) errors.price = `가격은 ${LIMITS.priceMax}자까지 입력할 수 있어요.`;
-  if (category !== "offline") {
-    mapUrl = null;
-    address = null;
-  } else if (address && address.length > LIMITS.addressMax) {
+  // 주소(지도 표시)는 모든 카테고리에서 쓸 수 있어요. 지도 링크는 오프라인 매장만 받아요.
+  if (category !== "offline") mapUrl = null;
+  if (address && address.length > LIMITS.addressMax) {
     errors.address = `주소는 ${LIMITS.addressMax}자까지 입력할 수 있어요.`;
   }
 

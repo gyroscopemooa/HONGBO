@@ -996,6 +996,18 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
               <textarea id="couponNote" value={f.couponNote ?? ""} onChange={(e) => set("couponNote", e.target.value)} maxLength={COUPON_NOTE_MAX} rows={2} placeholder="예: 앱 설정 → 쿠폰 입력에서 사용 · 계정당 1회 · 사용 기한" className="field" aria-invalid={!!errors.couponNote} />
             </Field>
           </div>}
+          {f.category && f.category !== "offline" && (
+            <div className="space-y-3 rounded-xl border border-line bg-soft/40 p-4">
+              <Field id="address" label="주소 (지도 표시)" optional error={errors.address} hint="오프라인으로 방문할 수 있는 곳이 있으면 주소를 입력해주세요. 입력하면 글 하단에 지도 위치가 나와요. 없으면 비워두세요.">
+                <input id="address" value={f.address} maxLength={LIMITS.addressMax} onChange={(e) => set("address", e.target.value)} placeholder="예) 울산 남구 삼산동 …" className="field" />
+              </Field>
+              {f.address.trim() && (
+                <Field id="addressDetail" label="상세주소" optional error={errors.addressDetail} hint="층·호수 등 방문에 필요한 안내를 적어주세요.">
+                  <input id="addressDetail" value={f.addressDetail} maxLength={120} onChange={(e) => set("addressDetail", e.target.value)} placeholder="예) 4층, 401호" className="field" />
+                </Field>
+              )}
+            </div>
+          )}
           <Field id="description" label="상세 설명" required error={errors.description} counter={{ now: f.bodyFormat === "rich" ? f.description.length : f.description.length + (f.bodyBlocks ?? []).filter(b => b.type === "text").reduce((sum, b) => sum + b.value.length, 0), max: LIMITS.descMax }}>
             <BodyBlocksEditor description={f.description} blocks={f.bodyBlocks ?? []} rich={f.bodyFormat === "rich"} onChange={(description, bodyBlocks) => setF(current => ({ ...current, description, bodyBlocks, bodyFormat: "rich" }))} onBusyChange={b => setBusyCount(n => n + (b ? 1 : -1))} errors={errors} />
           </Field>
