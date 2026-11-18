@@ -29,7 +29,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
               {rank}위
             </span>
           )}
-          {ad && <span className="rounded-md bg-ink/75 px-1.5 py-0.5 text-[11px] font-bold tracking-tight text-white backdrop-blur-sm">{post.adFree ? "더홍보무료홍보" : "광고"}</span>}
+          {ad && <span className="rounded-md bg-ink/75 px-1.5 py-0.5 text-[11px] font-bold tracking-tight text-white backdrop-blur-sm">{post.adFree ? "더홍보 지정 무료홍보" : "추천"}</span>}
           {isNewPost(post.publishedAt) && <span className="rounded-md bg-white/90 px-1.5 py-0.5 text-[11px] font-bold text-ink-2 shadow-sm">NEW</span>}
           {post.region && !ad && (
             <span className="inline-flex items-center gap-0.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[11.5px] font-bold text-ink-2 shadow-sm">
