@@ -1,13 +1,14 @@
 import { SHOW_POST_SOCIAL } from "@/lib/features";
 import Link from "next/link";
 import { Eye, MapPin, MessageCircle, ThumbsUp } from "lucide-react";
-import { LIMITS, benefitLabels } from "@/lib/constants";
+import { CATEGORY_MAP, LIMITS, benefitLabels } from "@/lib/constants";
 import type { Post } from "@/lib/types";
 import { cn, formatCount, isWithinWeek, relativeTime } from "@/lib/utils";
 import { BenefitBadges } from "./BenefitBadges";
 import { CategoryBadge } from "./CategoryBadge";
 import { NewBadge, isNewPost } from "./NewBadge";
 import { OfficialBadge } from "./OfficialBadge";
+import { GlassLens } from "./GlassLens";
 import { PostImage } from "./PostImage";
 
 const CARD_SIZES = "(min-width:1024px) 190px, (min-width:640px) 30vw, 46vw";
@@ -18,6 +19,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
     <>
       <div className="relative">
         <PostImage src={post.primaryImageUrl} alt="" category={post.category} sizes={CARD_SIZES} eager={eager} />
+        {ad && <GlassLens src={post.primaryImageUrl || CATEGORY_MAP[post.category].defaultImage} size={104} />}
         <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
           {rank != null && (
             <span

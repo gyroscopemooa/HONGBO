@@ -4,6 +4,7 @@ import { CATEGORY_MAP } from "@/lib/constants";
 import type { AdCreative, Post } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { BenefitBadges } from "./BenefitBadges";
+import { GlassLens } from "./GlassLens";
 import { NewBadge } from "./NewBadge";
 
 export type AdBannerPost = Pick<Post, "id" | "title" | "shortDescription" | "primaryImageUrl" | "category" | "extra"> & { publishedAt?: string };
@@ -47,6 +48,7 @@ export function AdBanner({
       <>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={creative.imageUrl} alt={post.title} className="absolute inset-0 size-full object-cover" loading="lazy" />
+        {!preview && <GlassLens src={creative.imageUrl} size={132} />}
         {badge}
       </>,
     );
@@ -61,13 +63,14 @@ export function AdBanner({
   return wrap(
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={img} alt="" className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]" loading="lazy" />
+      <img src={img} alt="" className={cn("absolute inset-0 size-full object-cover", preview && "transition duration-500 group-hover:scale-[1.03]")} loading="lazy" />
+      {!preview && <GlassLens src={img} size={132} />}
       <div
         className={cn("absolute inset-0", light ? "bg-gradient-to-r from-white/95 via-white/75 to-white/10" : "bg-gradient-to-r from-black/80 via-black/50 to-black/5")}
         aria-hidden
       />
       {badge}
-      <div className="relative flex h-full max-w-[78%] flex-col justify-center gap-1 px-4 sm:max-w-[62%] sm:px-8">
+      <div className="relative z-10 flex h-full max-w-[78%] flex-col justify-center gap-1 px-4 sm:max-w-[62%] sm:px-8">
         <div className="flex items-center gap-1.5">
           <span className={cn("rounded-md px-1.5 py-0.5 text-[11.5px] font-bold backdrop-blur-sm", light ? "bg-black/10 text-ink-2" : "bg-white/20 text-white")}>{cat.name}</span>
           {ad && post.publishedAt && <NewBadge publishedAt={post.publishedAt} />}
@@ -76,7 +79,7 @@ export function AdBanner({
         <p className={cn("line-clamp-2 text-[17px] font-black leading-snug tracking-[-0.04em] sm:text-[26px]", light ? "text-ink" : "text-white")}>{title}</p>
         {subtitle && <p className={cn("line-clamp-1 text-[12.5px] sm:text-[14.5px]", light ? "text-ink-2" : "text-white/80")}>{subtitle}</p>}
       </div>
-      <span className="absolute bottom-3 right-4 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[12.5px] font-bold text-ink shadow-sm sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:px-4 sm:text-[14px]">
+      <span className="absolute bottom-3 right-4 z-10 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[12.5px] font-bold text-ink shadow-sm sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:px-4 sm:text-[14px]">
         자세히 보기 <ArrowUpRight size={15} aria-hidden />
       </span>
     </>,
