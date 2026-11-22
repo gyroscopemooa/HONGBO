@@ -1,4 +1,7 @@
 import { PlayVisitGuide } from "@/components/PlayVisitGuide";
+import { PostLocationMap } from "@/components/PostLocationMap";
+import { BodyBlocks } from "@/components/BodyBlocks";
+import { LinkedText } from "@/components/LinkedText";
 
 import { PlayConditionsSummary } from "@/components/PlayConditionsSummary";
 import type { Metadata } from "next";
@@ -14,22 +17,23 @@ import { SurveyParticipation } from "@/components/SurveyParticipation";
 import { YoutubeEmbed } from "@/components/YoutubeEmbed";
 import { BadgeKit } from "@/components/BadgeKit";
 import { FavoriteButton } from "@/components/FavoriteButton";
-import { LikeButton } from "@/components/LikeButton";
-import { getLikeCount, isLiked } from "@/lib/likes-store";
-import { supabaseConfigured } from "@/lib/env";
 import { isFavorite } from "@/lib/favorites-store";
 import { OwnerActions } from "@/components/OwnerActions";
 import { PostCard } from "@/components/PostCard";
 import { ReportButton } from "@/components/ReportButton";
+import { PrivatePostComments } from "@/components/PrivatePostComments";
+import { adminPinPost } from "@/app/admin/actions";
 import { TrackEvent } from "@/components/TrackEvent";
 import { getCurrentUser } from "@/lib/auth";
 import { CATEGORY_MAP, LIMITS, PLATFORM_LABELS, withExclusiveRef } from "@/lib/constants";
 import { OfficialBadge } from "@/components/OfficialBadge";
 import { BenefitBadges } from "@/components/BenefitBadges";
+import { ProductSourceBadge } from "@/components/ProductSourceBadge";
 import { CopyCodeButton } from "@/components/CopyCodeButton";
 import { ctaLabel, platformText, secondaryLinks } from "@/lib/post-links";
 import { effectiveStatus, isPostPublic } from "@/lib/queries";
 import { store } from "@/lib/store";
+import { listPrivatePostComments } from "@/lib/private-post-comments";
 import { formatCount, formatDate, getDomain, relativeTime, siteUrl } from "@/lib/utils";
 
 type Props = { params: Promise<{ id: string }> };
@@ -71,15 +75,12 @@ export default async function PostDetailPage({ params }: Props) {
 
   const isOwner = !!user && post.authorId === user.id;
   const canManage = isOwner || !!user?.isAdmin;
-  const [favorited, liked] = user
-    ? await Promise.all([
-        isFavorite(user.id, post.id).catch(() => false),
-        isLiked(user.id, post.id).catch(() => false),
-      ])
-    : [false, false];
-  const likeCount = supabaseConfigured() ? (post.likeCount ?? 0) : await getLikeCount(post.id);
+  const favorited = user ? await isFavorite(user.id, post.id).catch(() => false) : false;
   const publicNow = isPostPublic(post);
   if (!publicNow && !canManage) notFound();
+  const [privateComments, privateCommentsReady] = canManage
+    ? await listPrivatePostComments(post.id).then((rows) => [rows, true] as const).catch(() => [[], false] as const)
+    : [[], false] as const;
   const appealState = isOwner && ["hidden", "blocked"].includes(post.status) ? (await getAppealStates([post.id]))[post.id] : undefined;
   const secondStage = ["pdf_requested", "rejected"].includes(appealState ?? "");
 
@@ -110,7 +111,7 @@ export default async function PostDetailPage({ params }: Props) {
   if (plat) rows.push({ icon: <Smartphone size={15} />, k: post.category === "content" ? "플랫폼" : "지원 환경", v: plat });
   if (usage) rows.push({ icon: <Info size={15} />, k: "이용 방식", v: usage });
   if (post.extra.period) rows.push({ icon: <CalendarClock size={15} />, k: "모집/행사 기간", v: post.extra.period });
-  if (post.address) rows.push({ icon: <MapPin size={15} />, k: "주소", v: post.address });
+  if (post.address) rows.push({ icon: <MapPin size={15} />, k: "주소", v: [post.address, post.extra.addressDetail].filter(Boolean).join(" ") });
   if (post.contact) rows.push({ icon: <Phone size={15} />, k: "연락 방법", v: post.contact });
   if (author) rows.push({ icon: <UserRound size={15} />, k: "작성자", v: author.nickname });
 
@@ -148,9 +149,10 @@ export default async function PostDetailPage({ params }: Props) {
         </div>
 
         <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1" aria-label="홍보 정보">
-          <div className="rounded-2xl border border-line bg-white p-5 shadow-card sm:p-6 lg:sticky lg:top-[72px]">
+          <div className={post.address ? "rounded-2xl border border-line bg-white p-5 shadow-card sm:p-6" : "rounded-2xl border border-line bg-white p-5 shadow-card sm:p-6 lg:sticky lg:top-[72px]"}>
             <div className="flex flex-wrap items-center gap-1.5">
               <CategoryBadge slug={post.category} className="!text-[12.5px] !px-2 !py-1" />
+              {post.category === "products" && <ProductSourceBadge value={post.extra.productSource ?? "other"} className="!px-2 !py-1 !text-[12.5px]" />}
               {post.region && (
                 <span className="inline-flex items-center gap-1 rounded-md bg-soft px-2 py-1 text-[12.5px] font-bold text-ink-2">
                   <MapPin size={12} aria-hidden /> {post.region}
@@ -249,7 +251,6 @@ export default async function PostDetailPage({ params }: Props) {
             <div className="mt-3 flex flex-wrap items-start gap-x-4 gap-y-2 [&_a]:whitespace-nowrap [&_button]:whitespace-nowrap">
               <CopyLinkButton path={`/post/${post.id}`} />
               <FavoriteButton postId={post.id} initial={favorited} loggedIn={!!user} />
-              <LikeButton postId={post.id} initial={liked} initialCount={likeCount} loggedIn={!!user} />
               <ReportButton postId={post.id} />
             </div>
 
@@ -257,6 +258,14 @@ export default async function PostDetailPage({ params }: Props) {
               <div className="mt-4 rounded-xl bg-soft p-3">
                 <p className="mb-2 text-xs font-semibold text-muted">{isOwner ? "내가 쓴 글" : "관리자 메뉴"}</p>
                 <OwnerActions postId={post.id} canRenew={isOwner} size="sm" redirectTo={isOwner ? "/mypage" : "/admin/posts"} />
+                {user?.isAdmin && (
+                  <form action={adminPinPost} className="mt-2">
+                    <input type="hidden" name="id" value={post.id} />
+                    <button name="pinned" value={post.adminPinned ? "off" : "on"} className="btn btn-outline btn-sm">
+                      {post.adminPinned ? "무료 지정홍보 해제" : "무료 지정홍보로 설정"}
+                    </button>
+                  </form>
+                )}
                 {isOwner && publicNow && <BadgeKit postId={post.id} origin={siteUrl()} />}
                 {post.extra.exclusive?.method === "survey" && (
                   <Link href={`/post/${post.id}/survey-results`} className="mt-2 inline-flex items-center rounded-lg border border-[#e6c77a] bg-white px-3 py-2 text-[13px] font-bold text-[#8a6105] hover:bg-[#fff7e0]">
@@ -266,6 +275,7 @@ export default async function PostDetailPage({ params }: Props) {
               </div>
             )}
           </div>
+          <PostLocationMap address={post.address} detail={post.extra.addressDetail} />
         </aside>
 
         <div className="min-w-0 lg:col-start-1 lg:row-start-2">
@@ -273,7 +283,8 @@ export default async function PostDetailPage({ params }: Props) {
             <h2 id="desc-title" className="mb-4 text-lg font-extrabold tracking-[-0.03em]">
               상세 설명
             </h2>
-            <div className="prose-body">{post.description}</div>
+            {post.extra.bodyFormat !== "rich" && <div className="prose-body"><LinkedText text={post.description} /></div>}
+            <BodyBlocks blocks={post.extra.bodyBlocks} />
             {!!post.extra.notes?.length && <section aria-label="추가 안내" className="mt-6 space-y-3">
               {post.extra.notes.map((note, i) => <section key={i} className="min-w-0 rounded-xl border border-line bg-soft/50 p-4 sm:p-5">
                 <h3 className="break-words text-base font-bold">{note.title}</h3>
@@ -299,6 +310,12 @@ export default async function PostDetailPage({ params }: Props) {
           </section>
         </div>
       </div>
+
+      {canManage && user && privateCommentsReady && (
+        <div className="mt-8 max-w-[800px]">
+          <PrivatePostComments postId={post.id} comments={privateComments} userId={user.id} isAdmin={user.isAdmin} />
+        </div>
+      )}
 
       {publicNow && post.extra.exclusive?.method === "survey" && (post.extra.exclusive.survey?.length ?? 0) > 0 && (
         <SurveyParticipation postId={post.id} questions={post.extra.exclusive.survey!} payout={post.extra.exclusive.payout} />

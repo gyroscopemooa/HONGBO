@@ -32,22 +32,40 @@ export default async function ThreadsAdmin() {
       <button className="btn btn-primary" type="submit">설정 저장</button>
     </ActionForm>
     <h3 className="font-bold">동의한 글 검토 · 템플릿 미리보기 (최근 50개)</h3>
-    {candidates.map(({ post, hash, consent }) => {
-      const source = { post_id: post.id, title: post.title, short_description: post.short_description, description: post.description, published_at: post.published_at, external_url: post.external_url };
+    <div className="overflow-hidden rounded-xl border border-line bg-white">
+    {candidates.map(({ post, hash, consent }, index) => {
+      const source = { post_id: post.id, title: post.title, short_description: post.short_description, description: post.description, published_at: post.published_at, external_url: post.external_url, contact: post.contact, address: post.address, extra: post.extra, tags: post.tags };
       const blocked = hasSensitiveContent(source);
-      return <article key={post.id} className="space-y-3 rounded-xl border p-4">
-        <Link className="underline" href={`/post/${post.id}`}>{post.title}</Link>
-        <p>상태: {post.status} · {consent?.excluded ? "제외" : consent?.approved_hash === hash ? consent.approved_by ? "관리자 검토 승인" : "자동 검사 통과" : "검토 필요"}</p>
-        <details><summary>검토할 원문 전체와 부가 정보</summary><pre className="whitespace-pre-wrap break-all">{JSON.stringify({ title: post.title, short_description: post.short_description, description: post.description, contact: post.contact, address: post.address, extra: post.extra, external_url: post.external_url }, null, 2)}</pre></details>
-        {blocked ? <p>개인정보 또는 민감정보 패턴 감지: 발행 차단</p> : <pre className="whitespace-pre-wrap break-words">{formatPromo(source, "https://www.thehongbo.com")}</pre>}
-        {hash && <ActionForm action={moderateThreadsPost} className="flex flex-wrap gap-3">
-          <input type="hidden" name="post_id" value={post.id} /><input type="hidden" name="hash" value={hash} />
-          <label><input type="checkbox" name="reviewed" /> 원문 전체와 링크 미리보기에 재게시하면 안 되는 개인정보·민감정보가 없음을 확인했습니다.</label>
-          <button className="btn btn-outline" name="decision" value="approve" disabled={blocked}>검토 승인</button>
-          <button className="btn btn-outline" name="decision" value="exclude">자동 홍보 제외</button>
-        </ActionForm>}
+      const reviewState = consent?.excluded ? "제외" : consent?.approved_hash === hash ? consent.approved_by ? "관리자 검토 승인" : "자동 검사 통과" : "검토 필요";
+      return <article key={post.id} className={`p-4 ${index ? "border-t border-line" : ""}`}>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link className="truncate font-bold underline underline-offset-2" href={`/post/${post.id}`}>{post.title}</Link>
+              <span className={blocked ? "rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700" : reviewState === "검토 필요" ? "rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-800" : "rounded-full bg-soft px-2 py-0.5 text-xs font-bold text-muted"}>{blocked ? "발행 차단" : reviewState}</span>
+            </div>
+            <p className="mt-1 line-clamp-1 text-sm text-muted">#{post.id} · {post.status} · {post.short_description}</p>
+          </div>
+          {hash && <ActionForm action={moderateThreadsPost} className="flex shrink-0 flex-wrap items-center gap-2">
+            <input type="hidden" name="post_id" value={post.id} /><input type="hidden" name="hash" value={hash} />
+            <button className="btn btn-outline btn-sm" name="decision" value="exclude">자동 홍보 제외</button>
+          </ActionForm>}
+        </div>
+        <details className="mt-3 rounded-lg bg-soft/60 px-3 py-2">
+          <summary className="cursor-pointer text-sm font-semibold">원문·템플릿 미리보기와 검토</summary>
+          <div className="mt-3 space-y-3">
+            <details><summary className="cursor-pointer text-sm text-muted">원문 전체와 부가 정보 보기</summary><pre className="mt-2 max-h-80 overflow-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-white p-3 text-xs">{JSON.stringify({ title: post.title, short_description: post.short_description, description: post.description, contact: post.contact, address: post.address, extra: post.extra, external_url: post.external_url }, null, 2)}</pre></details>
+            {blocked ? <p className="text-sm text-red-700">개인정보 또는 민감정보 패턴 감지: 제목·본문·연락처·주소·추가 정보·링크를 확인하세요.</p> : <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-line bg-white p-3 text-sm">{formatPromo(source, "https://www.thehongbo.com")}</pre>}
+            {hash && <ActionForm action={moderateThreadsPost} className="flex flex-wrap items-center gap-3">
+              <input type="hidden" name="post_id" value={post.id} /><input type="hidden" name="hash" value={hash} />
+              <label className="text-sm"><input type="checkbox" name="reviewed" /> 원문 전체와 링크 미리보기에 재게시하면 안 되는 개인정보·민감정보가 없음을 확인했습니다.</label>
+              <button className="btn btn-outline btn-sm" name="decision" value="approve" disabled={blocked}>검토 승인</button>
+            </ActionForm>}
+          </div>
+        </details>
       </article>;
     })}
+    </div>
     <h3 className="font-bold">최근 처리 내역 (50개)</h3>
     {(jobs.data ?? []).map(job => <article key={job.post_id} className="space-y-2 rounded-xl border p-4">
       <Link href={`/post/${job.post_id}`} className="underline">원문 #{job.post_id}</Link>

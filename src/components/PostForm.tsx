@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { PlayConditionsFields } from "./PlayConditionsFields";
+import { BodyBlocksEditor } from "./BodyBlocksEditor";
 import { EMPTY_PLAY_CONDITIONS, playBenefitValues, type PlayConditions } from "@/lib/play-conditions";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
@@ -32,6 +33,7 @@ import {
   EXTRA_NOTE_BODY_MAX,
   EXTRA_LINK_PRESETS,
   LIMITS,
+  PRODUCT_SOURCES,
   REGIONS,
   SNS_PLATFORMS,
   USAGE_TYPES,
@@ -40,7 +42,8 @@ import {
 } from "@/lib/constants";
 import { inferRegion } from "@/lib/policy";
 import { youtubeWatchUrl } from "@/lib/youtube";
-import type { Post, SurveyQuestion } from "@/lib/types";
+import type { BodyBlock, Post, SurveyQuestion } from "@/lib/types";
+import type { ProductSource } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "./CategoryIcon";
 import { Field, ImageSlot, LinkInput, TagInput, importRemoteImage } from "./form/parts";
@@ -48,6 +51,8 @@ import { Modal } from "./Modal";
 import { PostCard } from "./PostCard";
 
 export interface FormState {
+  bodyBlocks: BodyBlock[];
+  bodyFormat?: "rich";
   play?: PlayConditions;
   category: CategorySlug | "";
   title: string;
@@ -62,9 +67,11 @@ export interface FormState {
   businessUrl: string;
   mapUrl: string;
   address: string;
+  addressDetail: string;
   platforms: string[];
   snsPlatform: string;
   usageType: string;
+  productSource: ProductSource | "";
   period: string;
   benefits: string[];
   exclusiveOn: boolean;
@@ -90,6 +97,7 @@ export interface FormState {
 }
 
 const EMPTY: FormState = {
+  bodyBlocks: [],
   category: "",
   title: "",
   shortDescription: "",
@@ -103,9 +111,11 @@ const EMPTY: FormState = {
   businessUrl: "",
   mapUrl: "",
   address: "",
+  addressDetail: "",
   platforms: [],
   snsPlatform: "youtube",
   usageType: "",
+  productSource: "",
   period: "",
   benefits: [],
   exclusiveOn: false,
@@ -148,6 +158,8 @@ export function postToFormState(p: Post): FormState {
   return {
     ...EMPTY,
     category: p.category,
+    bodyBlocks: p.extra.bodyBlocks ?? [],
+    bodyFormat: p.extra.bodyFormat,
     play: p.extra.play,
     title: p.title,
     shortDescription: p.shortDescription,
@@ -161,9 +173,11 @@ export function postToFormState(p: Post): FormState {
     businessUrl: p.extra.businessUrl ?? "",
     mapUrl: p.mapUrl ?? "",
     address: p.address ?? "",
+    addressDetail: p.extra.addressDetail ?? "",
     platforms: p.category === "apps" && p.platform ? p.platform.split(",") : [],
     snsPlatform: p.category === "content" && p.platform ? p.platform : "youtube",
     usageType: p.extra.usageType ?? "",
+    productSource: p.extra.productSource ?? "other",
     period: p.extra.period ?? "",
     benefits: p.extra.play ? playBenefitValues(p.extra.play) : (p.extra.benefits ?? []).filter((b) => b !== EXCLUSIVE_SLUG),
     exclusiveOn: !!p.extra.exclusive,
@@ -206,11 +220,15 @@ function toPayload(f: FormState) {
     tags: f.tags,
     contact: f.contactPublic ? f.contact : null,
     extra: {
+      addressDetail: f.addressDetail,
+      bodyBlocks: f.bodyBlocks,
+      bodyFormat: f.bodyFormat,
       play: f.play,
       playUrl: f.playUrl,
       appStoreUrl: f.appStoreUrl,
       siteUrl: f.siteUrl,
       usageType: f.usageType,
+      productSource: f.productSource,
       period: f.period,
       benefits: f.benefits.join(","),
       exclusiveOn: f.exclusiveOn,
@@ -402,7 +420,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
       address: null,
       mapUrl: null,
       tags: [],
-      extra: { benefits: f.exclusiveOn ? [...f.benefits, EXCLUSIVE_SLUG] : f.benefits, ...(f.exclusiveOn ? { exclusive: { reward: f.exclusiveReward, how: f.exclusiveHow } } : {}) },
+      extra: { benefits: f.exclusiveOn ? [...f.benefits, EXCLUSIVE_SLUG] : f.benefits, ...(f.category === "products" ? { productSource: f.productSource || "other" } : {}), ...(f.exclusiveOn ? { exclusive: { reward: f.exclusiveReward, how: f.exclusiveHow } } : {}) },
       contact: null,
       status: "active",
       adminPinned: false,
@@ -540,7 +558,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
 
             {f.category === "offline" && (
               <>
-                <Field id="address" label="주소" optional error={errors.address} hint="시/도로 시작하는 주소를 쓰면 지역이 자동으로 선택돼요.">
+                <Field id="address" label="주소" optional error={errors.address} hint="도로명 또는 지번 주소를 입력해주세요. 이 주소로 지도 위치를 찾고 지역도 자동 선택해요. 층·호수는 상세주소에 적어주세요.">
                   <input
                     id="address"
                     value={f.address}
@@ -554,6 +572,9 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                     placeholder="예) 울산 남구 삼산동 …"
                     className="field"
                   />
+                </Field>
+                <Field id="addressDetail" label="상세주소" optional error={errors.addressDetail} hint="층·호수 등 방문에 필요한 안내를 적어주세요.">
+                  <input id="addressDetail" value={f.addressDetail} maxLength={120} onChange={(e) => set("addressDetail", e.target.value)} placeholder="예) 4층, 401호" className="field" />
                 </Field>
                 <LinkInput id="mapUrl" label="지도 링크" value={f.mapUrl} onChange={(v) => set("mapUrl", v)} onApply={applyOg} error={errors.mapUrl} placeholder="네이버지도 · 카카오맵 · Google Maps 공유 링크" hint="지도 링크 또는 아래 영업/문의 링크 중 하나는 꼭 필요해요." />
                 <LinkInput id="businessUrl" label="영업/문의 링크" optional value={f.businessUrl} onChange={(v) => set("businessUrl", v)} error={errors.businessUrl} placeholder="인스타그램, 블로그, 예약 페이지 등" withFetch onApply={applyOg} />
@@ -614,9 +635,18 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                   </Field>
                 )}
                 {f.category === "products" && (
-                  <Field id="price" label="가격" optional error={errors.price} hint="예) 12,900원 · 무료 · 가격 협의">
-                    <input id="price" value={f.price} maxLength={LIMITS.priceMax} onChange={(e) => set("price", e.target.value)} placeholder="12,900원" className="field" />
-                  </Field>
+                  <>
+                    <Field id="productSource" label="판매 형태" required error={errors.productSource} hint="구매자가 판매 방식을 미리 알 수 있도록 정확히 선택해주세요.">
+                      <div className="flex flex-wrap gap-2">
+                        {PRODUCT_SOURCES.map((source) => (
+                          <button key={source.value} type="button" aria-pressed={f.productSource === source.value} onClick={() => set("productSource", source.value)} className={cn("h-9 rounded-full border px-4 text-sm font-semibold transition", f.productSource === source.value ? "border-brand bg-brand text-white" : "border-line bg-white text-ink-2 hover:border-[#c9ced9]")}>{source.label}</button>
+                        ))}
+                      </div>
+                    </Field>
+                    <Field id="price" label="가격" optional error={errors.price} hint="예) 12,900원 · 무료 · 가격 협의">
+                      <input id="price" value={f.price} maxLength={LIMITS.priceMax} onChange={(e) => set("price", e.target.value)} placeholder="12,900원" className="field" />
+                    </Field>
+                  </>
                 )}
                 {f.category === "events" && (
                   <Field id="period" label="모집/행사 기간" optional hint="예) 상시 모집 · 매월 첫째 주 토요일">
@@ -948,16 +978,8 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
               <textarea id="couponNote" value={f.couponNote ?? ""} onChange={(e) => set("couponNote", e.target.value)} maxLength={COUPON_NOTE_MAX} rows={2} placeholder="예: 앱 설정 → 쿠폰 입력에서 사용 · 계정당 1회 · 사용 기한" className="field" aria-invalid={!!errors.couponNote} />
             </Field>
           </div>}
-          <Field id="description" label="상세 설명" required error={errors.description} counter={{ now: f.description.length, max: LIMITS.descMax }}>
-            <textarea
-              id="description"
-              value={f.description}
-              rows={9}
-              onChange={(e) => set("description", e.target.value)}
-              placeholder={"어떤 점이 특별한지, 누구에게 필요한지, 어떻게 이용하는지 자유롭게 적어주세요.\n줄바꿈은 그대로 보여져요."}
-              aria-invalid={!!errors.description}
-              className="field resize-y leading-relaxed"
-            />
+          <Field id="description" label="상세 설명" required error={errors.description} counter={{ now: f.bodyFormat === "rich" ? f.description.length : f.description.length + (f.bodyBlocks ?? []).filter(b => b.type === "text").reduce((sum, b) => sum + b.value.length, 0), max: LIMITS.descMax }}>
+            <BodyBlocksEditor description={f.description} blocks={f.bodyBlocks ?? []} rich={f.bodyFormat === "rich"} onChange={(description, bodyBlocks) => setF(current => ({ ...current, description, bodyBlocks, bodyFormat: "rich" }))} onBusyChange={b => setBusyCount(n => n + (b ? 1 : -1))} errors={errors} />
           </Field>
         </SectionCard>
 
@@ -966,10 +988,29 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
           <Field id="primaryImage" label="대표 이미지" error={errors.primaryImageUrl} hint="목록은 가운데를 기준으로 꽉 채우고, 상세·확대에서는 전체 사진을 보여줘요. 이전에 잘려 저장된 사진은 원본을 다시 올려주세요.">
             <div className="max-w-[560px]"><ImageSlot keepOriginal value={f.primaryImageUrl} onChange={(u) => set("primaryImageUrl", u)} alt="대표 이미지 미리보기" onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} /></div>
           </Field>
-          <Field id="extraImages" label={`추가 이미지 (최대 ${LIMITS.extraImagesMax}장)`} optional error={errors.images} hint="자르지 않고 원본 비율 그대로 보여드려요. 큰 사진이나 세로 스크린샷도 그대로 올려도 돼요. (권장: 가로 1200px 이상)">
+          <Field id="extraImages" label={`추가 이미지 (최대 ${LIMITS.extraImagesMax}장)`} optional error={errors.images} hint="‘대표로 설정’을 누르면 기존 대표 사진과 자리가 바뀌어요. 사진은 자르지 않고 원본 비율로 저장해요. (권장: 가로 1200px 이상)">
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               {f.images.map((url, i) => (
-                <ImageSlot key={url} size="sm" keepOriginal value={url} alt={`추가 이미지 ${i + 1}`} onChange={(u) => set("images", u ? f.images.map((x, idx) => (idx === i ? u : x)) : f.images.filter((_, idx) => idx !== i))} onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} />
+                <div key={url} className="min-w-0 space-y-2">
+                  <ImageSlot size="sm" keepOriginal value={url} alt={`추가 이미지 ${i + 1}`} onChange={(u) => set("images", u ? f.images.map((x, idx) => (idx === i ? u : x)) : f.images.filter((_, idx) => idx !== i))} onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} />
+                  <button
+                    type="button"
+                    disabled={pending || busyCount > 0}
+                    aria-label={`추가 이미지 ${i + 1}을 대표 이미지로 설정`}
+                    className="btn btn-outline btn-sm w-full disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={() => setF((current) => {
+                      const selected = current.images[i];
+                      if (!selected) return current;
+                      return {
+                        ...current,
+                        primaryImageUrl: selected,
+                        images: current.primaryImageUrl
+                          ? current.images.map((image, index) => index === i ? current.primaryImageUrl! : image)
+                          : current.images.filter((_, index) => index !== i),
+                      };
+                    })}
+                  >대표로 설정</button>
+                </div>
               ))}
               {f.images.length < LIMITS.extraImagesMax && (
                 <ImageSlot key={`new-${f.images.length}`} size="sm" keepOriginal value={null} alt="" onChange={(u) => u && set("images", [...f.images, u])} onBusyChange={(b) => setBusyCount((n) => n + (b ? 1 : -1))} />

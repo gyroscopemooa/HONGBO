@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Eye, MapPin, ThumbsUp } from "lucide-react";
+import { Eye, MapPin } from "lucide-react";
 import { LIMITS, benefitLabels } from "@/lib/constants";
 import type { Post } from "@/lib/types";
 import { cn, formatCount, isWithinWeek, relativeTime } from "@/lib/utils";
@@ -8,11 +8,12 @@ import { CategoryBadge } from "./CategoryBadge";
 import { NewBadge, isNewPost } from "./NewBadge";
 import { OfficialBadge } from "./OfficialBadge";
 import { PostImage } from "./PostImage";
+import { ProductSourceBadge } from "./ProductSourceBadge";
 
 const CARD_SIZES = "(min-width:1024px) 190px, (min-width:640px) 30vw, 46vw";
 
 /** 모든 카테고리가 공유하는 홍보 카드 (대표 이미지 / 제목 / 한 줄 소개 / 카테고리 / 지역) */
-export function PostCard({ post, eager = false, preview = false, ad = false, rank }: { post: Post; eager?: boolean; preview?: boolean; ad?: boolean; rank?: number }) {
+export function PostCard({ post, eager = false, preview = false, ad = false, adLabel = "광고", rank }: { post: Post; eager?: boolean; preview?: boolean; ad?: boolean; adLabel?: string; rank?: number }) {
   const inner = (
     <>
       <div className="relative">
@@ -28,7 +29,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
               {rank}위
             </span>
           )}
-          {ad && <span className="rounded-md bg-ink/75 px-1.5 py-0.5 text-[11px] font-bold tracking-tight text-white backdrop-blur-sm">광고</span>}
+          {ad && <span className="rounded-md bg-ink/75 px-1.5 py-0.5 text-[11px] font-bold tracking-tight text-white backdrop-blur-sm">{adLabel}</span>}
           {isNewPost(post.publishedAt) && <span className="rounded-md bg-white/90 px-1.5 py-0.5 text-[11px] font-bold text-ink-2 shadow-sm">NEW</span>}
           {post.region && !ad && (
             <span className="inline-flex items-center gap-0.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[11.5px] font-bold text-ink-2 shadow-sm">
@@ -54,9 +55,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
         <div className="mt-auto flex items-center justify-between gap-2 pt-2.5">
           <div className="flex min-w-0 items-center gap-2">
             <CategoryBadge slug={post.category} />
-            <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-muted" aria-label={`좋아요 ${post.likeCount ?? 0}개`}>
-              <ThumbsUp size={12} aria-hidden /> {formatCount(post.likeCount ?? 0)}
-            </span>
+            {post.category === "products" && <ProductSourceBadge value={post.extra.productSource ?? "other"} />}
           </div>
           {post.viewCount >= LIMITS.showViewsFrom ? (
             <span className="inline-flex shrink-0 items-center gap-1 text-xs text-faint">

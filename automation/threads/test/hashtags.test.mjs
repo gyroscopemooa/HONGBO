@@ -7,7 +7,9 @@ import { formatSelfPromo } from '../src/self-promo.mjs';
 test('five common tags rotate reproducibly; contextual tags need source evidence', () => {
   const plain = { post_id: 1, title: '소개합니다' };
   assert.equal(promoHashtags(plain).length, 5);
-  assert.equal(promoHashtags(plain)[0], '#더홍보');
+  assert.equal(promoHashtags(plain)[0], '#홍보');
+  assert.equal(promoHashtags({ ...plain, title: '치킨 기프티콘 이벤트' })[0], '#이벤트');
+  assert.equal(promoHashtags({ ...plain, title: '앱 개발 소개' })[0], '#개발');
   assert.deepEqual(promoHashtags(plain), promoHashtags(plain));
   assert.notDeepEqual(promoHashtags(plain), promoHashtags({ ...plain, post_id: 2 }));
   const cafe = promoHashtags({ ...plain, title: '카페 소개' });

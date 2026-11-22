@@ -26,6 +26,7 @@ import {
   EXTRA_NOTE_BODY_MAX,
   CATEGORY_SLUGS,
   LIMITS,
+  PRODUCT_SOURCES,
   SNS_PLATFORMS,
   USAGE_TYPES,
   type CategorySlug,
@@ -55,6 +56,9 @@ const rawSchema = z.object({
   contact: str(400),
   extra: z
     .object({
+      addressDetail: str(120),
+      bodyBlocks: z.array(z.object({ id: z.string().min(1).max(64), type: z.enum(["text", "image", "youtube"]), value: z.string().max(LIMITS.descMax), caption: z.string().max(120).optional() })).max(LIMITS.bodyBlocksMax).optional(),
+      bodyFormat: z.literal("rich").optional(),
       play: playConditionsSchema.optional(),
       notes: z.array(z.object({ title: z.string().max(200), body: z.string().max(2000) })).max(20).optional(),
       couponCode: str(400),
@@ -63,6 +67,7 @@ const rawSchema = z.object({
       appStoreUrl: str(2100),
       siteUrl: str(2100),
       usageType: str(40),
+      productSource: z.enum(PRODUCT_SOURCES.map((source) => source.value) as [string, ...string[]]).optional(),
       period: str(200),
       benefits: str(200),
       exclusiveOn: z.boolean().optional(),
@@ -129,6 +134,50 @@ export function parsePostInput(raw: unknown): ParseResult {
 
   // --- 링크 ---
   const extra: PostExtra = {};
+  const bodyBlocks: NonNullable<PostExtra["bodyBlocks"]> = [];
+  let bodyTextLength = v.extra.bodyFormat === "rich" ? 0 : description.length;
+  let bodyImages = 0;
+  let bodyVideos = 0;
+  const blockIds = new Set<string>();
+  for (const [i, block] of (v.extra.bodyBlocks ?? []).entries()) {
+    const value = block.value.replace(/\r\n/g, "\n").trim();
+    const caption = block.caption?.trim();
+    const key = `bodyBlocks.${i}`;
+    if (!value && block.type === "text") continue;
+    if (blockIds.has(block.id)) errors[key] = "본문 블록 식별자가 중복됐어요.";
+    blockIds.add(block.id);
+    if (block.type === "text") bodyTextLength += value.length;
+    if (block.type === "image") {
+      bodyImages++;
+      if (!isAllowedImageUrl(value)) errors[key] = "본문 사진을 직접 업로드해주세요.";
+    }
+    if (block.type === "youtube") {
+      bodyVideos++;
+      const videoId = parseYoutubeId(value);
+      if (!videoId) errors[key] = "올바른 유튜브 영상 주소를 입력해주세요.";
+      else { bodyBlocks.push({ ...block, value: `https://www.youtube.com/watch?v=${videoId}`, caption }); continue; }
+    }
+    bodyBlocks.push({ ...block, value, caption });
+  }
+  if (bodyTextLength > LIMITS.descMax) errors.bodyBlocks = `상세 설명과 본문 글을 합쳐 ${LIMITS.descMax}자까지 입력해주세요.`;
+  if (bodyImages > LIMITS.bodyImagesMax || bodyVideos > LIMITS.bodyVideosMax) errors.bodyBlocks = `본문 사진은 ${LIMITS.bodyImagesMax}장, 영상은 ${LIMITS.bodyVideosMax}개까지 넣을 수 있어요.`;
+  if (findBannedKeyword(bodyBlocks.map(b => `${b.type === "text" ? b.value : ""} ${b.caption ?? ""}`).join(" "))) errors.bodyBlocks = "본문에 등록할 수 없는 내용이 포함되어 있어요.";
+  if (bodyBlocks.length) extra.bodyBlocks = bodyBlocks;
+  if (v.extra.bodyFormat === "rich") {
+    extra.bodyFormat = "rich";
+    const plainText = bodyBlocks.filter(b => b.type === "text").map(b => b.value).join("\n\n");
+    if (plainText.trim().length < LIMITS.descMin) errors.description = `상세 설명을 ${LIMITS.descMin}자 이상 입력해주세요.`;
+    if (plainText.trim() !== description) errors.bodyBlocks = "본문과 저장할 설명이 일치하지 않아요. 내용을 다시 확인해주세요.";
+  }
+  const addressDetail = blankToNull(v.extra.addressDetail);
+  if (category === "offline" && addressDetail) {
+    if (!blankToNull(v.address)) errors.address = "상세주소와 함께 기본 주소를 입력해주세요.";
+    extra.addressDetail = addressDetail;
+  }
+  if (category === "products") {
+    if (!v.extra.productSource) errors.productSource = "판매 형태를 선택해주세요.";
+    else extra.productSource = v.extra.productSource as PostExtra["productSource"];
+  }
   if (v.extra.play) extra.play = v.extra.play;
   const linkField = (
     key: "externalUrl" | "mapUrl" | "playUrl" | "appStoreUrl" | "siteUrl" | "businessUrl",
@@ -414,7 +463,7 @@ export function parsePostInput(raw: unknown): ParseResult {
   if (contact && contact.length > LIMITS.contactMax) errors.contact = `연락처는 ${LIMITS.contactMax}자까지 입력할 수 있어요.`;
 
   // --- 금지 키워드 ---
-  const banned = findBannedKeyword(v.extra.play ? Object.values(v.extra.play).join(" ") : "", notes.map((n) => `${n.title} ${n.body}`).join(" "), couponCode, couponNote, title, shortDescription, description, tags.join(" "), address, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
+  const banned = findBannedKeyword(v.extra.play ? Object.values(v.extra.play).join(" ") : "", notes.map((n) => `${n.title} ${n.body}`).join(" "), couponCode, couponNote, title, shortDescription, description, tags.join(" "), address, extra.addressDetail, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
   if (banned) {
     errors.description = "운영정책상 등록할 수 없는 내용이 포함되어 있어요. 내용을 확인해주세요.";
   }

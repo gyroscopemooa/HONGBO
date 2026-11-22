@@ -22,7 +22,7 @@ export interface SeedPost {
   platform?: string;
   address?: string;
   extra?: PostExtra;
-  /** 메인 "오늘의 인기 홍보"에 고정할 때의 큐레이션 순서 (1이 가장 앞) */
+  /** 동점일 때 메인 "오늘의 인기 홍보"에 적용할 보조 순서 (1이 가장 앞) */
   curated?: number;
   /** 이미지 생성 모티프 / 팔레트 (scripts/gen-seed-images.ts 에서 사용) */
   motif: string;

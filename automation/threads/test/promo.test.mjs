@@ -117,9 +117,11 @@ test('every post has an opener and finishes with a relevant question, after hash
   assert.ok(unknown.endsWith('?'));
 });
 
-test('use the advertised HTTPS destination and safely fall back for invalid URLs', () => {
+test('always use the 더홍보 post URL, not an advertised external destination', () => {
   const direct = 'https://play.google.com/store/apps/details?id=com.healthyroutine.app';
-  assert.ok(formatPromo({ ...original, external_url: direct }, site).includes(direct));
+  const directCopy = formatPromo({ ...original, external_url: direct }, site);
+  assert.ok(!directCopy.includes(direct));
+  assert.ok(directCopy.includes(`${site}/post/123`));
   for (const external_url of ['javascript:alert(1)', 'https://user:password@example.com', 'invalid', 'https://example.com/' + 'x'.repeat(500)]) {
     const copy = formatPromo({ ...original, external_url }, site);
     assert.ok(copy.includes(`${site}/post/123`));

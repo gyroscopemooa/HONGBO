@@ -19,7 +19,7 @@ export function PremiumGrid({ ads }: { ads: Post[] }) {
     <Carousel title="추천 홍보" icon={<Crown size={22} className="text-[#e0a100]" fill="currentColor" aria-hidden />} moreHref="/advertise">
         {shownAds.map((p, i) => (
           <li key={`ad-${p.id}`}>
-            <PostCard post={p} ad eager={i < 5} />
+            <PostCard post={p} ad adLabel={p.adminPinned ? "무료 지정" : "광고"} eager={i < 5} />
           </li>
         ))}
         {Array.from({ length: plus }, (_, i) => (

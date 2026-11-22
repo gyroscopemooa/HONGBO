@@ -243,6 +243,10 @@ export const LIMITS = {
   tagsMax: 5,
   tagMax: 20,
   extraImagesMax: 4,
+  bodyBlocksMax: 16,
+  bodyImagesMax: 6,
+  bodyVideosMax: 3,
+  bodyImageMaxBytes: 350 * 1024,
   priceMax: 30,
   addressMax: 120,
   contactMax: 100,
@@ -254,8 +258,6 @@ export const LIMITS = {
   pageSize: 20,
   /** 최근 N시간의 유효 이벤트로 자동 인기순을 계산 */
   popularWindowHours: 72,
-  /** 이 개수 이상의 유효 이벤트가 쌓이면 운영자 큐레이션 대신 자동 인기순으로 전환 */
-  autoPopularMinEvents: 300,
   /** 카드에 조회수를 표시하는 최소 실제 조회수 */
   showViewsFrom: 1000,
   /** 링크 클릭 수는 이 값 이상일 때만 작성자 화면에 표시 (적은 숫자가 위축 요인이 되지 않도록) */
@@ -264,6 +266,17 @@ export const LIMITS = {
 };
 
 export const PAGE_SIZE = LIMITS.pageSize;
+
+/** 상품 판매자가 상품을 확보·판매하는 방식. 구매 전 성격을 쉽게 확인하도록 상품 글에만 표시합니다. */
+export const PRODUCT_SOURCES = [
+  { value: "made", label: "자체생산·제작" },
+  { value: "resale", label: "구매대행·유통" },
+  { value: "other", label: "기타" },
+] as const;
+export type ProductSource = (typeof PRODUCT_SOURCES)[number]["value"];
+export const PRODUCT_SOURCE_LABELS: Record<ProductSource, string> = Object.fromEntries(
+  PRODUCT_SOURCES.map((source) => [source.value, source.label]),
+) as Record<ProductSource, string>;
 
 /** 홍보글 혜택 배지 (글쓴이가 실제로 제공하는 혜택만 선택) */
 export const BENEFITS = [

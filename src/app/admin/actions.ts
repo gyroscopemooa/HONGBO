@@ -48,6 +48,7 @@ export async function adminPinPost(formData: FormData) {
   const rank = int(formData.get("rank"));
   await store.setPinned(id, pinned, rank && rank > 0 ? rank : null);
   refresh();
+  revalidatePath(`/post/${id}`);
 }
 
 export async function adminSetOfficial(formData: FormData) {

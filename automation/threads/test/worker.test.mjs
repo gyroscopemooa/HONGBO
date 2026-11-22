@@ -39,7 +39,7 @@ test('token copy whitespace is trimmed; embedded whitespace blocks before any AP
   await assert.rejects(scenario({env:{THREADS_ACCESS_TOKEN:'secret\nthreads'}}),/TOKEN_FORMAT_INVALID/);
 });
 test('sensitive source blocks before AI or container requests',async()=>{
-  const {result,calls}=await scenario({post:{description:'문의 010-1234-5678'}}); assert.equal(result,'blocked');
+  const {result,calls}=await scenario({post:{description:'문의 hello@example.com'}}); assert.equal(result,'blocked');
   assert.ok(!calls.some(c=>c.url.includes('openai')||c.url.endsWith('/threads')));
 });
 test('eligibility revoked just before publishing blocks the request',async()=>{
@@ -70,5 +70,20 @@ test('missing or expired token expiry blocks all network calls',async()=>{
 });
 test('token health and sensitive patterns',()=>{
   assert.equal(tokenHealth({THREADS_TOKEN_EXPIRES_AT:new Date(Date.now()+86400000).toISOString()}),'expiring');
-  for (const description of ['hello@example.com','계좌 123','900101-1234567','０１０－１２３４－５６７８']) assert.ok(hasSensitiveContent({description}));
+  for (const description of ['hello@example.com','계좌 123','900101-1234567']) assert.ok(hasSensitiveContent({description}));
+});
+
+test('phone numbers do not block promotion and are not reposted', async () => {
+  for (const description of ['학원 문의: 0507-1437-0675', '문의 ０５０７－１４３７－０６７５', '전화 052-123-4567', '전화 02-1234-5678', '문의 050714370675', '문의 010-1234-5678']) {
+    assert.equal(hasSensitiveContent({ description }), false, description);
+  }
+  const { result, calls } = await scenario({ post: { description: '학원 문의: 010-1234-5678' } });
+  assert.equal(result, 'published');
+  assert.doesNotMatch(calls.find(c => c.url.endsWith('/threads')).body.text, /010-1234-5678/);
+});
+
+test('phone numbers do not mask other sensitive content', () => {
+  for (const description of ['0507-1437-0675 hello@example.com', '0507-1437-0675 900101-1234567', '0507-1437-0675 계좌 123']) {
+    assert.equal(hasSensitiveContent({ description }), true, description);
+  }
 });

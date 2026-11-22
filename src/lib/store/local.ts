@@ -359,10 +359,10 @@ export const localStore: Store = {
 
   async findActiveDuplicate(authorId, input, excludeId) {
     const now = Date.now();
-    const p = load().posts.find(
-      (x) => x.authorId === authorId && x.id !== excludeId && isPublic(x, now) && isDuplicatePost(input, x),
-    );
-    return p ? clone(p) : null;
+    for (const post of load().posts) {
+      if (post.authorId === authorId && post.id !== excludeId && isPublic(post, now) && await isDuplicatePost(input, post)) return clone(post);
+    }
+    return null;
   },
 
   async incrementCounter(postId, kind) {

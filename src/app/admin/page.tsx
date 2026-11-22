@@ -56,7 +56,7 @@ export default async function AdminHome() {
         <h2 className="text-lg font-extrabold tracking-[-0.03em]">운영 메모</h2>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-[14px] leading-relaxed text-muted">
           <li>
-            <b className="text-ink-2">메인 고정</b>: 홍보글 목록에서 &lsquo;메인 고정&rsquo;과 순위를 지정하면 &ldquo;오늘의 인기 홍보&rdquo;에 먼저 노출돼요. 실제 조회·클릭이 충분히 쌓이면 자동 인기순으로 바뀌어요.
+            <b className="text-ink-2">메인 고정</b>: 홍보글 목록에서 &lsquo;메인 고정&rsquo;과 순위를 지정하면 동점 글의 보조 순서로 활용돼요. 오늘의 인기 홍보는 최근 반응과 조회·클릭 점수순으로 정렬됩니다.
           </li>
           <li>신고는 자동으로 글을 숨기지 않아요. 신고 탭에서 내용을 확인한 뒤 숨김·반려를 선택하세요.</li>
           <li>사용자를 차단하면 새 글 작성·이미지 업로드가 막혀요. (기존 글은 그대로 유지돼요.)</li>

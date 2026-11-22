@@ -110,7 +110,7 @@ export function Carousel({
       <ul
         ref={ref}
         onScroll={update}
-        className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 pt-1 [scroll-padding-inline:16px] sm:mx-0 sm:px-0 sm:[scroll-padding-inline:0] [&>li]:shrink-0 [&>li]:snap-start [&>li]:basis-[calc((100%-12px)/2.2)] sm:[&>li]:basis-[calc((100%-36px)/4)] lg:[&>li]:basis-[calc((100%-60px)/6)]"
+        className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 pt-1 [scroll-padding-inline:16px] sm:mx-0 sm:px-0 sm:[scroll-padding-inline:0] [&>li]:shrink-0 [&>li]:snap-start [&>li]:basis-[calc((100%-12px)/2)] sm:[&>li]:basis-[calc((100%-36px)/4)] lg:[&>li]:basis-[calc((100%-60px)/6)]"
       >
         {children}
       </ul>

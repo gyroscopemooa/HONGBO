@@ -7,6 +7,21 @@ import { ChevronDown, Flame, Clock, MapPin } from "lucide-react";
 import { BENEFITS, CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "./CategoryIcon";
+import { MorphTip } from "./MorphTip";
+
+const TIPS: Record<string, string> = {
+  "/posts": "등록된 홍보글을 한곳에서 모아 봐요",
+  "/play": "주말에 가볼 만한 곳과 행사를 찾아봐요",
+  "/benefit/exclusive": "더홍보에서만 받는 전용 혜택이에요",
+  "/benefit": "진행 중인 이벤트·혜택을 모두 모았어요",
+  "/community": "홍보 방법을 묻고 답하는 커뮤니티예요",
+  "/reviews": "실제 이용 후기와 리뷰를 확인해요",
+  "/meetup": "같이 홍보하는 소모임을 찾아봐요",
+  "/posts?sort=popular": "지금 많이 보는 인기 홍보글이에요",
+  "/posts?sort=latest": "방금 올라온 새 홍보글이에요",
+  "/region": "내 지역의 홍보글만 모아 봐요",
+};
+const tipOf = (href: string) => TIPS[href] ?? (href.startsWith("/category/") ? "이 분류의 홍보글을 모아 봐요" : href.startsWith("/benefit/") ? "이 혜택의 이벤트를 모아 봐요" : undefined);
 
 /** 비슷한 메뉴를 하나로 묶은 드롭다운 (데스크톱) */
 function GroupMenu({ label, pathname, items, linkCls }: { label: string; pathname: string; items: Array<[string, string]>; linkCls: (active: boolean) => string }) {
@@ -44,6 +59,8 @@ function GroupMenu({ label, pathname, items, linkCls }: { label: string; pathnam
               key={href}
               href={href}
               role="menuitem"
+              data-tip={tipOf(href)}
+              data-tip-side="right"
               className={cn("block rounded-lg px-3 py-2 text-[14px] font-semibold hover:bg-soft", pathname.startsWith(href) ? "text-brand" : "text-ink-2")}
             >
               {label}
@@ -91,13 +108,13 @@ function NavInner() {
   return (
     <nav aria-label="카테고리" className="wrap flex items-center">
       <div className="no-scrollbar -mx-1 flex min-w-0 flex-1 items-center overflow-x-auto overscroll-x-contain whitespace-nowrap xl:overflow-visible">
-        <Link href="/posts" className={linkCls(activeCat === "all")} aria-current={activeCat === "all" ? "page" : undefined}>
+        <Link href="/posts" data-tip={tipOf("/posts")} className={linkCls(activeCat === "all")} aria-current={activeCat === "all" ? "page" : undefined}>
           <CategoryIcon slug="all" size={17} />
           전체보기
           {underline(activeCat === "all")}
         </Link>
         {/* 모바일: 가로 스크롤 전체 목록 */}
-        <Link href="/play" className={linkCls(pathname.startsWith("/play"))} aria-current={pathname.startsWith("/play") ? "page" : undefined}>
+        <Link href="/play" data-tip={tipOf("/play")} className={linkCls(pathname.startsWith("/play"))} aria-current={pathname.startsWith("/play") ? "page" : undefined}>
           <span className="font-extrabold text-[#1762e8]">놀러가자</span>
           {underline(pathname.startsWith("/play"))}
         </Link>
@@ -132,7 +149,7 @@ function NavInner() {
             <GroupMenu key={g.label} label={g.label} pathname={pathname} items={g.slugs.map((slug) => [`/category/${slug}`, CATEGORY_NAME[slug]] as [string, string])} linkCls={linkCls} />
           ))}
           <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
-          <Link href="/benefit/exclusive" className={linkCls(pathname === "/benefit/exclusive")}>
+          <Link href="/benefit/exclusive" data-tip={tipOf("/benefit/exclusive")} className={linkCls(pathname === "/benefit/exclusive")}>
             <span className="font-extrabold text-[#b7791f]">★ 더홍보 전용</span>
             {underline(pathname === "/benefit/exclusive")}
           </Link>
@@ -154,13 +171,13 @@ function NavInner() {
       <div className="hidden shrink-0 items-center border-l border-line pl-2 xl:flex">
         <GroupMenu label="커뮤니티" pathname={pathname} items={extra} linkCls={linkCls} />
         <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
-        <Link href="/posts?sort=popular" className={linkCls(sort === "popular")}>
+        <Link href="/posts?sort=popular" data-tip={tipOf("/posts?sort=popular")} className={linkCls(sort === "popular")}>
           <Flame size={15} aria-hidden /> 인기글
         </Link>
-        <Link href="/posts?sort=latest" className={linkCls(sort === "latest")}>
+        <Link href="/posts?sort=latest" data-tip={tipOf("/posts?sort=latest")} className={linkCls(sort === "latest")}>
           <Clock size={15} aria-hidden /> 최신글
         </Link>
-        <Link href="/region" className={linkCls(pathname === "/region")}>
+        <Link href="/region" data-tip={tipOf("/region")} className={linkCls(pathname === "/region")}>
           <MapPin size={15} aria-hidden /> 지역별
         </Link>
       </div>
@@ -170,10 +187,10 @@ function NavInner() {
 
 export function CategoryNav() {
   return (
-    <div className="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+    <MorphTip className="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
       <Suspense fallback={<div className="h-12" />}>
         <NavInner />
       </Suspense>
-    </div>
+    </MorphTip>
   );
 }

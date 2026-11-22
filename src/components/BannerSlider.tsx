@@ -4,16 +4,21 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MorphTooltip } from "@/components/MorphTooltip";
 
 /**
  * 와이드 배너 슬라이드 — 5초마다 자동으로 넘어가고, 터치/스크롤로 직접 넘길 수도 있어요.
  * 마우스를 올려 두거나 "동작 줄이기" 설정이면 자동으로 넘기지 않습니다.
  * children 은 같은 비율의 슬라이드(li)들입니다.
  */
-export function BannerSlider({ children, count, label }: { children: React.ReactNode; count: number; label: string }) {
+export function BannerSlider({ children, count, label, labels }: { children: React.ReactNode; count: number; label: string; labels?: string[] }) {
   const ref = useRef<HTMLUListElement>(null);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [tip, setTip] = useState(-1);
+  const dots = useRef<(HTMLButtonElement | null)[]>([]);
+  const getDot = useCallback((i: number) => dots.current[i] ?? null, []);
+  const tipLabels = Array.from({ length: count }, (_, i) => labels?.[i] || `${i + 1}번째 배너`);
 
   const go = useCallback((i: number) => {
     const el = ref.current;
@@ -50,18 +55,27 @@ export function BannerSlider({ children, count, label }: { children: React.React
         {children}
       </ul>
       {count > 1 && (
-        <div className="mt-2 flex justify-center gap-1.5" role="tablist" aria-label="배너 선택">
-          {Array.from({ length: count }, (_, i) => (
-            <button
-              key={i}
-              type="button"
-              role="tab"
-              aria-selected={i === index}
-              aria-label={`${i + 1}번째 배너`}
-              onClick={() => go(i)}
-              className={cn("h-1.5 rounded-full transition-all", i === index ? "w-5 bg-ink-2" : "w-1.5 bg-line")}
-            />
-          ))}
+        <div className="mt-2 flex justify-center">
+          <div className="relative flex gap-0.5" role="tablist" aria-label="배너 선택" onPointerLeave={() => setTip(-1)}>
+            <MorphTooltip labels={tipLabels} getAnchor={getDot} active={tip} />
+            {Array.from({ length: count }, (_, i) => (
+              <button
+                key={i}
+                type="button"
+                role="tab"
+                ref={(el) => { dots.current[i] = el; }}
+                aria-selected={i === index}
+                aria-label={tipLabels[i]}
+                onClick={() => go(i)}
+                onPointerEnter={() => setTip(i)}
+                onFocus={() => setTip(i)}
+                onBlur={() => setTip(-1)}
+                className="grid h-5 place-items-center px-0.5"
+              >
+                <span className={cn("block h-1.5 rounded-full transition-all", i === index ? "w-5 bg-ink-2" : "w-1.5 bg-line")} />
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

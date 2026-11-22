@@ -47,11 +47,9 @@ function clipped(value, max) {
 function joinUrl(base, postId) {
   return base.replace(/\/+$/, "") + "/post/" + encodeURIComponent(String(postId));
 }
+// SNS promotion always sends visitors to the original 더홍보 post. External URLs
+// can be shown and managed on that page, but must never become the SNS destination.
 function destination(post, siteUrl) {
-  try {
-    const url = new URL(post.external_url);
-    if (url.protocol === 'https:' && !url.username && !url.password && weightedLength(url.href) <= 120) return url.href;
-  } catch { /* Missing or invalid destination falls back to the public source. */ }
   return joinUrl(siteUrl, post.post_id);
 }
 
@@ -146,7 +144,7 @@ export function formatPromo(post, siteUrl, suggestedBody = "", context = {}) {
   const pool = fresh ? (event ? [...FRESH_OPENERS, ...EVENT_OPENERS] : FRESH_OPENERS) : OPENERS;
   const opener = pool[Math.abs(id) % pool.length] + "\n\n";
   const question = "\n\n" + promoQuestion(post);
-  const closer = "\n\n" + (link === joinUrl(siteUrl, post.post_id) ? '원문 보기: ' : '자세히 보기: ') + link +
+  const closer = "\n\n원문 보기: " + link +
     "\n\n" + SIGNOFFS[Math.abs(id) % SIGNOFFS.length] +
     "\n무료 홍보는 더홍보에서!";
   const titleRoom = Math.min(120, Math.max(0, MAX_THREADS_CHARS - weightedLength(opener + closer + question) - 64));

@@ -1,5 +1,5 @@
 import type { PlayConditions } from "./play-conditions";
-import type { CategorySlug } from "./constants";
+import type { CategorySlug, ProductSource } from "./constants";
 
 export type PostStatus = "active" | "hidden" | "blocked" | "expired" | "deleted";
 
@@ -23,7 +23,17 @@ export interface SurveyQuestion {
   allowOther?: boolean;
 }
 
+export interface BodyBlock {
+  id: string;
+  type: "text" | "image" | "youtube";
+  value: string;
+  caption?: string;
+}
+
 export interface PostExtra {
+  bodyFormat?: "rich";
+  bodyBlocks?: BodyBlock[];
+  addressDetail?: string;
   play?: PlayConditions;
   /** 추가 링크(이벤트 참여, 쿠폰 받기 등). 상세 페이지에서 버튼으로 보여줍니다. */
   links?: ExtraLink[];
@@ -35,6 +45,8 @@ export interface PostExtra {
   siteUrl?: string;
   /** 서비스: online | offline | mixed */
   usageType?: string;
+  /** 상품: 자체생산·제작 | 구매대행·유통 | 기타 */
+  productSource?: ProductSource;
   /** 모집 기간 (자유 텍스트) */
   period?: string;
   /** 오프라인 가게: 영업/문의 링크 */
@@ -77,8 +89,6 @@ export interface Post {
   isSeed: boolean;
   viewCount: number;
   clickCount: number;
-  /** 공개 좋아요 수. 기존/로컬 게시글은 0으로 처리합니다. */
-  likeCount?: number;
   publishedAt: string;
   /** "다시 홍보하기"로 갱신된 시각 — 최신순 정렬 기준 */
   bumpedAt: string;

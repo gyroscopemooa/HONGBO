@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
   const file = form.get("file");
   if (!(file instanceof File)) return err("이미지 파일을 선택해주세요.");
   if (file.size > LIMITS.uploadMaxBytes) return err("이미지는 4MB 이하만 올릴 수 있어요.", 413);
+  if (form.get("purpose") === "body" && file.size > LIMITS.bodyImageMaxBytes) return err("본문 사진은 350KB 이하만 올릴 수 있어요.", 413);
 
   const bytes = new Uint8Array(await file.arrayBuffer());
   const kind = sniffImage(bytes);

@@ -1,3 +1,4 @@
+import { topicTag } from './hashtags.mjs';
 import { formatPromo, weightedLength } from './copy.mjs';
 import { preflight } from './preflight.mjs';
 export { formatPromo } from './copy.mjs';
@@ -5,10 +6,12 @@ const API = 'https://graph.threads.net/v1.0';
 const SITE = 'https://www.thehongbo.com';
 const TEASERS = ['새 소식 구경은 제가 안내할게요.', '오늘도 홍보 담당자가 소식을 들고 왔습니다.', '자세한 내용은 원문에 차곡차곡 담겨 있어요.'];
 
-// Automated screening complements mandatory human approval of the source snapshot.
+// Phone numbers are removed from the outgoing copy. Their presence alone must not
+// block a business promotion; other sensitive data is still a hard block.
 export function hasSensitiveContent(post) {
-  const text = [post.title, post.short_description, post.description].join(' ').normalize('NFKC');
-  return /[\w.+-]+@[\w.-]+\.[a-z]{2,}|(?:\+?82[ -]?|0)\d{1,2}[ .-]?\d{3,4}[ .-]?\d{4}|\d{6}\s*[-–]\s*[1-8]\d{6}|(?:계좌|주민등록|여권번호|카드번호|비밀번호|진단서|병력|성생활|정치성향)|\b(?:sk-|AKIA)[a-zA-Z0-9]{12,}/i.test(text);
+  const text = [post.title, post.short_description, post.description, post.contact, post.address, post.extra, post.external_url, post.tags].map(value => typeof value === 'string' ? value : JSON.stringify(value ?? '')).join(' ').normalize('NFKC');
+  if (/[\w.+-]+@[\w.-]+\.[a-z]{2,}|\d{6}\s*[-–]\s*[1-8]\d{6}|(?:계좌|주민등록|여권번호|카드번호|비밀번호|진단서|병력|성생활|정치성향)|\b(?:sk-|AKIA)[a-zA-Z0-9]{12,}/i.test(text)) return true;
+  return false;
 }
 class SafeError extends Error {}
 function code(error) { return error instanceof SafeError ? error.message : 'NETWORK_OR_RESPONSE_ERROR'; }
@@ -96,7 +99,7 @@ export async function runOnce(env) {
     if (weightedLength(draft) > 500) { await complete('blocked', 'TEXT_TOO_LONG'); return 'blocked'; }
     const userId = await verifyProfile(env);
     // No auto_publish_text: creation alone cannot publish a post.
-    const container = await graph(env, `/${userId}/threads`, { media_type: 'TEXT', text: draft });
+    const container = await graph(env, `/${userId}/threads`, { media_type: 'TEXT', text: draft, topic_tag: topicTag(post) });
     if (!/^\d+$/.test(container?.id ?? '')) throw new SafeError('CONTAINER_ID_MISSING');
     let state = await graph(env, `/${container.id}?fields=id,status,error_message`);
     for (let poll = 0; state?.status === 'IN_PROGRESS' && poll < 2; poll++) {
