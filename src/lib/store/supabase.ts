@@ -3,7 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CategorySlug } from "../constants";
 import { getAdminClient } from "../supabase/admin";
-import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, adEndsAt, isAdLive, nextFreeSlot } from "../ads";
+import { AD_BANNER_SLOTS, adEndsAt, isAdLive } from "../ads";
 import type { Ad, AdCreative, Banner, EventType, Notice, Post, PostExtra, PostInput, PostStatus, Profile, Report } from "../types";
 import type { EventInput, ListResult, NewReport, Stats, Store } from "./types";
 
@@ -532,11 +532,8 @@ export const supabaseStore: Store = {
     const { data: rows, error: e2 } = await sb().from("ads").select("*").eq("kind", ad.kind).eq("status", "active").neq("id", id);
     if (e2) fail("ads.live", e2);
     const live = (rows as Row[]).map(toAd).filter((a) => isAdLive(a));
-    let slotNo: number | null = null;
-    if (ad.kind === "premium") {
-      slotNo = nextFreeSlot(live);
-      if (slotNo == null) return { ok: false, error: `프리미엄 ${AD_PREMIUM_SLOTS}칸이 모두 차 있어요. 기존 광고가 끝나면 승인할 수 있어요.` };
-    } else if (live.length >= AD_BANNER_SLOTS) {
+    const slotNo: number | null = null;
+    if (ad.kind === "banner" && live.length >= AD_BANNER_SLOTS) {
       return { ok: false, error: `와이드 배너 ${AD_BANNER_SLOTS}자리가 모두 차 있어요.` };
     }
     const now = new Date();

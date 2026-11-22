@@ -586,9 +586,7 @@ export const localStore: Store = {
     if (!ad) return { ok: false, error: "신청 내역을 찾을 수 없어요." };
     const live = db.ads.filter((a) => a.id !== id && a.kind === ad.kind && isAdLive(a));
     if (ad.kind === "premium") {
-      const slot = nextFreeSlot(live);
-      if (slot == null) return { ok: false, error: `프리미엄 ${AD_PREMIUM_SLOTS}칸이 모두 차 있어요. 기존 광고가 끝나면 승인할 수 있어요.` };
-      ad.slotNo = slot;
+      ad.slotNo = null;
     } else if (live.length >= AD_BANNER_SLOTS) {
       return { ok: false, error: `와이드 배너 ${AD_BANNER_SLOTS}자리가 모두 차 있어요.` };
     }

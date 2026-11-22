@@ -1,6 +1,9 @@
 import type { Ad } from "./types";
 
-/** 프리미엄 상단 광고 칸 수 (처음엔 3칸만 공개) */
+/**
+ * 홈 상단의 새 글 보충 수. 유료·운영자 지정 홍보에는 개수 제한을 두지 않고
+ * 가로 슬라이드로 계속 노출한다.
+ */
 export const AD_PREMIUM_SLOTS = 3;
 /** 와이드 배너 동시 노출 가능 수 (홈에서 로테이션) */
 export const AD_BANNER_SLOTS = 3;
@@ -44,11 +47,10 @@ export function isAdLive(a: Pick<Ad, "status" | "startsAt" | "endsAt">, now = Da
   );
 }
 
-/** 사용 중이 아닌 가장 낮은 프리미엄 칸 번호. 모두 차 있으면 null */
+/** 이전 관리 화면의 칸 번호 호환용. 상단 슬라이드는 개수 제한이 없다. */
 export function nextFreeSlot(liveAds: Array<Pick<Ad, "kind" | "slotNo">>): number | null {
   const used = new Set(liveAds.filter((a) => a.kind === "premium" && a.slotNo != null).map((a) => a.slotNo));
-  for (let i = 1; i <= AD_PREMIUM_SLOTS; i++) if (!used.has(i)) return i;
-  return null;
+  for (let i = 1; ; i++) if (!used.has(i)) return i;
 }
 
 /** 새로고침마다 순서를 섞어 모든 광고주가 앞자리를 고르게 나눠 갖게 합니다. */
@@ -62,7 +64,6 @@ export function shuffle<T>(list: T[]): T[] {
 }
 
 /**
- * 운영자 고정 광고 — 유료 광고 자리가 남아 있을 때 프리미엄·배너 맨 앞에 "광고"로 표시해 노출합니다.
- * 유료 광고가 3칸을 모두 채우면 자동으로 양보합니다. 글 번호는 운영 DB 기준이며, 글이 없으면 건너뜁니다.
+ * 기존 운영자 고정 글 번호. 새 홈 노출은 admin_pinned 비시드 글 전체를 사용한다.
  */
 export const HOUSE_AD_POST_ID = 41;

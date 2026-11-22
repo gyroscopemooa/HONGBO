@@ -17,7 +17,7 @@ import { PremiumGrid } from "@/components/PremiumGrid";
 import { PromoBanner } from "@/components/PromoBanner";
 import { HomeBoards } from "@/components/HomeBoards";
 import { RankList } from "@/components/RankList";
-import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, AD_PRICES, shuffle, won } from "@/lib/ads";
+import { AD_BANNER_SLOTS, AD_PRICES, shuffle, won } from "@/lib/ads";
 import { listHeroAds } from "@/lib/hero-ad-store";
 import type { HeroAdView } from "@/components/HeroAdSlide";
 import { infl09ApplyUrl } from "@/lib/infl09";
@@ -56,12 +56,11 @@ export default async function HomePage() {
     linkUrl: a.linkUrl,
   }));
 
-  // 추천 영역(앞 3자리)에 나온 글은 배너에서 제외하고, 배너 자리가 남으면 최신 글로 채웁니다.
-  const premiumAds = premium.slice(0, AD_PREMIUM_SLOTS);
+  // 추천 홍보는 활성 유료·운영자 지정 글 전체를 슬라이드로 보여줍니다.
+  const premiumAds = premium;
   // 최신 글로 비는 자리를 채울 때는 "다시 홍보하기(끌어올리기)"로 위로 올라온 글은 제외하고, 새로 등록한 글만 씁니다.
   const fresh = latest.filter((p) => Math.abs(new Date(p.bumpedAt).getTime() - new Date(p.publishedAt).getTime()) < 60_000);
-  const premiumFill = fresh.filter((p) => !premiumAds.some((a) => a.id === p.id)).slice(0, AD_PREMIUM_SLOTS - premiumAds.length);
-  const used = new Set([...premiumAds, ...premiumFill].map((p) => p.id));
+  const used = new Set(premiumAds.map((p) => p.id));
   const bannerAds = adBanners.slice(0, AD_BANNER_SLOTS);
   const bannerFill = fresh
     .filter((p) => p.primaryImageUrl && !used.has(p.id) && !bannerAds.some((a) => a.post.id === p.id))
@@ -131,7 +130,7 @@ export default async function HomePage() {
         </BannerSlider>
       </section>
 
-      <PremiumGrid ads={premiumAds} fill={fresh} />
+      <PremiumGrid ads={premiumAds} />
 
       <div className="mt-8 sm:mt-10">
         <Hero ads={heroAds} infl09={{ url: infl09Url, preview: !infl09Url && process.env.NODE_ENV !== "production" }} />

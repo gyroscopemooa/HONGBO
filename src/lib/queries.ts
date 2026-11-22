@@ -1,6 +1,6 @@
 import "server-only";
 import { applyPremiumCreative } from "./ad-creative";
-import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, HOUSE_AD_POST_ID, shuffle } from "./ads";
+import { AD_BANNER_SLOTS, shuffle } from "./ads";
 import { LIMITS } from "./constants";
 import { store } from "./store";
 import type { AdCreative, Post } from "./types";
@@ -50,7 +50,7 @@ export async function getLiveAdPosts(kind: "premium" | "banner", category?: stri
       // 프리미엄 카드는 직접 정한 이미지·문구가 있으면 덮어씌웁니다(링크는 원래 글 그대로).
       list.push(kind === "premium" ? applyPremiumCreative(p, a.creative) : p);
     }
-    return kind === "premium" ? shuffle(list).slice(0, AD_PREMIUM_SLOTS) : shuffle(list);
+    return shuffle(list);
   } catch {
     return [];
   }
@@ -75,12 +75,9 @@ export async function getLiveBannerAds(): Promise<Array<{ post: Post; creative: 
   }
 }
 
-/** 전체/카테고리 목록 상단 "추천 홍보". 유료 광고가 자리를 다 채우지 않으면 운영자 고정 광고가 맨 앞에 들어갑니다(홈과 동일). */
+/** 전체/카테고리 목록 상단 "추천 홍보". 활성 유료 지정글을 모두 섞어 보여줍니다. */
 export async function getTopAds(category?: string): Promise<Post[]> {
   const ads = await getLiveAdPosts("premium", category);
-  if (ads.length >= AD_PREMIUM_SLOTS) return ads;
-  const house = await store.getPost(HOUSE_AD_POST_ID).catch(() => null);
-  if (house && isPostPublic(house) && (!category || house.category === category) && !ads.some((p) => p.id === house.id)) return [house, ...ads];
   return ads;
 }
 
@@ -100,7 +97,7 @@ export function getHomeData() {
 }
 
 async function loadHomeData() {
-  const [popular, latest, side, strip, notices, premium, adBanners, house, exclusive] = await Promise.all([
+  const [popular, latest, side, strip, notices, premium, adBanners, pinned, exclusive] = await Promise.all([
     getPopularPosts(22),
     store.listPosts({ publicOnly: true, sort: "latest", pageSize: 20 }),
     store.listBanners({ activeOnly: true, placement: "side" }),
@@ -108,15 +105,12 @@ async function loadHomeData() {
     store.listNotices(5),
     getLiveAdPosts("premium"),
     getLiveBannerAds(),
-    store.getPost(HOUSE_AD_POST_ID).catch(() => null),
+    store.listPosts({ publicOnly: true, pinnedOnly: true, isSeed: false, sort: "popular", pageSize: 100 }),
     store.listPosts({ publicOnly: true, benefit: "exclusive", sort: "latest", page: 1, pageSize: 10 }),
   ]);
-  // 운영자 고정 광고: 유료 광고가 자리를 다 채우지 않았을 때만 맨 앞에 넣습니다.
-  const houseOk = house && isPostPublic(house) ? house : null;
-  const premiumOut = houseOk && premium.length < AD_PREMIUM_SLOTS && !premium.some((p) => p.id === houseOk.id) ? [houseOk, ...premium] : premium;
-  const bannersOut =
-    houseOk && adBanners.length < AD_BANNER_SLOTS && !adBanners.some((b) => b.post.id === houseOk.id) ? [{ post: houseOk, creative: null }, ...adBanners] : adBanners;
-  return { popular, latest: latest.items, sideBanners: side, stripBanners: strip, notices, premium: premiumOut, adBanners: bannersOut, exclusive };
+  // 유료와 운영자 수동 지정 글을 함께 섞습니다. 두 방식으로 지정된 글은 한 번만 보입니다.
+  const premiumOut = shuffle([...premium, ...pinned.items].filter((p, index, list) => list.findIndex((x) => x.id === p.id) === index));
+  return { popular, latest: latest.items, sideBanners: side, stripBanners: strip, notices, premium: premiumOut, adBanners, exclusive };
 }
 
 export function isPostPublic(p: Pick<Post, "status" | "expiresAt">): boolean {

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { adminApproveAd, adminAssignAd, adminDeleteAd } from "../actions";
 import { AdBanner } from "@/components/AdBanner";
 import { ConfirmButton } from "@/components/ConfirmButton";
-import { AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PLANS, AD_PREMIUM_SLOTS, AD_PRICES, depositorName, isAdLive, won } from "@/lib/ads";
+import { AD_BANNER_SLOTS, AD_KIND_LABEL, AD_PLANS, AD_PRICES, depositorName, isAdLive, won } from "@/lib/ads";
 import { store } from "@/lib/store";
 import type { Ad, Post } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -72,7 +72,7 @@ export default async function AdminAds({ searchParams }: { searchParams: Promise
         </p>
       )}
       <p className="text-[14px] text-muted">
-        프리미엄 <b className="text-ink-2">{premiumLive}/{AD_PREMIUM_SLOTS}</b>칸 · 와이드 배너 <b className="text-ink-2">{bannerLive}/{AD_BANNER_SLOTS}</b>자리 사용 중. 입금을 확인한 뒤 <b className="text-ink-2">승인</b>하면 그 시점부터 기간이 시작돼요.
+        프리미엄 <b className="text-ink-2">{premiumLive}</b>건 · 와이드 배너 <b className="text-ink-2">{bannerLive}/{AD_BANNER_SLOTS}</b>자리 사용 중. 프리미엄과 운영자 지정 글은 홈 상단 슬라이드에 함께 노출돼요. 입금을 확인한 뒤 <b className="text-ink-2">승인</b>하면 그 시점부터 기간이 시작돼요.
       </p>
 
       <section aria-label="승인 대기">

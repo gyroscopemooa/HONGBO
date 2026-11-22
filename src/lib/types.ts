@@ -139,7 +139,7 @@ export interface AdCreative {
   tone?: "dark" | "light";
 }
 
-/** 유료 광고(상단 프리미엄 3칸 / 와이드 배너). 신청 → 운영자 승인(입금 확인) → 기간 동안 노출. */
+/** 유료 광고(상단 프리미엄 슬라이드 / 와이드 배너). 신청 → 운영자 승인(입금 확인) → 기간 동안 노출. */
 export interface Ad {
   id: number;
   postId: number;
@@ -147,7 +147,7 @@ export interface Ad {
   plan: "week" | "month";
   /** requested: 신청됨(승인 대기) / active: 승인됨(기간 내에만 노출) */
   status: "requested" | "active";
-  /** 프리미엄 칸 번호(1~10). 배너는 null */
+  /** 과거 고정 칸 번호 호환용. 현재 프리미엄·배너 모두 null을 사용한다. */
   slotNo: number | null;
   startsAt: string | null;
   endsAt: string | null;
