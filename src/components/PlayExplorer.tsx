@@ -11,6 +11,29 @@ import { usePlayDay } from "./usePlayDay";
 import { CalendarDays } from "lucide-react";
 
 const SAVE_KEY = "thehongbo.play.saved.v1";
+type ExplorerSort = "all" | "ongoing" | "soon" | "closing" | "checked";
+
+const EXPLORER_SORTS: { value: ExplorerSort; label: string; description: string }[] = [
+  { value: "all", label: "전체 보기", description: "진행 중인 곳과 예정 일정을 함께 봅니다" },
+  { value: "ongoing", label: "진행 중", description: "오늘 방문할 수 있는 일정만 봅니다" },
+  { value: "soon", label: "일정 임박순", description: "시작일이 가까운 일정부터 봅니다" },
+  { value: "closing", label: "마감 임박순", description: "종료일이 가까운 일정부터 봅니다" },
+  { value: "checked", label: "최근 확인순", description: "운영자가 최근 확인한 안내부터 봅니다" },
+];
+
+function sortExplorerPlaces(places: PlayPlace[], sort: ExplorerSort, day: string) {
+  const defaultSorted = sortPlayPlaces(places, day);
+  if (sort === "all") return defaultSorted;
+  if (sort === "ongoing") return defaultSorted.filter(place => playStatus(place, day) === "진행 중");
+
+  const dated = (place: PlayPlace, date?: string) => date && date >= day ? date : "9999-12-31";
+  return [...defaultSorted].sort((a, b) => {
+    if (sort === "soon") return dated(a, a.startDate).localeCompare(dated(b, b.startDate));
+    if (sort === "closing") return dated(a, a.endDate || a.startDate).localeCompare(dated(b, b.endDate || b.startDate));
+    return b.checkedAt.localeCompare(a.checkedAt);
+  });
+}
+
 export function PlayExplorer({ places, day: initialDay }: { places: PlayPlace[]; day: string }) {
   const day = usePlayDay(initialDay);
   const [q, setQ] = useState("");
@@ -22,6 +45,7 @@ export function PlayExplorer({ places, day: initialDay }: { places: PlayPlace[];
   const [savedOnly, setSavedOnly] = useState(false);
   const [saved, setSaved] = useState<string[]>([]);
   const [storageMessage, setStorageMessage] = useState("");
+  const [sort, setSort] = useState<ExplorerSort>("all");
   useEffect(() => {
     try {
       const value: unknown = JSON.parse(localStorage.getItem(SAVE_KEY) ?? "[]");
@@ -35,8 +59,8 @@ export function PlayExplorer({ places, day: initialDay }: { places: PlayPlace[];
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)); setStorageMessage(""); }
     catch { setStorageMessage("이 브라우저에서는 찜을 보관할 수 없어 현재 화면에서만 유지돼요."); }
   }
-  const filtered = sortPlayPlaces(filterPlayPlaces(places, { q, region, kind, companion, conditions }, day), day).filter(p => !savedOnly || saved.includes(p.slug));
-  const reset = () => { setQ(""); setRegion(""); setKind(""); setCompanion(""); setSavedOnly(false); setConditions({}); setExpanded(false); };
+  const filtered = sortExplorerPlaces(filterPlayPlaces(places, { q, region, kind, companion, conditions }, day), sort, day).filter(p => !savedOnly || saved.includes(p.slug));
+  const reset = () => { setQ(""); setRegion(""); setKind(""); setCompanion(""); setSavedOnly(false); setConditions({}); setExpanded(false); setSort("all"); };
   return <section id="explore" className="play-section">
     <div className="play-heading"><div><p className="play-eyebrow">FIND YOUR LITTLE GETAWAY</p><h2 className="mt-2">지역·종류·조건으로 찾아보기</h2></div><p className="play-muted">운영자가 정리한 국내 나들이 안내</p></div>
     <div className="play-filters">
@@ -50,6 +74,10 @@ export function PlayExplorer({ places, day: initialDay }: { places: PlayPlace[];
       {kind && <div className="play-chips" aria-label="세부 활동 종류">{["",...playSubtypes(kind)].map(t=><button type="button" className="play-chip" key={t} aria-pressed={(conditions.subtype??"")===t} onClick={()=>setConditions({...conditions,subtype:t})}>{t||"세부 종류 전체"}</button>)}</div>}
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{([['notice','소식 성격',PLAY_NOTICE],['cost','비용',PLAY_COST],['visit','방문 방식',PLAY_VISIT],['solo','혼자 참여',PLAY_SOLO]] as const).map(([key,title,options])=><label className="text-xs font-semibold" key={key}>{title}<select className="mt-1" aria-label={title} value={conditions[key]??""} onChange={e=>setConditions({...conditions,[key]:e.target.value||undefined})}><option value="">전체</option>{Object.entries(options).map(([v,t])=><option key={v} value={v}>{t}</option>)}</select></label>)}</div>
       <p className="play-muted mt-3 !text-xs">입장 무료와 전체 이용 무료, 자유 방문과 1인 참여는 서로 다른 조건입니다. 확인된 조건만 필터에 반영합니다.</p>
+      <div className="play-sort" role="group" aria-label="안내 정렬">
+        <span className="play-sort-label">정렬</span>
+        {EXPLORER_SORTS.map(option => <button key={option.value} type="button" className="play-sort-button" aria-pressed={sort === option.value} aria-label={option.description} onClick={() => { setSort(option.value); setExpanded(false); }}>{option.label}</button>)}
+      </div>
       <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 text-xs text-[#5e7390]">
         <label className="flex items-center gap-2"><input type="checkbox" checked={savedOnly} onChange={e=>setSavedOnly(e.target.checked)}/>이 기기에 찜한 곳 ({saved.length})</label>
         <Link href="/play/archive" className="font-bold underline">지난 축제 기록 →</Link>
