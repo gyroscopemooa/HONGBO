@@ -207,8 +207,8 @@ export function MemberComments({
         댓글 · {visible.length}
       </h2>
       <p className="my-2 text-sm text-muted">
-        질문과 피드백을 주고받아 보세요. 댓글·답글 알림은 사이트 내 알림함에서
-        확인할 수 있어요.
+        이 댓글은 글 작성자와 관리자만 확인할 수 있어요. 댓글·답글 알림은 사이트
+        내 알림함에서 확인할 수 있어요.
       </p>
       {comments.length ? (
         <ul>{comments.filter((c) => !c.parentId).map(render)}</ul>
@@ -342,8 +342,7 @@ export function MemberApplications({
     <section className="mt-6 rounded-xl border border-line p-4">
       <h2 className="text-lg font-bold">참여 신청</h2>
       <p className="my-2 text-sm text-muted">
-        신청 내용은 작성자와 관리자만 확인합니다. 개인정보는 적지 마세요. 궁금한
-        점과 공개 피드백은 아래 댓글로 나눠주세요.
+        신청 내용은 작성자와 관리자만 확인합니다. 개인정보는 적지 마세요.
       </p>
       {owner ? (
         <>

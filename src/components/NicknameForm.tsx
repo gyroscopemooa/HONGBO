@@ -10,7 +10,8 @@ export function NicknameForm({ nickname }: { nickname: string }) {
       <label htmlFor="nickname" className="text-sm font-bold text-ink-2">
         닉네임
       </label>
-      <input id="nickname" name="nickname" defaultValue={nickname} maxLength={16} className="field !h-10 !py-2 sm:max-w-[220px]" />
+      <input id="nickname" name="nickname" defaultValue={nickname} maxLength={16} className="field !h-10 !py-2 sm:max-w-[220px]" aria-describedby="nickname-help" />
+      <span id="nickname-help" className="text-xs text-muted">운영진·관리자와 혼동되는 이름은 사용할 수 없어요.</span>
       <button type="submit" disabled={pending} className="btn btn-outline btn-sm">
         {pending ? "저장 중…" : "저장"}
       </button>

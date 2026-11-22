@@ -34,10 +34,11 @@ export default async function Page({
   );
   const post = await getMemberPost(Number(id));
   if (!post) notFound();
-  const [comments, user] = await Promise.all([
-    listMemberComments(post.id),
-    getCurrentUser(),
-  ]);
+  const user = await getCurrentUser();
+  const canAccessComments =
+    user?.id === post.authorId || user?.isAdmin === true;
+  // Keep comments out of the server response for everyone else.
+  const comments = canAccessComments ? await listMemberComments(post.id) : [];
   const applications = user
     ? await listMemberApplications(
         post.id,
@@ -152,12 +153,14 @@ export default async function Page({
           )}
         </nav>
       )}
-      <MemberComments
-        postId={post.id}
-        comments={comments}
-        userId={user?.id}
-        isAdmin={!!user?.isAdmin}
-      />
+      {canAccessComments && (
+        <MemberComments
+          postId={post.id}
+          comments={comments}
+          userId={user?.id}
+          isAdmin={!!user?.isAdmin}
+        />
+      )}
     </div>
   );
 }

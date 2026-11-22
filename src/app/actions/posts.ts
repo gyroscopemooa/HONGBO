@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { ensureAnonId } from "@/lib/anon";
 import { getCurrentUser } from "@/lib/auth";
+import { isReservedNickname } from "@/lib/nickname";
 import { REPORT_REASON_LABELS, LIMITS } from "@/lib/constants";
 import { postExpiryFromNow } from "@/lib/queries";
 import { rateLimit } from "@/lib/ratelimit";
@@ -164,6 +165,8 @@ export async function updateNicknameAction(_prev: ActionResult | null, formData:
   const nickname = String(formData.get("nickname") ?? "").replace(/\s+/g, " ").trim();
   if (nickname.length < 2 || nickname.length > 16) return { ok: false, message: "닉네임은 2~16자로 입력해주세요." };
   if (!/^[0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ_\- ]+$/.test(nickname)) return { ok: false, message: "한글, 영문, 숫자, _ - 만 사용할 수 있어요." };
+  if (!user.isAdmin && isReservedNickname(nickname))
+    return { ok: false, message: "운영진과 혼동될 수 있는 닉네임은 사용할 수 없어요." };
   await store.updateNickname(user.id, nickname);
   revalidatePath("/mypage");
   return { ok: true, message: "닉네임이 변경됐어요." };

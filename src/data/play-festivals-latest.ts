@@ -3,6 +3,46 @@ import type { PlayPlace } from "@/lib/play";
 // Official schedules checked on 2026-11-11. Source links are retained on every detail.
 export const PLAY_LATEST_FESTIVALS: PlayPlace[] = [
   {
+    slug: "gangnam-eyes-winter-festa-2026",
+    title: "2026 강남아이즈 미디어 윈터페스타",
+    region: "서울",
+    area: "삼성역 무역센터 일대",
+    kind: "축제·행사",
+    companions: ["데이트", "가족과", "친구와", "혼자"],
+    summary:
+      "삼성역 일대의 미디어아트와 공연, 푸드 스트리트를 함께 둘러보는 도심 겨울 행사입니다.",
+    mood: "12월, 새로운 나들이",
+    art: "fireworks",
+    price: "관람 무료 · 푸드트럭·개별 프로그램 별도",
+    address: "서울 강남구 삼성역 5번 출구 무역센터 디지털 미디어 일대 광장",
+    startDate: "2026-12-03",
+    endDate: "2026-12-27",
+    tips: [
+      "공식 안내 기준 미디어아트 퍼포먼스는 매일 12:26부터 21:26까지 총 14회 운영됩니다. 현장 상황에 따른 변경 공지를 확인하세요.",
+      "개막 공연, 버스킹, 크리스마스이브 사일런트 디스코는 날짜·예약 조건이 다릅니다. 원하는 프로그램을 공식 안내에서 먼저 확인하세요.",
+      "관람은 무료지만 푸드트럭과 개별 프로그램에는 별도 비용이 들 수 있습니다.",
+    ],
+    guide:
+      "삼성역 무역센터 디지털 미디어 일대 광장에서 열리는 겨울 행사입니다. 미디어아트와 공연, 먹거리 프로그램의 일정과 참여 조건은 각각 다르므로 방문 전 공식 공지를 확인하세요.",
+    source:
+      "https://korean.visitseoul.net/events/2026Gangnam-Eyes-Media-Winter-Festa/KOPm1s2m9",
+    sourceLabel: "서울관광 공식 강남아이즈 미디어 윈터페스타 안내",
+    checkedAt: "2026-11-23",
+    conditions: {
+      kind: "축제·행사",
+      subtype: "공연·문화행사",
+      notice: "festival",
+      cost: "entryFree",
+      costDetails: "관람 무료 · 푸드트럭·개별 프로그램 별도",
+      visit: "unknown",
+      solo: "unknown",
+      eligibility: "사일런트 디스코 등 일부 프로그램은 사전 예약·현장 접수 조건 확인",
+      preparation: "야간 관람용 겉옷 권장",
+      exceptions: "프로그램 시간·참여 인원은 현장 상황에 따라 변동될 수 있음",
+      benefitConditions: "",
+    },
+  },
+  {
     "slug": "gunsan-fireworks-2026",
     "title": "군산불꽃축제",
     "region": "전북",

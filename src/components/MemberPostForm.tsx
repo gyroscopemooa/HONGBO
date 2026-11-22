@@ -63,8 +63,8 @@ export function MemberPostForm({ post }: { post?: MemberPost }) {
       }}
     >
       <div className="rounded-xl bg-soft p-4 text-sm">
-        함께 써보고 이야기를 나누는 공간입니다. 모집 후에도 댓글에 답하고 진행
-        상황을 알려주세요. 개인정보·비공개 주소는 적지 마세요.
+        함께 써보고 이야기를 나누는 공간입니다. 모집 후에도 진행 상황을 알려주세요.
+        개인정보·비공개 주소는 적지 마세요.
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label>
@@ -211,7 +211,7 @@ export function MemberPostForm({ post }: { post?: MemberPost }) {
               name="application"
               maxLength={500}
               defaultValue={post?.details.application}
-              placeholder="댓글로 질문 또는 참여 의사를 알려주세요."
+              placeholder="신청 방법과 문의할 곳을 알려주세요."
               className="field mt-1 w-full"
             />
           </label>

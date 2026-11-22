@@ -1,6 +1,12 @@
 import { PLAY_SPOT_LOCATIONS } from "./play-spots";
 export interface PlayLocation {lat:number;lon:number;label:string;source?:string}
 export const PLAY_LOCATIONS:Record<string,PlayLocation>={
+  "gangnam-eyes-winter-festa-2026": {
+    "lat": 37.508389,
+    "lon": 127.059475,
+    "label": "삼성역 5번 출구 무역센터 일대",
+    "source": "https://www.openstreetmap.org/node/1952406158"
+  },
   "gyeonggi-rice-dessert-2026": {
     "lat": 37.2669788,
     "lon": 126.997266,

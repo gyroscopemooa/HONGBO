@@ -45,7 +45,7 @@ export default async function Page({
         </div>
       </div>
       <p className="my-5 rounded-xl bg-soft p-4 text-sm">
-        모집만 하고 끝내지 말고, 댓글에 답하고 진행 상황과 후기를 나눠주세요.{" "}
+        모집 내용과 진행 조건을 글에 충분히 적고, 진행 상황과 후기를 나눠주세요.{" "}
         <Link className="underline" href="/community">
           운영자 가이드
         </Link>

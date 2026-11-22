@@ -143,8 +143,13 @@ export async function addMemberCommentAction(
       message: "댓글에 등록할 수 없는 내용이 포함되어 있어요.",
     };
   try {
-    if (!(await db.getMemberPost(postId)))
+    const post = await db.getMemberPost(postId);
+    if (!post)
       return { ok: false, message: "글을 찾을 수 없어요." };
+    // Hide the UI as well, but enforce this again at the Server Action
+    // boundary so a direct action request cannot access private comments.
+    if (post.authorId !== user.id && !user.isAdmin)
+      return { ok: false, message: "댓글은 글 작성자와 관리자만 사용할 수 있어요." };
     if ((await db.listMemberComments(postId)).length >= 1000)
       return {
         ok: false,
