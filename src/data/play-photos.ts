@@ -6,11 +6,24 @@ export type PlayPhoto = { src: string; alt: string; author: string; title: strin
 const sa4 = { license: "CC BY-SA 4.0", licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/" };
 const sa3 = { license: "CC BY-SA 3.0", licenseUrl: "https://creativecommons.org/licenses/by-sa/3.0/" };
 const cc0 = { license: "CC0 1.0", licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/" };
+const pd = { license: "Public domain", licenseUrl: "https://commons.wikimedia.org/wiki/Commons:Copyright_tags#Public_domain" };
 export const PLAY_PHOTOS: Record<string, PlayPhoto> = {
   ...PLAY_FESTIVAL_PHOTOS,
   ...PLAY_LATEST_PHOTOS,
   ...PLAY_TOURISM_PHOTOS,
   ...PLAY_SPOT_PHOTOS,
+  "gangnam-eyes-winter-festa-2026": {
+    ...pd, width: 1280, height: 960, src: "/play/coex-seoul.jpg", alt: "서울 코엑스 컨벤션센터 입구",
+    author: "Eloquence (Erik Möller)", title: "Seoul-COEX", captured: "2005-06-24",
+    source: "https://commons.wikimedia.org/wiki/File:Seoul-COEX.jpg",
+    label: "코엑스 일대 자료사진", caption: "행사장 인근 코엑스 자료사진 · 2026 행사 현장 사진이 아닙니다.",
+  },
+  "romantic-hangang-christmas-2026": {
+    ...sa4, width: 1280, height: 853, src: "/play/ttukseom-hangang.jpg", alt: "뚝섬한강공원 야경",
+    author: "Real rism", title: "NIght view at Ttukseom Hangang Park", captured: "2024-11-04",
+    source: "https://commons.wikimedia.org/wiki/File:NIght_view_at_Ttukseom_Hangang_Park.jpg",
+    label: "2024년 뚝섬 자료사진", caption: "뚝섬한강공원 자료사진 · 2026 크리스마스 마켓 현장 사진이 아닙니다.",
+  },
   "seoul-lantern-2026": {
     ...sa4, width: 1280, height: 960, src: "/play/seoul-lantern.jpg", alt: "청계천 물 위에 빛나는 서울빛초롱축제의 푸른 조형물",
     author: "Ethan Doyle White", title: "Blue Lanterns at the 2019 Seoul Lantern Festival", captured: "2019-11-06",

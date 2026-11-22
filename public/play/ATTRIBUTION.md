@@ -26,6 +26,11 @@ Additional photographs (2026-11-11):
 License links: https://creativecommons.org/licenses/by-sa/3.0/ and https://creativecommons.org/publicdomain/zero/1.0/
 Additional images use Wikimedia 1280px thumbnails except the hotel exterior original. No pixel editing; CSS resizes/crops displayed regions. Photographic adaptations retain each source's applicable license; no endorsement is implied.
 
+- `coex-seoul.jpg`: "Seoul-COEX", Eloquence (Erik Möller), 2005-06-24, public domain.
+  https://commons.wikimedia.org/wiki/File:Seoul-COEX.jpg
+  1280px Wikimedia thumbnail; COEX-area archival photograph, not a 2026 Gangnam Eyes event photograph.
+- `ttukseom-hangang.jpg` is also used for the Romantic Hangang Christmas Market card as an archival 2024 Ttukseom Hangang Park photograph, not a 2026 market photograph. It remains CC BY-SA 4.0 under the attribution already recorded in `src/data/play-spot-photos.ts`.
+
 - `seoul-lantern.jpg`: "Blue Lanterns at the 2019 Seoul Lantern Festival", Ethan Doyle White, 2019-11-06, CC BY-SA 4.0.
   https://commons.wikimedia.org/wiki/File:Blue_Lanterns_at_the_2019_Seoul_Lantern_Festival.jpg
   Wikimedia 1280px thumbnail; archival 2019 photo, not a preview of the 2026 installation. CSS display cropping only; same license applies.
