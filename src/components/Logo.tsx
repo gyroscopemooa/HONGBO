@@ -64,7 +64,12 @@ export function Logo({ className, size = "md", href = "/" }: { className?: strin
       ))}
     </span>
   );
-  const handlers = { onMouseEnter: start, onMouseLeave: stop, onFocus: start, onBlur: stop };
+  const handlers = {
+    onMouseEnter: () => { if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) start(); },
+    onMouseLeave: stop,
+    onFocus: () => { if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) start(); },
+    onBlur: stop,
+  };
   if (href === null) return <span className={cls} aria-label="더홍보" {...handlers}>{inner}</span>;
   return (
     <Link href={href} className={cls} aria-label="더홍보 홈" {...handlers}>
