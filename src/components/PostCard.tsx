@@ -41,19 +41,24 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
           )}
         </div>
         {post.extra.official && <OfficialBadge value={post.extra.official} className="absolute right-2 top-2 z-10" />}
-        {(post.extra.benefits?.length ?? 0) > 0 && <BenefitBadges values={post.extra.benefits} className="absolute bottom-2 left-2 z-10" />}
-        {post.price && (
-          <span className="absolute bottom-2 right-2 rounded-md bg-ink/80 px-1.5 py-0.5 text-[11.5px] font-bold text-white backdrop-blur-sm">
-            {post.price}
-          </span>
-        )}
+
       </div>
-      <div className="flex flex-1 flex-col p-3">
+      <div className="flex min-w-0 flex-1 flex-col p-3">
         <h3 className="line-clamp-2 min-h-[2.7em] text-[14.5px] font-bold leading-[1.35] tracking-[-0.02em] text-ink group-hover:text-brand-dark">
           <NewBadge publishedAt={post.publishedAt} className="mr-1" />
           {post.title}
         </h3>
         <p className="mt-1 line-clamp-1 text-[12.5px] text-muted">{post.shortDescription}</p>
+        {((post.extra.benefits?.length ?? 0) > 0 || post.price) && (
+          <div className="mt-2 flex min-w-0 flex-col items-start gap-1.5">
+            <BenefitBadges values={post.extra.benefits} className="max-w-full" />
+            {post.price && (
+              <p className="max-w-full text-[12.5px] font-bold leading-snug text-ink [overflow-wrap:anywhere]">
+                {post.price}
+              </p>
+            )}
+          </div>
+        )}
         <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-2.5">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <CategoryBadge slug={post.category} />
@@ -81,7 +86,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
   );
 
   return (
-    <article className={cn("group relative h-full overflow-hidden rounded-[14px] border bg-white shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-hover", ad ? "border-[#f0b429]/70 ring-1 ring-[#f0b429]/30" : post.extra.benefits?.includes("exclusive") ? "border-line" : benefitLabels(post.extra.benefits).length > 0 ? "border-[#e5484d]/60 ring-1 ring-[#e5484d]/20" : "border-line")}>
+    <article className={cn("group relative h-full min-w-0 overflow-hidden rounded-[14px] border bg-white shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-hover", ad ? "border-[#f0b429]/70 ring-1 ring-[#f0b429]/30" : post.extra.benefits?.includes("exclusive") ? "border-line" : benefitLabels(post.extra.benefits).length > 0 ? "border-[#e5484d]/60 ring-1 ring-[#e5484d]/20" : "border-line")}>
       {preview ? (
         <div className="flex h-full flex-col">{inner}</div>
       ) : (
