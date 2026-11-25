@@ -30,7 +30,7 @@ import { PostCard } from "@/components/PostCard";
 import { ReportButton } from "@/components/ReportButton";
 import { TrackEvent } from "@/components/TrackEvent";
 import { getCurrentUser } from "@/lib/auth";
-import { CATEGORY_MAP, LIMITS, PLATFORM_LABELS, withExclusiveRef, SERVICE_FIELDS, isServiceField } from "@/lib/constants";
+import { CATEGORY_MAP, LIMITS, PLATFORM_LABELS, withExclusiveRef, SERVICE_FIELDS, resolveServiceField } from "@/lib/constants";
 import { OfficialBadge } from "@/components/OfficialBadge";
 import { BenefitBadges } from "@/components/BenefitBadges";
 import { CopyCodeButton } from "@/components/CopyCodeButton";
@@ -126,7 +126,8 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
   const rows: Array<{ icon: React.ReactNode; k: string; v: React.ReactNode }> = [];
   if (plat) rows.push({ icon: <Smartphone size={15} />, k: post.category === "content" ? "플랫폼" : "지원 환경", v: plat });
   if (usage) rows.push({ icon: <Info size={15} />, k: "이용 방식", v: usage });
-  const specialty = post.category === "services" ? SERVICE_FIELDS[isServiceField(post.extra.serviceField) ? post.extra.serviceField : "other"] : null;
+  const field = resolveServiceField(post.category, post.extra.serviceField);
+  const specialty = field ? SERVICE_FIELDS[field] : null;
   if (specialty) rows.push({ icon: <Info size={15} />, k: "서비스 분야", v: specialty.name });
   if (post.extra.specialtyType) rows.push({ icon: <Info size={15} />, k: specialty?.kindLabel ?? "서비스 종류", v: post.extra.specialtyType });
   if (post.extra.specialtyDuration) rows.push({ icon: <CalendarClock size={15} />, k: specialty?.durationLabel ?? "소요 시간·제공 내용", v: post.extra.specialtyDuration });

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Flame, Clock } from "lucide-react";
-import { PAGE_SIZE, SERVICE_FIELDS, SERVICE_PRICE_FILTERS, type CategorySlug } from "@/lib/constants";
+import { PAGE_SIZE, SERVICE_FIELDS, SERVICE_PRICE_FILTERS, GENERAL_SERVICE_FIELDS, isIndependentService, isServiceCategory, type CategorySlug } from "@/lib/constants";
 import { buildHref, type ListParams } from "@/lib/listing";
 import { getPopularMode, getPopularPosts } from "@/lib/queries";
 import { store } from "@/lib/store";
@@ -48,12 +48,13 @@ export async function ListView({
   emptyTitle,
 }: Props) {
   const isService = category === "services";
+  const hasPriceFilter = isServiceCategory(category);
   const popularMode = params.sort === "popular" ? await getPopularMode() : undefined;
   const { items, total } = await store.listPosts({
     publicOnly: true,
     category,
     service: isService ? params.service : undefined,
-    priceFilter: isService ? params.price : undefined,
+    priceFilter: hasPriceFilter ? params.price : undefined,
     benefit,
     q: query,
     region: params.region,
@@ -71,7 +72,7 @@ export async function ListView({
       sort: params.sort === "latest" ? undefined : params.sort,
       region: params.region,
       service: isService ? params.service : undefined,
-      price: isService ? params.price : undefined,
+      price: hasPriceFilter ? params.price : undefined,
       ...patch,
     });
 
@@ -91,11 +92,12 @@ export async function ListView({
         {description && <p className="text-[14.5px] text-muted">{description}</p>}
       </div>
 
-      {isService && <section className="mb-5 space-y-3" aria-label="서비스 분야 및 요금 필터">
-        <div className="flex flex-wrap gap-2">
+      {hasPriceFilter && <section className="mb-5 space-y-3" aria-label="서비스 분야 및 요금 필터">
+        {isService && <div className="flex flex-wrap gap-2">
           <Link href={href({ service: undefined, page: undefined })} className={tab(!params.service)}>전체 서비스</Link>
-          {Object.entries(SERVICE_FIELDS).map(([slug, field]) => <Link key={slug} href={href({ service: slug, page: undefined })} className={tab(params.service === slug)}>{field.name}</Link>)}
-        </div>
+          {GENERAL_SERVICE_FIELDS.map(slug => <Link key={slug} href={href({ service: slug, page: undefined })} className={tab(params.service === slug)}>{SERVICE_FIELDS[slug].name}</Link>)}
+          {params.service === "psychology" && <Link href={href({ service: "psychology", page: undefined })} className={tab(true)}>기존 심리·상담</Link>}
+        </div>}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted">기준 요금</span>
           <Link href={href({ price: undefined, page: undefined })} className={tab(!params.price)}>전체</Link>
@@ -124,7 +126,7 @@ export async function ListView({
         </div>
       </div>
 
-      {isService && params.page === 1 && <ServiceGuideCards guides={params.service ? SERVICE_GUIDES.filter(g => g.field === params.service) : SERVICE_GUIDES.filter(g => g.field === "photography" || g.field === "psychology" || g.field === "therapy").slice(0, 7)} heading={params.service ? `${SERVICE_FIELDS[params.service].name} 이용 가이드` : "전문 서비스 이용 가이드"} />}
+      {hasPriceFilter && params.page === 1 && <ServiceGuideCards guides={isIndependentService(category) ? SERVICE_GUIDES.filter(g => g.field === category) : params.service === "psychology" ? SERVICE_GUIDES.filter(g => g.field === "psych-test" || g.field === "counseling") : params.service ? SERVICE_GUIDES.filter(g => g.field === params.service) : SERVICE_GUIDES.filter(g => GENERAL_SERVICE_FIELDS.includes(g.field))} heading={isIndependentService(category) ? `${SERVICE_FIELDS[category].name} 이용 가이드` : params.service ? `${SERVICE_FIELDS[params.service].name} 이용 가이드` : "전문 서비스 이용 가이드"} />}
       {total === 0 ? (
         <>
           <EmptyState

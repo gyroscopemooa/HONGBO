@@ -6,7 +6,7 @@ import { siteUrl } from "@/lib/utils";
 import { listCommunity } from "@/lib/community-store";
 import { PLAY_PLACES } from "@/data/play";
 import { SERVICE_GUIDES } from "@/data/service-guides";
-import { SERVICE_FIELDS } from "@/lib/constants";
+import { GENERAL_SERVICE_FIELDS, serviceFieldHref } from "@/lib/constants";
 
 // 새 홍보글이 등록되면 바로 반영되도록 요청 시점에 생성합니다.
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/posts`, lastModified: now, changeFrequency: "hourly", priority: 0.9 },
     { url: `${base}/service-guides`, changeFrequency: "weekly", priority: 0.8 },
     ...SERVICE_GUIDES.map(g => ({ url: `${base}/service-guides/${g.slug}`, changeFrequency: "monthly" as const, priority: 0.7 })),
-    ...Object.keys(SERVICE_FIELDS).map(field => ({ url: `${base}/category/services?service=${field}`, changeFrequency: "weekly" as const, priority: 0.7 })),
+    ...GENERAL_SERVICE_FIELDS.map(field => ({ url: `${base}${serviceFieldHref(field)}`, changeFrequency: "weekly" as const, priority: 0.7 })),
     { url: `${base}/community`, changeFrequency: "daily", priority: 0.8 },
     { url: `${base}/play`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/play/dates`, lastModified: new Date("2026-11-11T00:00:00+09:00"), changeFrequency: "weekly", priority: 0.7 },

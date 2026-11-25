@@ -1,7 +1,7 @@
 import { isDuplicatePost } from "../post-duplicates";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { legacyServiceField, LEGACY_SERVICE_FIELDS, type CategorySlug } from "../constants";
+import { legacyServiceField, resolveServiceCategory, resolveServiceField, isIndependentService, type CategorySlug } from "../constants";
 import { getAdminClient } from "../supabase/admin";
 import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, adEndsAt, isAdLive, nextFreeSlot, premiumCapacityError } from "../ads";
 import type { Ad, AdCreative, Banner, EventType, Notice, Post, PostExtra, PostInput, PostStatus, Profile, Report } from "../types";
@@ -21,12 +21,14 @@ function fail(op: string, error: { message: string } | null): never {
 }
 
 function toPost(r: Row): Post {
-  const serviceField = legacyServiceField(r.category);
+  const extra = (r.extra as PostExtra | null) ?? {};
+  const category = resolveServiceCategory(r.category as CategorySlug, extra.serviceField);
+  const serviceField = resolveServiceField(category, legacyServiceField(r.category) ?? extra.serviceField);
   const imgs = (r.post_images as Array<{ image_url: string; sort_order: number }> | null) ?? [];
   return {
     id: Number(r.id),
     authorId: (r.author_id as string | null) ?? null,
-    category: serviceField ? "services" : r.category as CategorySlug,
+    category,
     title: r.title as string,
     shortDescription: r.short_description as string,
     description: r.description as string,
@@ -39,7 +41,7 @@ function toPost(r: Row): Post {
     address: (r.address as string | null) ?? null,
     mapUrl: (r.map_url as string | null) ?? null,
     tags: (r.tags as string[] | null) ?? [],
-    extra: { ...((r.extra as PostExtra | null) ?? {}), ...(serviceField ? { serviceField } : {}) },
+    extra: { ...extra, ...(serviceField ? { serviceField } : {}) },
     contact: (r.contact as string | null) ?? null,
     status: r.status as PostStatus,
     adminPinned: Boolean(r.admin_pinned),
@@ -152,12 +154,15 @@ export const supabaseStore: Store = {
       else if (q.status === "active") qb = qb.eq("status", "active").or(`expires_at.is.null,expires_at.gt.${now}`);
       else qb = qb.eq("status", q.status);
     }
-    if (q.category === "services") qb = qb.in("category", ["services", ...Object.keys(LEGACY_SERVICE_FIELDS)]);
-    else if (q.category) qb = qb.eq("category", q.category);
+    if (q.category === "services") {
+      qb = qb.in("category", ["services", "occupational-therapy"])
+        .or("extra->>serviceField.is.null,extra->>serviceField.not.in.(photography,psych-test,counseling),category.eq.occupational-therapy");
+    } else if (isIndependentService(q.category)) {
+      qb = qb.or(`category.eq.${q.category},and(category.eq.services,extra->>serviceField.eq.${q.category})`);
+    } else if (q.category) qb = qb.eq("category", q.category);
     if (q.service) {
-      const legacySlugs = Object.keys(LEGACY_SERVICE_FIELDS).filter(k => legacyServiceField(k) === q.service);
       if (q.service === "other") qb = qb.or("and(category.eq.services,extra->>serviceField.is.null),and(category.eq.services,extra->>serviceField.eq.other)");
-      else if (legacySlugs.length) qb = qb.or(`and(category.eq.services,extra->>serviceField.eq.${q.service}),category.in.(${legacySlugs.join(",")})`);
+      else if (q.service === "therapy") qb = qb.or("and(category.eq.services,extra->>serviceField.eq.therapy),category.eq.occupational-therapy");
       else qb = qb.eq("extra->>serviceField", q.service);
     }
     if (q.priceFilter === "listed") qb = qb.not("price", "is", null);

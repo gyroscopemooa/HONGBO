@@ -207,7 +207,7 @@ export const CATEGORY_MAP = Object.fromEntries(
 ) as Record<CategorySlug, CategoryInfo>;
 
 /** Legacy slugs are readable during rolling migration, but not shown as top-level categories. */
-export const LEGACY_SERVICE_FIELDS = { photography: "photography", "psych-test": "psychology", counseling: "psychology", "occupational-therapy": "therapy" } as const;
+export const LEGACY_SERVICE_FIELDS = { "occupational-therapy": "therapy" } as const;
 export function legacyServiceField(value: unknown): ServiceField | undefined {
   return typeof value === "string" && Object.prototype.hasOwnProperty.call(LEGACY_SERVICE_FIELDS, value) ? LEGACY_SERVICE_FIELDS[value as keyof typeof LEGACY_SERVICE_FIELDS] : undefined;
 }
@@ -215,7 +215,9 @@ export const CATEGORIES = ALL_CATEGORY_INFO.filter(c => !legacyServiceField(c.sl
 export const CATEGORY_SLUGS = CATEGORIES.map(c => c.slug);
 export const SERVICE_FIELDS = {
   "photography": {"name":"촬영","kindLabel":"촬영 종류","kind":"예) 여행 스냅 · 웨딩 · 가족 · 상품 · 영상","durationLabel":"촬영 시간·인원·보정본","duration":"예) 1시간 · 2인 · 보정본 20장","providerLabel":"작가 정보·경력","provider":"예) 작가 경력 · 포트폴리오","title":"예) 울산 야외 스냅 촬영"},
-  "psychology": {"name":"심리·상담","kindLabel":"검사·상담 종류","kind":"예) 성격검사 · 개인상담 · 부부상담","durationLabel":"검사·상담 시간·회기","duration":"예) 검사 60분 · 해석 30분","providerLabel":"전문가 자격·소속","provider":"예) 상담·검사 관련 자격 · 소속","title":"예) 성인 심리검사 및 상담"},
+  "psych-test": {"name":"심리검사","kindLabel":"검사 종류","kind":"예) 성격 · 적성 · 정서 · 종합심리검사","durationLabel":"검사 시간·해석·보고서","duration":"예) 검사 60분 · 해석 30분","providerLabel":"검사자 자격·소속","provider":"예) 검사 실시·해석 자격 · 소속 기관","title":"예) 성격검사 및 결과 해석"},
+  "counseling": {"name":"심리상담","kindLabel":"상담 종류·대상","kind":"예) 개인 · 부부 · 가족 · 청소년","durationLabel":"상담 시간·회기","duration":"예) 1회 50분 · 화상 상담 가능","providerLabel":"상담자 자격·소속","provider":"예) 상담 자격 · 발급 기관 · 소속","title":"예) 성인 개인 심리상담"},
+  "psychology": {"name":"기존 심리·상담(미분류)","kindLabel":"검사·상담 종류","kind":"예) 성격검사 · 개인상담 · 부부상담","durationLabel":"검사·상담 시간·회기","duration":"예) 검사 60분 · 해석 30분","providerLabel":"전문가 자격·소속","provider":"예) 상담·검사 관련 자격 · 소속","title":"예) 성인 심리검사 및 상담"},
   "therapy": {"name":"치료·재활","kindLabel":"프로그램 종류","kind":"예) 작업치료 · 언어재활 · 놀이치료","durationLabel":"대상·시간·프로그램","duration":"예) 아동 대상 · 1회 40분","providerLabel":"면허·자격·기관","provider":"예) 작업치료사 면허 · 소속 기관","title":"예) 아동 작업치료 안내"},
   "education": {"name":"교육·레슨","kindLabel":"수업 분야","kind":"예) 외국어 · 음악 · 운동 · 과외","durationLabel":"수준·횟수·수업 시간","duration":"예) 초급 · 주 2회 · 60분","providerLabel":"강사 정보·경력","provider":"예) 강사 경력 · 자격","title":"예) 초급 영어 회화 레슨"},
   "performance": {"name":"공연·행사","kindLabel":"공연·행사 종류","kind":"예) 축가 · 사회 · 마술 · 행사 공연","durationLabel":"공연 시간·출장 범위","duration":"예) 30분 · 전국 출장 협의","providerLabel":"출연자 정보·경력","provider":"예) 공연 경력 · 영상","title":"예) 결혼식 축가 및 사회"},
@@ -231,7 +233,30 @@ export type ServiceField = keyof typeof SERVICE_FIELDS;
 export function isServiceField(value: unknown): value is ServiceField {
   return typeof value === "string" && Object.prototype.hasOwnProperty.call(SERVICE_FIELDS, value);
 }
-export const SERVICE_PRICE_FILTERS = { listed: "요금 안내 있음", unlisted: "요금 미기재", free: "무료", under50: "5만원 미만", under100: "5만~10만원 미만", under300: "10만~30만원 미만", over300: "30만원 이상" } as const;
+export const INDEPENDENT_SERVICE_CATEGORIES = ["photography", "psych-test", "counseling"] as const;
+export type IndependentServiceCategory = typeof INDEPENDENT_SERVICE_CATEGORIES[number];
+export function isIndependentService(value: unknown): value is IndependentServiceCategory {
+  return (INDEPENDENT_SERVICE_CATEGORIES as readonly unknown[]).includes(value);
+}
+export function isServiceCategory(value: unknown): boolean {
+  return value === "services" || isIndependentService(value) || !!legacyServiceField(value);
+}
+/** Preserve ambiguous previously merged psychology listings rather than guessing their specialty. */
+export function resolveServiceCategory(category: CategorySlug, field: unknown): CategorySlug {
+  if (legacyServiceField(category)) return "services";
+  return category === "services" && isIndependentService(field) ? field : category;
+}
+export function resolveServiceField(category: CategorySlug | "", field: unknown): ServiceField | undefined {
+  if (isIndependentService(category)) return category;
+  const legacy = legacyServiceField(category);
+  if (legacy) return legacy;
+  return category === "services" ? (isServiceField(field) ? field : "other") : undefined;
+}
+export const GENERAL_SERVICE_FIELDS = (Object.keys(SERVICE_FIELDS) as ServiceField[]).filter(f => !isIndependentService(f) && f !== "psychology");
+export function serviceFieldHref(field: ServiceField): string {
+  return isIndependentService(field) ? `/category/${field}` : `/category/services?service=${field}`;
+}
+export const SERVICE_PRICE_FILTERS = { listed: "요금 안내 있음", unlisted: "요금 미기재", free: "무료", under50: "1원~5만원 미만", under100: "5만~10만원 미만", under300: "10만~30만원 미만", over300: "30만원 이상" } as const;
 export type ServicePriceFilter = keyof typeof SERVICE_PRICE_FILTERS;
 export function isServicePriceFilter(value: unknown): value is ServicePriceFilter {
   return typeof value === "string" && Object.prototype.hasOwnProperty.call(SERVICE_PRICE_FILTERS, value);

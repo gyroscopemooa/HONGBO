@@ -57,7 +57,11 @@ function GroupMenu({ label, pathname, items, linkCls }: { label: string; pathnam
 
 /** 데스크톱 카테고리 묶음 (비슷한 것끼리) */
 const CATEGORY_GROUPS = [
-  { label: "앱·웹", slugs: ["apps", "websites", "services"] },
+  { label: "앱·웹", slugs: ["apps", "websites"] },
+  { label: "서비스", slugs: ["services"] },
+  { label: "촬영", slugs: ["photography"] },
+  { label: "심리상담", slugs: ["counseling"] },
+  { label: "심리검사", slugs: ["psych-test"] },
   { label: "가게·상품", slugs: ["offline", "products"] },
   { label: "콘텐츠·모집", slugs: ["content", "events"] },
   { label: "자유·한줄", slugs: ["free", "quick"] },
@@ -107,7 +111,7 @@ function NavInner() {
           {underline(pathname.startsWith("/play"))}
         </Link>
         <div className="flex w-max shrink-0 items-center xl:hidden">
-          {[...CATEGORIES.filter(c => c.slug === "services"), ...CATEGORIES.filter(c => c.slug !== "services")].map((c) => {
+          {[...["photography", "counseling", "psych-test", "services"].flatMap(slug => CATEGORIES.filter(c => c.slug === slug)), ...CATEGORIES.filter(c => !["photography", "counseling", "psych-test", "services"].includes(c.slug))].map((c) => {
             const active = activeCat === c.slug;
             return (
               <Link key={c.slug} href={`/category/${c.slug}`} className={linkCls(active)} aria-current={active ? "page" : undefined}>
@@ -134,7 +138,7 @@ function NavInner() {
         {/* 데스크톱: 비슷한 카테고리끼리 묶은 드롭다운 */}
         <div className="hidden w-max shrink-0 items-center xl:flex">
           {CATEGORY_GROUPS.map((g) => (
-            <GroupMenu key={g.label} label={g.label} pathname={pathname} items={g.slugs.map((slug) => [`/category/${slug}`, CATEGORY_NAME[slug]] as [string, string])} linkCls={linkCls} />
+            g.slugs.length === 1 ? <Link key={g.label} href={`/category/${g.slugs[0]}`} className={linkCls(activeCat === g.slugs[0])} aria-current={activeCat === g.slugs[0] ? "page" : undefined}>{g.label}{underline(activeCat === g.slugs[0])}</Link> : <GroupMenu key={g.label} label={g.label} pathname={pathname} items={g.slugs.map((slug) => [`/category/${slug}`, CATEGORY_NAME[slug]] as [string, string])} linkCls={linkCls} />
           ))}
           <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
           <Link href="/benefit/exclusive" className={linkCls(pathname === "/benefit/exclusive")}>

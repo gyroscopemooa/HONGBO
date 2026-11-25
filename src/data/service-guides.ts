@@ -110,7 +110,7 @@ export const SERVICE_GUIDES: ServiceGuide[] = [
   },
   {
     "slug": "psychological-test",
-    "field": "psychology",
+    "field": "psych-test",
     "title": "심리검사 종류와 결과 해석 상담 기관 찾기",
     "description": "성격검사·적성검사·정서검사 등을 알아볼 때 검사 목적, 해석 방식, 제공자 자격을 확인하는 방법입니다.",
     "keywords": [
@@ -136,7 +136,7 @@ export const SERVICE_GUIDES: ServiceGuide[] = [
   },
   {
     "slug": "counseling",
-    "field": "psychology",
+    "field": "counseling",
     "title": "심리상담 센터 찾기: 개인·부부·가족 상담 비교",
     "description": "대면·비대면 심리상담을 선택할 때 상담 대상, 회기, 상담자 자격과 비용을 비교하는 안내입니다.",
     "keywords": [

@@ -2,7 +2,7 @@ import { matchesPlayConditions } from "../play-conditions";
 import { isDuplicatePost } from "../post-duplicates";
 import fs from "node:fs";
 import path from "node:path";
-import { legacyServiceField, type CategorySlug } from "../constants";
+import { legacyServiceField, resolveServiceCategory, resolveServiceField, type CategorySlug } from "../constants";
 import { SEED_BANNERS, SEED_NOTICES, SEED_ORDER, SEED_POSTS, seedExternalUrl, seedImageUrl } from "@/data/seed";
 import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, adEndsAt, isAdLive, nextFreeSlot, premiumCapacityError } from "../ads";
 import type { Ad, Banner, EventType, Notice, Post, Profile, Report } from "../types";
@@ -188,10 +188,9 @@ function matches(p: Post, q: ListQuery, now: number): boolean {
     } else if (p.status !== q.status) return false;
     else if (q.status === "active" && p.expiresAt && new Date(p.expiresAt).getTime() <= now) return false;
   }
-  const legacy = legacyServiceField(p.category);
-  const category = legacy ? "services" : p.category;
+  const category = resolveServiceCategory(p.category, p.extra.serviceField);
   if (q.category && category !== q.category) return false;
-  if (q.service && (legacy ?? p.extra.serviceField ?? "other") !== q.service) return false;
+  if (q.service && resolveServiceField(category, legacyServiceField(p.category) ?? p.extra.serviceField) !== q.service) return false;
   if (q.priceFilter && (q.priceFilter === "listed" ? !p.price : q.priceFilter === "unlisted" ? !!p.price : p.extra.servicePriceBand !== q.priceFilter)) return false;
   if (q.region && p.region !== q.region) return false;
   if (q.tag && !p.tags.includes(q.tag)) return false;
@@ -234,8 +233,9 @@ function sortPosts(items: Post[], q: ListQuery): Post[] {
 }
 
 function normalizeLegacyPost(p: Post): Post {
-  const serviceField = legacyServiceField(p.category);
-  return serviceField ? { ...p, category: "services", extra: { ...p.extra, serviceField } } : p;
+  const category = resolveServiceCategory(p.category, p.extra.serviceField);
+  const serviceField = resolveServiceField(category, legacyServiceField(p.category) ?? p.extra.serviceField);
+  return serviceField ? { ...p, category, extra: { ...p.extra, serviceField } } : p;
 }
 
 const clone = <T,>(v: T): T => structuredClone(v);

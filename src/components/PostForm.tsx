@@ -13,6 +13,10 @@ import {
   CATEGORIES,
   CATEGORY_MAP,
   legacyServiceField,
+  isServiceCategory,
+  resolveServiceCategory,
+  resolveServiceField,
+  GENERAL_SERVICE_FIELDS,
   isServiceField,
   SERVICE_FIELDS,
   type ServiceField,
@@ -177,8 +181,8 @@ const TITLE_PLACEHOLDER: Record<CategorySlug, string> = {
 export function postToFormState(p: Post): FormState {
   return {
     ...EMPTY,
-    category: legacyServiceField(p.category) ? "services" : p.category,
-    serviceField: legacyServiceField(p.category) ?? p.extra.serviceField ?? "other",
+    category: resolveServiceCategory(p.category, p.extra.serviceField),
+    serviceField: resolveServiceField(resolveServiceCategory(p.category, p.extra.serviceField), legacyServiceField(p.category) ?? p.extra.serviceField) ?? "other",
     servicePrice: p.extra.servicePrice == null ? "" : String(p.extra.servicePrice),
     bodyBlocks: p.extra.bodyBlocks ?? [],
     bodyFormat: p.extra.bodyFormat,
@@ -258,8 +262,8 @@ function toPayload(f: FormState) {
       appStoreUrl: f.appStoreUrl,
       siteUrl: f.siteUrl,
       usageType: f.usageType,
-      serviceField: f.category === "services" ? f.serviceField ?? "other" : undefined,
-      servicePrice: f.category === "services" && f.servicePrice?.trim() ? Number(f.servicePrice) : undefined,
+      serviceField: resolveServiceField(f.category, f.serviceField),
+      servicePrice: isServiceCategory(f.category) && f.servicePrice?.trim() ? Number(f.servicePrice) : undefined,
       specialtyType: f.specialtyType ?? "",
       specialtyDuration: f.specialtyDuration ?? "",
       specialtyProvider: f.specialtyProvider ?? "",
@@ -328,7 +332,8 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
         if (d && (d.title || d.description || d.category)) {
           // 브라우저 저장소(외부 시스템)에서 초안을 복원하는 의도된 동작
           // eslint-disable-next-line react-hooks/set-state-in-effect
-          setF({ ...EMPTY, ...d, ...(legacyServiceField(d.category) ? { category: "services", serviceField: legacyServiceField(d.category) } : {}) });
+          const category = d.category ? resolveServiceCategory(d.category, d.serviceField) : "";
+          setF({ ...EMPTY, ...d, category, serviceField: resolveServiceField(category, legacyServiceField(d.category) ?? d.serviceField) ?? "other" });
           setRestored(true);
         }
       }
@@ -352,7 +357,8 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
   }, [f, mode]);
 
   const cat = f.category ? CATEGORY_MAP[f.category] : null;
-  const specialty = f.category === "services" ? SERVICE_FIELDS[isServiceField(f.serviceField) ? f.serviceField : "other"] : null;
+  const field = resolveServiceField(f.category, f.serviceField);
+  const specialty = field ? SERVICE_FIELDS[field] : null;
 
   const missing = useMemo(() => {
     const m: string[] = [];
@@ -365,7 +371,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
     if (f.exclusiveOn && !f.exclusiveAgree) m.push("전용 이벤트 동의");
     if (f.category === "apps" && !f.playUrl.trim() && !f.appStoreUrl.trim() && !f.siteUrl.trim()) m.push("앱 링크");
     else if (f.category === "offline" && !f.mapUrl.trim() && !f.businessUrl.trim()) m.push("지도/문의 링크");
-    else if (f.category === "services") {
+    else if (isServiceCategory(f.category)) {
       if (!f.externalUrl.trim() && !(f.contactPublic && f.contact.trim())) m.push("문의·예약 링크 또는 공개 연락처");
     }
     else if (f.category && f.category !== "apps" && f.category !== "offline" && f.category !== "quick" && !(f.category === "events" && f.exclusiveOn && f.exclusiveMethod === "survey") && !f.externalUrl.trim()) m.push("링크");
@@ -453,12 +459,12 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
       images: [],
       externalUrl: "",
       platform: null,
-      price: (f.category === "products" || f.category === "services") && f.price.trim() ? f.price.trim() : null,
-      region: f.region || (f.category === "offline" || f.category === "services" ? inferRegion(f.address) : null),
+      price: (f.category === "products" || isServiceCategory(f.category)) && f.price.trim() ? f.price.trim() : null,
+      region: f.region || (f.category === "offline" || isServiceCategory(f.category) ? inferRegion(f.address) : null),
       address: null,
       mapUrl: null,
       tags: [],
-      extra: { ...(f.category === "services" ? { serviceField: f.serviceField ?? "other" } : {}), benefits: f.exclusiveOn ? [...f.benefits, EXCLUSIVE_SLUG] : f.benefits, ...(f.exclusiveOn ? { exclusive: { reward: f.exclusiveReward, how: f.exclusiveHow } } : {}) },
+      extra: { ...(isServiceCategory(f.category) ? { serviceField: resolveServiceField(f.category, f.serviceField) } : {}), benefits: f.exclusiveOn ? [...f.benefits, EXCLUSIVE_SLUG] : f.benefits, ...(f.exclusiveOn ? { exclusive: { reward: f.exclusiveReward, how: f.exclusiveHow } } : {}) },
       contact: null,
       status: "active",
       adminPinned: false,
@@ -518,7 +524,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                     role="radio"
                     aria-checked={active}
                     aria-label={c.name}
-                    onClick={() => set("category", c.slug)}
+                    onClick={() => setF(prev => ({ ...prev, category: c.slug, serviceField: c.slug === "services" && prev.category === "services" ? prev.serviceField : resolveServiceField(c.slug, undefined) ?? "other" }))}
                     className={cn(
                       "flex items-center gap-2.5 rounded-xl border-2 px-3 py-3 text-left transition",
                       active ? "border-brand bg-brand-soft" : "border-line bg-white hover:border-[#c9ced9]",
@@ -632,9 +638,10 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                     </select>
                   </Field>
                 )}
-                {specialty && <Field id="serviceField" label="서비스 분야" error={errors.serviceField}>
+                {f.category === "services" && <Field id="serviceField" label="서비스 분야" error={errors.serviceField}>
                   <select id="serviceField" value={f.serviceField ?? "other"} onChange={e => { if (isServiceField(e.target.value)) set("serviceField", e.target.value); }} className="field">
-                    {Object.entries(SERVICE_FIELDS).map(([slug, field]) => <option key={slug} value={slug}>{field.name}</option>)}
+                    {f.serviceField === "psychology" && <option value="psychology">기존 심리·상담(미분류) — 위에서 대분류 변경 가능</option>}
+                    {GENERAL_SERVICE_FIELDS.map(slug => <option key={slug} value={slug}>{SERVICE_FIELDS[slug].name}</option>)}
                   </select>
                 </Field>}
                 <LinkInput
@@ -697,7 +704,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                     <Field id="servicePrice" label="검색용 기준 요금 (원)" optional error={errors["extra.servicePrice"]} hint="숫자로 입력하면 가격대 검색에 포함됩니다. 무료는 0, 협의·외화 요금은 비워두세요.">
                       <input id="servicePrice" type="number" min={0} max={1000000000} step={1} value={f.servicePrice ?? ""} onChange={e => set("servicePrice", e.target.value)} placeholder="80000" className="field" />
                     </Field>
-                    {(f.serviceField === "psychology" || f.serviceField === "therapy") && <p className="rounded-lg bg-soft p-3 text-[13px] text-muted">서비스 홍보만 가능하며 검사 결과, 환자·내담자 개인정보나 진료기록은 공개 글에 올리지 마세요. 자격과 소속을 정확히 표시해주세요.</p>}
+                    {(field === "psychology" || field === "psych-test" || field === "counseling" || field === "therapy") && <p className="rounded-lg bg-soft p-3 text-[13px] text-muted">서비스 홍보만 가능하며 검사 결과, 환자·내담자 개인정보나 진료기록은 공개 글에 올리지 마세요. 자격과 소속을 정확히 표시해주세요.</p>}
                   </div>
                 )}
                 {f.category === "products" && (
