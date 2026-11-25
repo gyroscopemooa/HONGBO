@@ -252,7 +252,13 @@ export function resolveServiceField(category: CategorySlug | "", field: unknown)
   if (legacy) return legacy;
   return category === "services" ? (isServiceField(field) ? field : "other") : undefined;
 }
-export const GENERAL_SERVICE_FIELDS = (Object.keys(SERVICE_FIELDS) as ServiceField[]).filter(f => !isIndependentService(f) && f !== "psychology");
+export type GeneralServiceField = Exclude<ServiceField, IndependentServiceCategory | "psychology">;
+export const GENERAL_SERVICE_FIELDS = (Object.keys(SERVICE_FIELDS) as ServiceField[]).filter(
+  (field): field is GeneralServiceField => !isIndependentService(field) && field !== "psychology",
+);
+export function isGeneralServiceField(value: unknown): value is GeneralServiceField {
+  return typeof value === "string" && GENERAL_SERVICE_FIELDS.includes(value as GeneralServiceField);
+}
 export function serviceFieldHref(field: ServiceField): string {
   return isIndependentService(field) ? `/category/${field}` : `/category/services?service=${field}`;
 }
