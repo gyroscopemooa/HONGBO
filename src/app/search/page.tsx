@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Search } from "lucide-react";
 import { ListView } from "@/components/ListView";
+import { matchingServiceGuides } from "@/data/service-guides";
+import { ServiceGuideCards } from "@/components/ServiceGuideCards";
 import { TrackEvent } from "@/components/TrackEvent";
 import { parseListParams, type SearchParams } from "@/lib/listing";
 
@@ -41,6 +43,7 @@ export default async function SearchPage({ searchParams }: Props) {
         </form>
       </div>
       {q && <TrackEvent type="search" />}
+      {q && params.page === 1 && <div className="wrap"><ServiceGuideCards guides={matchingServiceGuides(q)} heading="관련 서비스 이용 가이드" /></div>}
       <ListView
         basePath="/search"
         params={params}

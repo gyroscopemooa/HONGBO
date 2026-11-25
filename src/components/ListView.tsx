@@ -10,6 +10,8 @@ import { EmptyState } from "./EmptyState";
 import { Pagination } from "./Pagination";
 import { PostCard } from "./PostCard";
 import { RegionSelect } from "./RegionSelect";
+import { SERVICE_GUIDES } from "@/data/service-guides";
+import { ServiceGuideCards } from "./ServiceGuideCards";
 
 interface Props {
   basePath: string;
@@ -122,6 +124,7 @@ export async function ListView({
         </div>
       </div>
 
+      {isService && params.page === 1 && <ServiceGuideCards guides={params.service ? SERVICE_GUIDES.filter(g => g.field === params.service) : SERVICE_GUIDES.filter(g => g.field === "photography" || g.field === "psychology" || g.field === "therapy").slice(0, 7)} heading={params.service ? `${SERVICE_FIELDS[params.service].name} 이용 가이드` : "전문 서비스 이용 가이드"} />}
       {total === 0 ? (
         <>
           <EmptyState
