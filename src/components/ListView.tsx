@@ -98,7 +98,7 @@ export async function ListView({
       {hasPriceFilter && (
         <section className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:gap-3" aria-label="서비스 분야 및 요금 필터">
           {isService && (
-            <details className="group relative min-w-0 sm:w-56">
+            <details key={`service-${params.service ?? "all"}`} className="group relative min-w-0 sm:w-56">
               <summary className="flex h-10 cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-line bg-white px-3 text-sm font-semibold text-ink-2 [&::-webkit-details-marker]:hidden">
                 <span className="truncate">{params.service ? SERVICE_FIELDS[params.service].name : "전체 서비스"}</span>
                 <ChevronDown size={16} aria-hidden className="shrink-0 text-muted transition-transform group-open:rotate-180" />
@@ -112,7 +112,7 @@ export async function ListView({
               </div>
             </details>
           )}
-          <details className="group relative min-w-0 sm:w-56">
+          <details key={`price-${params.price ?? "all"}`} className="group relative min-w-0 sm:w-56">
             <summary className="flex h-10 cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-line bg-white px-3 text-sm font-semibold text-ink-2 [&::-webkit-details-marker]:hidden">
               <span className="truncate">{params.price ? SERVICE_PRICE_FILTERS[params.price] : "전체 요금"}</span>
               <ChevronDown size={16} aria-hidden className="shrink-0 text-muted transition-transform group-open:rotate-180" />
