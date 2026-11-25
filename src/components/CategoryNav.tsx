@@ -107,7 +107,7 @@ function NavInner() {
           {underline(pathname.startsWith("/play"))}
         </Link>
         <div className="flex w-max shrink-0 items-center xl:hidden">
-          {CATEGORIES.map((c) => {
+          {[...CATEGORIES.filter(c => c.slug === "services"), ...CATEGORIES.filter(c => c.slug !== "services")].map((c) => {
             const active = activeCat === c.slug;
             return (
               <Link key={c.slug} href={`/category/${c.slug}`} className={linkCls(active)} aria-current={active ? "page" : undefined}>

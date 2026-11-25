@@ -8,14 +8,12 @@ import { PremiumSlider } from "./PremiumSlider";
 
 /** 광고가 적을 때 최신 홍보글로 채워 최소로 보여 주는 카드 수 */
 export const PREMIUM_MIN_SHOWN = 3;
-/** PC에서 한 줄에 보이는 칸 수 — 이보다 적으면 "내 홍보를 여기에" 안내 칸으로 채워요(최소 1칸은 항상 맨 뒤에). */
-const ROW = 5;
 
 /**
  * 홈 상단 추천 영역 — 운영자 고정 광고가 맨 앞, 그다음 노출 중인 광고 전부.
  * 한 페이지는 10칸(2줄)이고 11개부터는 페이지 슬라이드로 자동 넘어가요. 뒤 페이지가 손해 보지 않게
  * 날마다 시작 페이지가 바뀝니다(운영자 고정 광고는 항상 첫 칸). 광고가 3개보다 적으면 최신 홍보글이 채우고,
- * 맨 뒤에는 "내 홍보를 여기에" 안내 칸이 항상 1~2개 붙어요.
+ * 마지막 페이지에 남는 자리가 있을 때만 신청 안내 칸을 최대 2개 붙여요.
  */
 export function PremiumGrid({ ads, fill }: { ads: Post[]; fill: Post[] }) {
   const freeTrial = freeAdTrialEnabled();
@@ -23,7 +21,7 @@ export function PremiumGrid({ ads, fill }: { ads: Post[]; fill: Post[] }) {
   const pinned = ads[0]?.adPinned ? ads[0] : null;
   const rest = pinned ? ads.slice(1) : ads;
   const total = ads.length + filler.length;
-  const pageCount = Math.max(1, Math.ceil((total + 1) / PREMIUM_PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(total / PREMIUM_PAGE_SIZE));
   const shift = dailyPageOffset(pageCount) * PREMIUM_PAGE_SIZE;
   const rot = rest.length ? shift % rest.length : 0;
   const ordered = [...(pinned ? [pinned] : []), ...rest.slice(rot), ...rest.slice(0, rot)];
@@ -31,7 +29,10 @@ export function PremiumGrid({ ads, fill }: { ads: Post[]; fill: Post[] }) {
     ...ordered.map((p) => ({ key: `ad-${p.id}`, post: p, ad: true })),
     ...filler.map((p) => ({ key: `new-${p.id}`, post: p })),
   ];
-  const plus = total < 4 ? 5 - total : total + 2 <= pageCount * PREMIUM_PAGE_SIZE ? 2 : 1;
+  // Do not create an otherwise empty slide solely for ad application tiles.
+  const adPages = Math.max(1, Math.ceil(cards.length / PREMIUM_PAGE_SIZE));
+  const remaining = adPages * PREMIUM_PAGE_SIZE - cards.length;
+  const plus = Math.min(2, remaining);
   for (let i = 0; i < plus; i++) cards.push({ key: `empty-${i}` });
   const pages = Array.from({ length: Math.ceil(cards.length / PREMIUM_PAGE_SIZE) }, (_, i) => cards.slice(i * PREMIUM_PAGE_SIZE, (i + 1) * PREMIUM_PAGE_SIZE));
 

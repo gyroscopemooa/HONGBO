@@ -23,7 +23,8 @@ import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, AD_PRICES, shuffle, won } from "@/li
 import { listHeroAds } from "@/lib/hero-ad-store";
 import type { HeroAdView } from "@/components/HeroAdSlide";
 import { infl09ApplyUrl } from "@/lib/infl09";
-import { SITE } from "@/lib/constants";
+import { SITE, SERVICE_FIELDS } from "@/lib/constants";
+import { SERVICE_GUIDES } from "@/data/service-guides";
 import { listCommunity } from "@/lib/community-store";
 import { listMeetup } from "@/lib/meetup-store";
 import { getHomeData } from "@/lib/queries";
@@ -147,6 +148,14 @@ export default async function HomePage() {
         <Hero ads={heroAds} infl09={{ url: infl09Url, preview: !infl09Url && process.env.NODE_ENV !== "production" }} />
       </div>
       <CategoryTiles />
+      <section className="wrap pb-5" aria-label="전문 서비스 바로가기">
+        <div className="rounded-2xl border border-line bg-white p-4 sm:p-5">
+          <div className="mb-3 flex items-center justify-between gap-2"><h2 className="text-lg font-extrabold">전문 서비스 찾기</h2><Link href="/category/services" className="shrink-0 text-sm font-semibold text-brand">서비스 전체보기</Link></div>
+          <div className="flex flex-wrap gap-2">{Object.entries(SERVICE_FIELDS).map(([slug, info]) => <Link key={slug} href={`/category/services?service=${slug}`} className="rounded-full border border-line px-3 py-2 text-sm font-semibold hover:border-brand hover:text-brand">{info.name}</Link>)}</div>
+          <div className="mt-4 border-t border-line pt-3"><div className="mb-2 flex items-center justify-between gap-2"><h3 className="text-sm font-bold">새로운 서비스 이용 가이드</h3><Link href="/service-guides" className="shrink-0 text-sm font-semibold text-brand">전체 {SERVICE_GUIDES.length}개 보기</Link></div>
+          <ul className="grid gap-1 sm:grid-cols-2">{SERVICE_GUIDES.filter(g => ["snap-photo", "travel-snap", "psychological-test", "occupational-language-therapy"].includes(g.slug)).map(g => <li key={g.slug}><Link href={`/service-guides/${g.slug}`} className="block rounded-lg px-1 py-2 text-sm font-medium hover:bg-soft hover:text-brand">{g.title}</Link></li>)}</ul></div>
+        </div>
+      </section>
       <div className="wrap pb-5"><CommunityLatest limit={2} /></div>
       <div className="wrap my-5">
         <Link href="/play" className="flex items-center justify-between gap-4 rounded-2xl border border-[#d2e3fc] bg-[#eaf3ff] px-5 py-5 sm:px-7">
