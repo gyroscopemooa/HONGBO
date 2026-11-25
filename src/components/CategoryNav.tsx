@@ -156,7 +156,7 @@ function NavInner() {
           ))}
           <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
           <Link href="/posts?sort=popular" className={linkCls(sort === "popular")}>인기글</Link>
-          <Link href="/posts?sort=latest" className={linkCls(sort === "latest")}>최신글</Link>
+          <Link href="/posts?sort=published" className={linkCls(sort === "published")}>최신글</Link>
           <Link href="/region" className={linkCls(pathname === "/region")}>지역별</Link>
         </div>
       </div>
@@ -166,7 +166,7 @@ function NavInner() {
         <Link href="/posts?sort=popular" className={linkCls(sort === "popular")}>
           <Flame size={15} aria-hidden /> 인기글
         </Link>
-        <Link href="/posts?sort=latest" className={linkCls(sort === "latest")}>
+        <Link href="/posts?sort=published" className={linkCls(sort === "published")}>
           <Clock size={15} aria-hidden /> 최신글
         </Link>
         <Link href="/region" className={linkCls(pathname === "/region")}>

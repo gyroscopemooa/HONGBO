@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const { popular, latest, sideBanners, stripBanners, notices, premium, adBanners, exclusive } = await getHomeData();
+  const { popular, latest, published, sideBanners, stripBanners, notices, premium, adBanners, exclusive } = await getHomeData();
   // 하단 게시판 최신글: 어느 하나가 실패해도 홈 화면은 정상 표시합니다.
   const [reviewBoard, communityBoard, meetupBoard, heroAdRows] = await Promise.all([
     listReviews({ pageSize: 5 }).catch(() => ({ items: [], total: 0 })),
@@ -62,7 +62,7 @@ export default async function HomePage() {
   // 추천 영역(앞 3자리)에 나온 글은 배너에서 제외하고, 배너 자리가 남으면 최신 글로 채웁니다.
   const premiumAds = premium;
   // 최신 글로 비는 자리를 채울 때는 "다시 홍보하기(끌어올리기)"로 위로 올라온 글은 제외하고, 새로 등록한 글만 씁니다.
-  const fresh = latest.filter((p) => Math.abs(new Date(p.bumpedAt).getTime() - new Date(p.publishedAt).getTime()) < 60_000);
+  const fresh = published.filter((p) => Math.abs(new Date(p.bumpedAt).getTime() - new Date(p.publishedAt).getTime()) < 60_000);
   const premiumFill = fresh.filter((p) => !premiumAds.some((a) => a.id === p.id)).slice(0, Math.max(0, PREMIUM_MIN_SHOWN - premiumAds.length));
   const used = new Set([...premiumAds, ...premiumFill].map((p) => p.id));
   const bannerAds = adBanners.slice(0, AD_BANNER_SLOTS);
@@ -218,12 +218,12 @@ export default async function HomePage() {
             <h2 className="flex items-center gap-2 text-[19px] font-extrabold tracking-[-0.04em]">
               <Siren size={20} className="text-brand" aria-hidden /> 최신 홍보글
             </h2>
-            <Link href="/posts?sort=latest" className="inline-flex items-center text-[13.5px] font-medium text-muted hover:text-brand">
+            <Link href="/posts?sort=published" className="inline-flex items-center text-[13.5px] font-medium text-muted hover:text-brand">
               더보기 <ChevronRight size={15} aria-hidden />
             </Link>
           </div>
           <div className="divide-y divide-line/60">
-            {latest.slice(0, 11).map((p) => (
+            {published.slice(0, 11).map((p) => (
               <PostRow key={p.id} post={p} />
             ))}
           </div>

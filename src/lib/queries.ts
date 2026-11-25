@@ -109,9 +109,10 @@ export function getHomeData() {
 }
 
 async function loadHomeData() {
-  const [popular, latest, side, strip, notices, premium, adBanners, house, exclusive] = await Promise.all([
+  const [popular, latest, published, side, strip, notices, premium, adBanners, house, exclusive] = await Promise.all([
     getPopularPosts(22),
     store.listPosts({ publicOnly: true, sort: "latest", pageSize: 20 }),
+    store.listPosts({ publicOnly: true, sort: "published", pageSize: 20 }),
     store.listBanners({ activeOnly: true, placement: "side" }),
     store.listBanners({ activeOnly: true, placement: "strip" }),
     store.listNotices(5),
@@ -125,7 +126,7 @@ async function loadHomeData() {
   const premiumOut = houseOk ? pinFirst(premium, houseOk) : premium;
   const bannersOut =
     houseOk && adBanners.length < AD_BANNER_SLOTS && !adBanners.some((b) => b.post.id === houseOk.id) ? [{ post: houseOk, creative: null }, ...adBanners] : adBanners;
-  return { popular, latest: latest.items, sideBanners: side, stripBanners: strip, notices, premium: premiumOut, adBanners: bannersOut, exclusive };
+  return { popular, latest: latest.items, published: published.items, sideBanners: side, stripBanners: strip, notices, premium: premiumOut, adBanners: bannersOut, exclusive };
 }
 
 export function isPostPublic(p: Pick<Post, "status" | "expiresAt">): boolean {

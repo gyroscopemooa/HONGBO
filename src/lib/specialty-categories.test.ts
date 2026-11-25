@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CATEGORIES, SERVICE_FIELDS, INDEPENDENT_SERVICE_CATEGORIES, GENERAL_SERVICE_FIELDS, resolveServiceCategory, resolveServiceField, serviceFieldHref } from "./constants";
+import { CATEGORIES, INDEPENDENT_SERVICE_CATEGORIES, GENERAL_SERVICE_FIELDS, resolveServiceCategory, resolveServiceField, serviceFieldHref } from "./constants";
 import { parsePostInput } from "./validation";
 const base = { title: "전문 서비스 소개", shortDescription: "서비스 이용 방법 안내", description: "서비스의 종류와 이용 방법을 안내합니다. 자세한 내용은 문의해주세요.", externalUrl: "https://example.com/reserve" };
 for (const serviceField of [...INDEPENDENT_SERVICE_CATEGORIES, ...GENERAL_SERVICE_FIELDS, "psychology" as const]) {

@@ -5,7 +5,7 @@ import { cleanQuery, parsePositiveInt, pickFirst } from "./utils";
 export type SearchParams = Record<string, string | string[] | undefined>;
 
 export interface ListParams {
-  sort: "latest" | "popular";
+  sort: "latest" | "popular" | "published";
   page: number;
   region?: string;
   q: string;
@@ -19,7 +19,7 @@ export function parseListParams(sp: SearchParams, defaultSort: ListParams["sort"
   const service = pickFirst(sp.service);
   const price = pickFirst(sp.price);
   return {
-    sort: sortRaw === "popular" ? "popular" : sortRaw === "latest" ? "latest" : defaultSort,
+    sort: sortRaw === "popular" || sortRaw === "latest" || sortRaw === "published" ? sortRaw : defaultSort,
     page: Math.min(parsePositiveInt(sp.page, 1), 500),
     region: isRegion(region) ? region : undefined,
     q: cleanQuery(sp.q),

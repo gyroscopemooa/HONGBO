@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { Flame, Clock } from "lucide-react";
+import { Flame, Clock, Sparkles } from "lucide-react";
 import { PAGE_SIZE, SERVICE_FIELDS, SERVICE_PRICE_FILTERS, GENERAL_SERVICE_FIELDS, isIndependentService, isServiceCategory, type CategorySlug } from "@/lib/constants";
 import { buildHref, type ListParams } from "@/lib/listing";
 import { getPopularMode, getPopularPosts } from "@/lib/queries";
@@ -106,9 +106,12 @@ export async function ListView({
       </section>}
       {top}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link href={href({ sort: undefined, page: undefined })} className={tab(params.sort === "latest")}>
             <Clock size={15} aria-hidden /> 최신순
+          </Link>
+          <Link href={href({ sort: "published", page: undefined })} className={tab(params.sort === "published")}>
+            <Sparkles size={15} aria-hidden /> 신규 등록순
           </Link>
           <Link href={href({ sort: "popular", page: undefined })} className={tab(params.sort === "popular")}>
             <Flame size={15} aria-hidden /> 인기순

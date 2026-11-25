@@ -19,7 +19,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     title: `${name} 무료 홍보 - ${name} 서비스 찾기`,
     description: field ? `${name} 서비스 제공자와 이용 가이드를 더홍보에서 찾아보세요. ${field.kind.replace("예) ", "")} 등 분야별 서비스 홍보 및 문의 방법을 확인할 수 있습니다.` : `${c.desc} 무료 홍보 사이트 더홍보에서 ${c.name} 홍보글을 마음껏 올리고 둘러보세요.`,
     alternates: {
-      canonical: buildHref(`/category/${slug}`, { sort: p.sort === "popular" ? "popular" : undefined, region: p.region, service: slug === "services" ? p.service : undefined, price: isServiceCategory(slug) ? p.price : undefined, page: p.page > 1 ? p.page : undefined }),
+      canonical: buildHref(`/category/${slug}`, { sort: p.sort === "latest" ? undefined : p.sort, region: p.region, service: slug === "services" ? p.service : undefined, price: isServiceCategory(slug) ? p.price : undefined, page: p.page > 1 ? p.page : undefined }),
     },
   };
 }
@@ -31,7 +31,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   if (!isCategorySlug(slug)) notFound();
   const c = CATEGORY_MAP[slug];
   const p = parseListParams(await searchParams);
-  if (slug === "services" && isIndependentService(p.service)) redirect(buildHref(`/category/${p.service}`, { region: p.region, sort: p.sort === "popular" ? p.sort : undefined, price: p.price, page: p.page > 1 ? p.page : undefined }));
+  if (slug === "services" && isIndependentService(p.service)) redirect(buildHref(`/category/${p.service}`, { region: p.region, sort: p.sort === "latest" ? undefined : p.sort, price: p.price, page: p.page > 1 ? p.page : undefined }));
   return (
     <ListView
       basePath={`/category/${slug}`}

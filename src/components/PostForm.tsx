@@ -331,8 +331,8 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
         const d = JSON.parse(raw) as Partial<FormState>;
         if (d && (d.title || d.description || d.category)) {
           // 브라우저 저장소(외부 시스템)에서 초안을 복원하는 의도된 동작
-          // eslint-disable-next-line react-hooks/set-state-in-effect
           const category = d.category ? resolveServiceCategory(d.category, d.serviceField) : "";
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setF({ ...EMPTY, ...d, category, serviceField: resolveServiceField(category, legacyServiceField(d.category) ?? d.serviceField) ?? "other" });
           setRestored(true);
         }
