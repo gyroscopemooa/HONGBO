@@ -284,3 +284,8 @@
 @media (prefers-reduced-motion: reduce) {
   .hb-logo-letter { animation: none !important; }
 }
+
+/* Keep the mobile document within the viewport; individual carousels/nav retain their own horizontal scrolling. */
+@media (max-width: 767px) {
+  html, body { overflow-x: clip; max-width: 100%; }
+}
