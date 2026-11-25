@@ -6,6 +6,7 @@ import { store } from "@/lib/store";
 import { invalidateHomeData, isPostPublic } from "@/lib/queries";
 import { findBannedKeyword } from "@/lib/policy";
 import { rateLimit } from "@/lib/ratelimit";
+import { SHOW_POST_SOCIAL } from "@/lib/features";
 export type CommentResult={ok:boolean;message:string};
 export async function savePostComment(_previous:CommentResult,form:FormData):Promise<CommentResult>{
  const user=await getCurrentUser();
@@ -18,6 +19,7 @@ export async function savePostComment(_previous:CommentResult,form:FormData):Pro
  try{
  const post=await store.getPost(postId);
  if(!post||!isPostPublic(post))return {ok:false,message:"현재 공개 중인 글에만 댓글을 남길 수 있어요."};
+ if(!SHOW_POST_SOCIAL&&!user.isAdmin&&post.authorId!==user.id)return {ok:false,message:"현재는 관리자와 해당 글 작성자만 댓글을 이용할 수 있어요."};
  const db=getAdminClient();
  if(mode==="create"){
  const {error}=await db.from("post_comments").insert({post_id:postId,author_id:user.id,nickname:user.nickname.slice(0,100)||"회원",body});
