@@ -333,7 +333,7 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
         <SurveyParticipation postId={post.id} questions={post.extra.exclusive.survey!} payout={post.extra.exclusive.payout} />
       )}
 
-      {SHOW_POST_SOCIAL && publicNow && <PostComments postId={post.id} />}
+      {publicNow && (SHOW_POST_SOCIAL || canManage) && <PostComments postId={post.id} />}
 
       {related.items.length > 0 && (
         <section aria-label="같은 카테고리의 다른 홍보" className="mt-10">
