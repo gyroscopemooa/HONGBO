@@ -49,6 +49,10 @@ export interface PostExtra {
   siteUrl?: string;
   /** 서비스: online | offline | mixed */
   usageType?: string;
+  /** 전문 서비스 홍보 정보 (공개 가능한 제공자 정보만). */
+  specialtyType?: string;
+  specialtyDuration?: string;
+  specialtyProvider?: string;
   /** 모집 기간 (자유 텍스트) */
   period?: string;
   /** 오프라인 가게: 영업/문의 링크 */

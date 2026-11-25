@@ -12,6 +12,8 @@ import {
   APP_PLATFORMS,
   CATEGORIES,
   CATEGORY_MAP,
+  isSpecialtyCategory,
+  SPECIALTY_CATEGORIES,
   BENEFITS,
   BENEFIT_MAX,
   EXCLUSIVE_CODE_MAX,
@@ -69,6 +71,9 @@ export interface FormState {
   platforms: string[];
   snsPlatform: string;
   usageType: string;
+  specialtyType?: string;
+  specialtyDuration?: string;
+  specialtyProvider?: string;
   period: string;
   benefits: string[];
   exclusiveOn: boolean;
@@ -115,6 +120,9 @@ const EMPTY: FormState = {
   platforms: [],
   snsPlatform: "youtube",
   usageType: "",
+  specialtyType: "",
+  specialtyDuration: "",
+  specialtyProvider: "",
   period: "",
   benefits: [],
   exclusiveOn: false,
@@ -148,6 +156,10 @@ const TITLE_PLACEHOLDER: Record<CategorySlug, string> = {
   apps: "예) 하루 10분 습관 체크 앱",
   websites: "예) 무료 이미지 사이즈 변환 도구",
   services: "예) 소상공인 무료 첫 상담",
+  "photography": "예) 울산 야외 스냅 촬영",
+  "psych-test": "예) 성격검사 및 결과 해석",
+  "counseling": "예) 성인 개인 심리상담",
+  "occupational-therapy": "예) 아동 작업치료 프로그램 안내",
   offline: "예) 울산 삼산동 감성 카페 <한잔의 오후>",
   products: "예) 직접 만든 캐릭터 스티커 세트",
   content: "예) 퇴근 후 1분 생활팁 쇼츠 채널",
@@ -179,6 +191,9 @@ export function postToFormState(p: Post): FormState {
     platforms: p.category === "apps" && p.platform ? p.platform.split(",") : [],
     snsPlatform: p.category === "content" && p.platform ? p.platform : "youtube",
     usageType: p.extra.usageType ?? "",
+    specialtyType: p.extra.specialtyType ?? "",
+    specialtyDuration: p.extra.specialtyDuration ?? "",
+    specialtyProvider: p.extra.specialtyProvider ?? "",
     period: p.extra.period ?? "",
     benefits: p.extra.play ? playBenefitValues(p.extra.play) : (p.extra.benefits ?? []).filter((b) => b !== EXCLUSIVE_SLUG),
     exclusiveOn: !!p.extra.exclusive,
@@ -235,6 +250,9 @@ function toPayload(f: FormState) {
       appStoreUrl: f.appStoreUrl,
       siteUrl: f.siteUrl,
       usageType: f.usageType,
+      specialtyType: f.specialtyType ?? "",
+      specialtyDuration: f.specialtyDuration ?? "",
+      specialtyProvider: f.specialtyProvider ?? "",
       period: f.period,
       benefits: f.benefits.join(","),
       exclusiveOn: f.exclusiveOn,
@@ -324,6 +342,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
   }, [f, mode]);
 
   const cat = f.category ? CATEGORY_MAP[f.category] : null;
+  const specialty = isSpecialtyCategory(f.category) ? SPECIALTY_CATEGORIES[f.category] : null;
 
   const missing = useMemo(() => {
     const m: string[] = [];
@@ -336,6 +355,9 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
     if (f.exclusiveOn && !f.exclusiveAgree) m.push("전용 이벤트 동의");
     if (f.category === "apps" && !f.playUrl.trim() && !f.appStoreUrl.trim() && !f.siteUrl.trim()) m.push("앱 링크");
     else if (f.category === "offline" && !f.mapUrl.trim() && !f.businessUrl.trim()) m.push("지도/문의 링크");
+    else if (isSpecialtyCategory(f.category)) {
+      if (!f.externalUrl.trim() && !(f.contactPublic && f.contact.trim())) m.push("문의·예약 링크 또는 공개 연락처");
+    }
     else if (f.category && f.category !== "apps" && f.category !== "offline" && f.category !== "quick" && !(f.category === "events" && f.exclusiveOn && f.exclusiveMethod === "survey") && !f.externalUrl.trim()) m.push("링크");
     return m;
   }, [f]);
@@ -421,8 +443,8 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
       images: [],
       externalUrl: "",
       platform: null,
-      price: f.category === "products" && f.price.trim() ? f.price.trim() : null,
-      region: f.region || (f.category === "offline" ? inferRegion(f.address) : null),
+      price: (f.category === "products" || isSpecialtyCategory(f.category)) && f.price.trim() ? f.price.trim() : null,
+      region: f.region || (f.category === "offline" || isSpecialtyCategory(f.category) ? inferRegion(f.address) : null),
       address: null,
       mapUrl: null,
       tags: [],
@@ -603,7 +625,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                 <LinkInput
                   id="externalUrl"
                   label={
-                    f.category === "websites"
+                    specialty ? "문의·예약 링크" : f.category === "websites"
                       ? "사이트 주소"
                       : f.category === "services"
                         ? "서비스 주소"
@@ -615,15 +637,18 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                               ? "신청 링크"
                               : "바로가기 링크"
                   }
-                  required={f.category !== "quick"}
-                  optional={f.category === "quick"}
+                  required={f.category !== "quick" && !specialty}
+                  optional={f.category === "quick" || !!specialty}
                   value={f.externalUrl}
                   onChange={(v) => set("externalUrl", v)}
                   error={errors.externalUrl}
                   withFetch
                   onApply={applyOg}
                 />
-                {f.category === "services" && (
+                {specialty && (
+                  <p className="text-[13px] text-muted">예약 링크가 없다면 아래에서 공개 연락처를 입력해주세요. 가격과 세부 내용은 선택 입력입니다.</p>
+                )}
+                {(f.category === "services" || !!specialty) && (
                   <Field id="usageType" label="이용 방식" optional>
                     <div className="flex flex-wrap gap-2">
                       {USAGE_TYPES.map((u) => (
@@ -639,6 +664,23 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                       ))}
                     </div>
                   </Field>
+                )}
+                {specialty && (
+                  <div className="space-y-4">
+                    <Field id="specialtyType" label="서비스 종류" optional error={errors.specialtyType}>
+                      <input id="specialtyType" value={f.specialtyType ?? ""} maxLength={100} onChange={(e) => set("specialtyType", e.target.value)} placeholder={specialty.kind} className="field" />
+                    </Field>
+                    <Field id="specialtyDuration" label="소요 시간·제공 내용" optional error={errors.specialtyDuration}>
+                      <input id="specialtyDuration" value={f.specialtyDuration ?? ""} maxLength={100} onChange={(e) => set("specialtyDuration", e.target.value)} placeholder={specialty.duration} className="field" />
+                    </Field>
+                    <Field id="specialtyProvider" label={f.category === "photography" ? "작가 정보·경력" : "제공자 자격·소속"} optional error={errors.specialtyProvider}>
+                      <input id="specialtyProvider" value={f.specialtyProvider ?? ""} maxLength={100} onChange={(e) => set("specialtyProvider", e.target.value)} placeholder={specialty.provider} className="field" />
+                    </Field>
+                    <Field id="price" label="이용 요금" optional error={errors.price} hint="1회 기준, 패키지 또는 문의 후 결정 등 실제 요금 안내를 입력해주세요.">
+                      <input id="price" value={f.price} maxLength={LIMITS.priceMax} onChange={(e) => set("price", e.target.value)} placeholder="예) 1회 80,000원 · 가격 협의" className="field" />
+                    </Field>
+                    {f.category !== "photography" && <p className="rounded-lg bg-soft p-3 text-[13px] text-muted">서비스 홍보만 가능하며 검사 결과, 환자·내담자 개인정보나 진료기록은 공개 글에 올리지 마세요. 자격과 소속을 정확히 표시해주세요.</p>}
+                  </div>
                 )}
                 {f.category === "products" && (
                   <>

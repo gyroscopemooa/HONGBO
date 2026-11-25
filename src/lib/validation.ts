@@ -25,6 +25,7 @@ import {
   EXTRA_NOTE_TITLE_MAX,
   EXTRA_NOTE_BODY_MAX,
   CATEGORY_SLUGS,
+  isSpecialtyCategory,
   LIMITS,
   SNS_PLATFORMS,
   USAGE_TYPES,
@@ -69,6 +70,9 @@ const rawSchema = z.object({
       appStoreUrl: str(2100),
       siteUrl: str(2100),
       usageType: str(40),
+      specialtyType: str(200),
+      specialtyDuration: str(200),
+      specialtyProvider: str(200),
       period: str(200),
       benefits: str(200),
       exclusiveOn: z.boolean().optional(),
@@ -396,6 +400,20 @@ export function parsePostInput(raw: unknown): ParseResult {
       platform = allowed.includes(p) ? p : "other";
       break;
     }
+    case "photography":
+    case "psych-test":
+    case "counseling":
+    case "occupational-therapy": {
+      externalUrl = linkField("externalUrl", v.externalUrl);
+      const u = (v.extra.usageType ?? "").trim();
+      if ((USAGE_TYPES.map((x) => x.value) as string[]).includes(u)) extra.usageType = u;
+      for (const key of ["specialtyType", "specialtyDuration", "specialtyProvider"] as const) {
+        const value = (v.extra[key] ?? "").replace(/\s+/g, " ").trim();
+        if (value.length > 100) errors[key] = "100자까지 입력할 수 있어요.";
+        else if (value) extra[key] = value;
+      }
+      break;
+    }
     case "services": {
       externalUrl = linkField("externalUrl", v.externalUrl, true);
       const u = (v.extra.usageType ?? "").trim();
@@ -418,7 +436,7 @@ export function parsePostInput(raw: unknown): ParseResult {
     }
   }
 
-  if (category !== "products") price = null;
+  if (category !== "products" && !isSpecialtyCategory(category)) price = null;
   else if (price && price.length > LIMITS.priceMax) errors.price = `가격은 ${LIMITS.priceMax}자까지 입력할 수 있어요.`;
   // 주소(지도 표시)는 모든 카테고리에서 쓸 수 있어요. 지도 링크는 오프라인 매장만 받아요.
   if (category !== "offline") mapUrl = null;
@@ -432,7 +450,7 @@ export function parsePostInput(raw: unknown): ParseResult {
     errors.region = "지역을 목록에서 선택해주세요.";
     region = null;
   }
-  if (!region && category === "offline") region = inferRegion(address);
+  if (!region && (category === "offline" || isSpecialtyCategory(category))) region = inferRegion(address);
 
   // --- 태그 ---
   const tagSet = new Set<string>();
@@ -471,15 +489,15 @@ export function parsePostInput(raw: unknown): ParseResult {
   if (contact && contact.length > LIMITS.contactMax) errors.contact = `연락처는 ${LIMITS.contactMax}자까지 입력할 수 있어요.`;
 
   // --- 금지 키워드 ---
-  const banned = findBannedKeyword(extra.deliveryPeriod ?? "", extra.deliveryMethod ?? "", extra.saleMethod ?? "", v.extra.play ? Object.values(v.extra.play).join(" ") : "", notes.map((n) => `${n.title} ${n.body}`).join(" "), couponCode, couponNote, title, shortDescription, description, tags.join(" "), address, extra.addressDetail, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
+  const banned = findBannedKeyword(extra.specialtyType ?? "", extra.specialtyDuration ?? "", extra.specialtyProvider ?? "", isSpecialtyCategory(category) ? (price ?? "") : "", extra.deliveryPeriod ?? "", extra.deliveryMethod ?? "", extra.saleMethod ?? "", v.extra.play ? Object.values(v.extra.play).join(" ") : "", notes.map((n) => `${n.title} ${n.body}`).join(" "), couponCode, couponNote, title, shortDescription, description, tags.join(" "), address, extra.addressDetail, extraLinks.map((l) => l.label).join(" "), extra.exclusive?.reward ?? "", extra.exclusive?.how ?? "", (extra.exclusive?.survey ?? []).map((q) => [q.title, ...(q.options ?? [])].join(" ")).join(" "));
   if (banned) {
     errors.description = "운영정책상 등록할 수 없는 내용이 포함되어 있어요. 내용을 확인해주세요.";
   }
 
-  const linkOptional = category === "quick" || (category === "events" && extra.exclusive?.method === "survey");
+  const linkOptional = category === "quick" || (isSpecialtyCategory(category) && !!contact) || (category === "events" && extra.exclusive?.method === "survey");
   if (Object.keys(errors).length > 0 || (!externalUrl && !linkOptional)) {
     if (!externalUrl && !linkOptional && !errors.externalUrl && !errors.playUrl && !errors.mapUrl && !errors.businessUrl) {
-      errors.externalUrl = "링크를 입력해주세요.";
+      errors.externalUrl = isSpecialtyCategory(category) ? "문의·예약 링크 또는 공개 연락처 중 하나를 입력해주세요." : "링크를 입력해주세요.";
     }
     return { ok: false, errors, message: "입력한 내용을 다시 확인해주세요." };
   }

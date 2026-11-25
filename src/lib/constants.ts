@@ -48,7 +48,11 @@ export type CategorySlug =
   | "content"
   | "events"
   | "free"
-  | "quick";
+  | "quick"
+  | "photography"
+  | "psych-test"
+  | "counseling"
+  | "occupational-therapy";
 
 export interface CategoryInfo {
   slug: CategorySlug;
@@ -94,6 +98,46 @@ export const CATEGORIES: CategoryInfo[] = [
     desc: "상담, 대행, 강의 등 내가 제공하는 서비스를 소개하세요.",
     color: "#9156f0",
     tint: "#f3edff",
+    defaultImage: "/defaults/services.svg",
+  },
+  {
+    slug: "photography",
+    name: "촬영",
+    short: "촬영",
+    cta: "촬영 문의·예약",
+    desc: "스냅, 웨딩, 가족사진, 프로필, 상품·영상 촬영 등 작가와 스튜디오를 소개하세요.",
+    color: "#a34cce",
+    tint: "#f7edfc",
+    defaultImage: "/defaults/content.svg",
+  },
+  {
+    slug: "psych-test",
+    name: "심리검사",
+    short: "심리검사",
+    cta: "검사 문의·예약",
+    desc: "성격, 적성, 정서 등 심리검사와 검사 결과 해석 서비스를 소개하세요.",
+    color: "#197d99",
+    tint: "#e6f5fa",
+    defaultImage: "/defaults/services.svg",
+  },
+  {
+    slug: "counseling",
+    name: "심리상담",
+    short: "심리상담",
+    cta: "상담 문의·예약",
+    desc: "개인, 부부·가족, 청소년, 진로 등 심리상담 서비스와 상담기관을 소개하세요.",
+    color: "#26855f",
+    tint: "#e7f7ef",
+    defaultImage: "/defaults/services.svg",
+  },
+  {
+    slug: "occupational-therapy",
+    name: "작업치료",
+    short: "작업치료",
+    cta: "작업치료 문의",
+    desc: "작업치료 기관의 프로그램, 서비스 내용과 이용 방법을 소개하세요.",
+    color: "#c47a21",
+    tint: "#fff3e0",
     defaultImage: "/defaults/services.svg",
   },
   {
@@ -163,6 +207,18 @@ export const CATEGORY_MAP = Object.fromEntries(
 ) as Record<CategorySlug, CategoryInfo>;
 
 export const CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug) as CategorySlug[];
+
+/** 전문 서비스 홍보에 공통으로 사용하는 입력 안내. */
+export const SPECIALTY_CATEGORIES = {
+  "photography": { kind: "예) 여행 스냅 · 웨딩 · 가족 · 프로필 · 영상", duration: "예) 1시간 촬영 · 보정본 20장", provider: "예) 작가 경력 · 포트폴리오" },
+  "psych-test": { kind: "예) 성격검사 · 적성검사 · 정서검사", duration: "예) 검사 60분 · 해석 30분", provider: "예) 검사 실시·해석 자격 및 소속" },
+  "counseling": { kind: "예) 개인 · 부부 · 가족 · 청소년", duration: "예) 1회 50분", provider: "예) 상담 자격 · 발급기관 · 소속" },
+  "occupational-therapy": { kind: "예) 일상생활 훈련 · 아동 작업치료", duration: "예) 1회 40분", provider: "예) 작업치료사 면허 및 의료기관·소속" },
+} as const;
+
+export function isSpecialtyCategory(value: unknown): value is keyof typeof SPECIALTY_CATEGORIES {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(SPECIALTY_CATEGORIES, value);
+}
 
 /** 커뮤니티의 '홍보글 쓰는 법' 안내 글 */
 export const WRITING_GUIDE_PATH = "/community/8ca6c06d-0eac-4fa8-8e30-784fe0ba5134";

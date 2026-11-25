@@ -126,6 +126,9 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
   const rows: Array<{ icon: React.ReactNode; k: string; v: React.ReactNode }> = [];
   if (plat) rows.push({ icon: <Smartphone size={15} />, k: post.category === "content" ? "플랫폼" : "지원 환경", v: plat });
   if (usage) rows.push({ icon: <Info size={15} />, k: "이용 방식", v: usage });
+  if (post.extra.specialtyType) rows.push({ icon: <Info size={15} />, k: "서비스 종류", v: post.extra.specialtyType });
+  if (post.extra.specialtyDuration) rows.push({ icon: <CalendarClock size={15} />, k: "소요 시간·제공 내용", v: post.extra.specialtyDuration });
+  if (post.extra.specialtyProvider) rows.push({ icon: <UserRound size={15} />, k: post.category === "photography" ? "작가 정보·경력" : "제공자 자격·소속", v: post.extra.specialtyProvider });
   if (post.extra.period) rows.push({ icon: <CalendarClock size={15} />, k: "모집/행사 기간", v: post.extra.period });
   if (post.address) rows.push({ icon: <MapPin size={15} />, k: "주소", v: [post.address, post.extra.addressDetail].filter(Boolean).join(" ") });
   if (post.category === "products" && post.extra.deliveryMethod) rows.push({ icon: <Info size={15} />, k: "배송방법", v: post.extra.deliveryMethod });
