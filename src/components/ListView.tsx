@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { Flame, Clock, Sparkles } from "lucide-react";
+import { Flame, Clock, Sparkles, ChevronDown } from "lucide-react";
 import { PAGE_SIZE, SERVICE_FIELDS, SERVICE_PRICE_FILTERS, GENERAL_SERVICE_FIELDS, isIndependentService, isServiceCategory, type CategorySlug } from "@/lib/constants";
 import { buildHref, type ListParams } from "@/lib/listing";
 import { getPopularMode, getPopularPosts } from "@/lib/queries";
@@ -82,6 +82,9 @@ export async function ListView({
       active ? "border-ink bg-ink text-white" : "border-line bg-white text-ink-2 hover:border-[#c9ced9]",
     );
 
+  const filterOption = (active: boolean) =>
+    cn("block rounded-md px-3 py-2 text-sm leading-5 hover:bg-soft focus-visible:outline focus-visible:outline-2", active ? "bg-soft font-bold text-ink" : "text-ink-2");
+
   // 결과가 없을 때 사이트가 끊겨 보이지 않도록 인기 홍보를 대신 보여줍니다.
   const fallback = total === 0 ? (await getPopularPosts(5)).filter((p) => !category || p.category !== category).slice(0, 5) : [];
 
@@ -92,18 +95,37 @@ export async function ListView({
         {description && <p className="text-[14.5px] text-muted">{description}</p>}
       </div>
 
-      {hasPriceFilter && <section className="mb-5 space-y-3" aria-label="서비스 분야 및 요금 필터">
-        {isService && <div className="flex flex-wrap gap-2">
-          <Link href={href({ service: undefined, page: undefined })} className={tab(!params.service)}>전체 서비스</Link>
-          {GENERAL_SERVICE_FIELDS.map(slug => <Link key={slug} href={href({ service: slug, page: undefined })} className={tab(params.service === slug)}>{SERVICE_FIELDS[slug].name}</Link>)}
-          {params.service === "psychology" && <Link href={href({ service: "psychology", page: undefined })} className={tab(true)}>기존 심리·상담</Link>}
-        </div>}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted">기준 요금</span>
-          <Link href={href({ price: undefined, page: undefined })} className={tab(!params.price)}>전체</Link>
-          {Object.entries(SERVICE_PRICE_FILTERS).map(([slug, label]) => <Link key={slug} href={href({ price: slug, page: undefined })} className={tab(params.price === slug)}>{label}</Link>)}
-        </div>
-      </section>}
+      {hasPriceFilter && (
+        <section className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:gap-3" aria-label="서비스 분야 및 요금 필터">
+          {isService && (
+            <details className="group relative min-w-0 sm:w-56">
+              <summary className="flex h-10 cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-line bg-white px-3 text-sm font-semibold text-ink-2 [&::-webkit-details-marker]:hidden">
+                <span className="truncate">{params.service ? SERVICE_FIELDS[params.service].name : "전체 서비스"}</span>
+                <ChevronDown size={16} aria-hidden className="shrink-0 text-muted transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="absolute left-0 top-full z-20 mt-1 max-h-72 w-full min-w-[10rem] overflow-y-auto rounded-lg border border-line bg-white p-1 shadow-lg">
+                <Link href={href({ service: undefined, page: undefined })} aria-current={!params.service ? "true" : undefined} className={filterOption(!params.service)}>전체 서비스</Link>
+                {GENERAL_SERVICE_FIELDS.map(slug => (
+                  <Link key={slug} href={href({ service: slug, page: undefined })} aria-current={params.service === slug ? "true" : undefined} className={filterOption(params.service === slug)}>{SERVICE_FIELDS[slug].name}</Link>
+                ))}
+                {params.service === "psychology" && <Link href={href({ service: "psychology", page: undefined })} aria-current="true" className={filterOption(true)}>기존 심리·상담</Link>}
+              </div>
+            </details>
+          )}
+          <details className="group relative min-w-0 sm:w-56">
+            <summary className="flex h-10 cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-line bg-white px-3 text-sm font-semibold text-ink-2 [&::-webkit-details-marker]:hidden">
+              <span className="truncate">{params.price ? SERVICE_PRICE_FILTERS[params.price] : "전체 요금"}</span>
+              <ChevronDown size={16} aria-hidden className="shrink-0 text-muted transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="absolute right-0 top-full z-20 mt-1 max-h-72 w-full min-w-[10rem] overflow-y-auto rounded-lg border border-line bg-white p-1 shadow-lg">
+              <Link href={href({ price: undefined, page: undefined })} aria-current={!params.price ? "true" : undefined} className={filterOption(!params.price)}>전체 요금</Link>
+              {Object.entries(SERVICE_PRICE_FILTERS).map(([slug, label]) => (
+                <Link key={slug} href={href({ price: slug, page: undefined })} aria-current={params.price === slug ? "true" : undefined} className={filterOption(params.price === slug)}>{label}</Link>
+              ))}
+            </div>
+          </details>
+        </section>
+      )}
       {top}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
