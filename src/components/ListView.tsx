@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Flame, Clock, Sparkles, ChevronDown } from "lucide-react";
-import { PAGE_SIZE, SERVICE_FIELDS, SERVICE_PRICE_FILTERS, GENERAL_SERVICE_FIELDS, isIndependentService, isServiceCategory, type CategorySlug } from "@/lib/constants";
+import { PAGE_SIZE, SERVICE_FIELDS, SERVICE_PRICE_FILTERS, GENERAL_SERVICE_FIELDS, isGeneralServiceField, isIndependentService, isServiceCategory, type CategorySlug } from "@/lib/constants";
 import { buildHref, type ListParams } from "@/lib/listing";
 import { getPopularMode, getPopularPosts } from "@/lib/queries";
 import { store } from "@/lib/store";
@@ -151,7 +151,7 @@ export async function ListView({
         </div>
       </div>
 
-      {hasPriceFilter && params.page === 1 && <ServiceGuideCards guides={isIndependentService(category) ? SERVICE_GUIDES.filter(g => g.field === category) : params.service === "psychology" ? SERVICE_GUIDES.filter(g => g.field === "psych-test" || g.field === "counseling") : params.service ? SERVICE_GUIDES.filter(g => g.field === params.service) : SERVICE_GUIDES.filter(g => GENERAL_SERVICE_FIELDS.includes(g.field))} heading={isIndependentService(category) ? `${SERVICE_FIELDS[category].name} 이용 가이드` : params.service ? `${SERVICE_FIELDS[params.service].name} 이용 가이드` : "전문 서비스 이용 가이드"} />}
+      {hasPriceFilter && params.page === 1 && <ServiceGuideCards guides={isIndependentService(category) ? SERVICE_GUIDES.filter(g => g.field === category) : params.service === "psychology" ? SERVICE_GUIDES.filter(g => g.field === "psych-test" || g.field === "counseling") : params.service ? SERVICE_GUIDES.filter(g => g.field === params.service) : SERVICE_GUIDES.filter(g => isGeneralServiceField(g.field))} heading={isIndependentService(category) ? `${SERVICE_FIELDS[category].name} 이용 가이드` : params.service ? `${SERVICE_FIELDS[params.service].name} 이용 가이드` : "전문 서비스 이용 가이드"} />}
       {total === 0 ? (
         <>
           <EmptyState
