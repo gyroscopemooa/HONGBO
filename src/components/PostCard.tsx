@@ -41,27 +41,25 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
           )}
         </div>
         {post.extra.official && <OfficialBadge value={post.extra.official} className="absolute right-2 top-2 z-10" />}
-
       </div>
-      <div className="flex min-w-0 flex-1 flex-col p-3">
-        <h3 className="line-clamp-2 min-h-[2.7em] text-[14.5px] font-bold leading-[1.35] tracking-[-0.02em] text-ink group-hover:text-brand-dark">
+      <div className="flex min-w-0 flex-1 flex-col p-2.5 sm:p-3">
+        <h3 className="line-clamp-2 text-[14.5px] font-bold leading-[1.35] tracking-[-0.02em] text-ink group-hover:text-brand-dark">
           <NewBadge publishedAt={post.publishedAt} className="mr-1" />
           {post.title}
         </h3>
-        <p className="mt-1 line-clamp-1 text-[12.5px] text-muted">{post.shortDescription}</p>
-        {((post.extra.benefits?.length ?? 0) > 0 || post.price) && (
-          <div className="mt-2 flex min-w-0 flex-col items-start gap-1.5">
-            <BenefitBadges values={post.extra.benefits} className="max-w-full" />
-            {post.price && (
-              <p className="max-w-full text-[12.5px] font-bold leading-snug text-ink [overflow-wrap:anywhere]">
-                {post.price}
-              </p>
-            )}
+        <p className="mt-0.5 line-clamp-1 text-[12.5px] text-muted">{post.shortDescription}</p>
+        {post.price && (
+          <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
+            <BenefitBadges values={post.extra.benefits} className="max-w-full shrink-0" />
+            <p className="min-w-0 flex-[1_1_4rem] text-[12px] font-bold leading-tight text-ink [overflow-wrap:anywhere]">
+              {post.price}
+            </p>
           </div>
         )}
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-2.5">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-1.5 gap-y-1 pt-1.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
             <CategoryBadge slug={post.category} />
+            {!post.price && <BenefitBadges values={post.extra.benefits} className="max-w-full" />}
             {post.category === "services" && isServiceField(post.extra.serviceField) && <span className="text-[11.5px] font-semibold text-muted">{SERVICE_FIELDS[post.extra.serviceField].name}</span>}
             {SHOW_POST_SOCIAL && <>
             <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-muted" aria-label={`좋아요 ${post.likeCount ?? 0}개`}>
