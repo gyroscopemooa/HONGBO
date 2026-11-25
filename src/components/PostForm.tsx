@@ -513,6 +513,15 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
 
         {/* 1. 카테고리 */}
         <SectionCard step={1} title="무엇을 홍보하나요?" desc="카테고리를 먼저 골라주세요. 바꿔도 입력한 내용은 사라지지 않아요.">
+          {mode === "create" && (
+            <div role="note" className="mb-3 rounded-xl border border-line bg-soft px-4 py-3 text-[13.5px] leading-relaxed text-ink-2">
+              <p>축제·행사, 여행지, 관광명소, 체험·나들이 등 놀러 가기 좋은 장소와 소식은 <strong>놀러가자</strong> 페이지를 이용해 주세요.</p>
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <Link href="/play/share" target="_blank" rel="noopener noreferrer" className="font-bold text-brand-dark underline underline-offset-2">놀러가자 글쓰기 바로가기 ↗</Link>
+                <Link href="/play" target="_blank" rel="noopener noreferrer" className="font-semibold text-muted underline underline-offset-2">놀러가자 페이지 보기 ↗</Link>
+              </div>
+            </div>
+          )}
           <div data-field="category">
             <div role="radiogroup" aria-label="카테고리" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {CATEGORIES.map((c) => {
