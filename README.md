@@ -87,6 +87,12 @@ npm run dev        # http://localhost:3000
    - Supabase **Site URL** = `https://www.thehongbo.com`
 5. 배포 후 `https://www.thehongbo.com/sitemap.xml` 을 Google Search Console / 네이버 서치어드바이저에 제출합니다.
 
+### 전문 서비스 카테고리
+
+- 독립 카테고리: `/category/photography` (촬영), `/category/counseling` (심리상담), `/category/psych-test` (심리검사).
+- 일반 서비스: `/category/services` (분야 및 요금 드롭다운).
+- SEO용 운영자 안내 콘텐츠: `/service-guides` (16개, 실제 업체 홍보글과 구분).
+
 ## 3. 화면 · 라우트
 
 | 경로 | 설명 |
