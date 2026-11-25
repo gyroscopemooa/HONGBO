@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Flame, Clock } from "lucide-react";
-import { PAGE_SIZE, type CategorySlug } from "@/lib/constants";
+import { PAGE_SIZE, SERVICE_FIELDS, SERVICE_PRICE_FILTERS, type CategorySlug } from "@/lib/constants";
 import { buildHref, type ListParams } from "@/lib/listing";
 import { getPopularMode, getPopularPosts } from "@/lib/queries";
 import { store } from "@/lib/store";
@@ -45,10 +45,13 @@ export async function ListView({
   showRegionFilter = true,
   emptyTitle,
 }: Props) {
+  const isService = category === "services";
   const popularMode = params.sort === "popular" ? await getPopularMode() : undefined;
   const { items, total } = await store.listPosts({
     publicOnly: true,
     category,
+    service: isService ? params.service : undefined,
+    priceFilter: isService ? params.price : undefined,
     benefit,
     q: query,
     region: params.region,
@@ -65,6 +68,8 @@ export async function ListView({
       ...keepParams,
       sort: params.sort === "latest" ? undefined : params.sort,
       region: params.region,
+      service: isService ? params.service : undefined,
+      price: isService ? params.price : undefined,
       ...patch,
     });
 
@@ -84,6 +89,17 @@ export async function ListView({
         {description && <p className="text-[14.5px] text-muted">{description}</p>}
       </div>
 
+      {isService && <section className="mb-5 space-y-3" aria-label="서비스 분야 및 요금 필터">
+        <div className="flex flex-wrap gap-2">
+          <Link href={href({ service: undefined, page: undefined })} className={tab(!params.service)}>전체 서비스</Link>
+          {Object.entries(SERVICE_FIELDS).map(([slug, field]) => <Link key={slug} href={href({ service: slug, page: undefined })} className={tab(params.service === slug)}>{field.name}</Link>)}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted">기준 요금</span>
+          <Link href={href({ price: undefined, page: undefined })} className={tab(!params.price)}>전체</Link>
+          {Object.entries(SERVICE_PRICE_FILTERS).map(([slug, label]) => <Link key={slug} href={href({ price: slug, page: undefined })} className={tab(params.price === slug)}>{label}</Link>)}
+        </div>
+      </section>}
       {top}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">

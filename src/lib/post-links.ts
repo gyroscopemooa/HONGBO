@@ -6,6 +6,8 @@ export function ctaLabel(post: Pick<Post, "category" | "externalUrl" | "mapUrl" 
   switch (post.category) {
     case "apps":
       return post.extra.playUrl || post.extra.appStoreUrl ? "앱 설치하기" : "보러가기";
+    case "services":
+      return "서비스 문의·예약";
     case "offline":
       return post.mapUrl && post.externalUrl === post.mapUrl ? "지도에서 보기" : "매장 정보 보기";
     default:

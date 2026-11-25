@@ -69,7 +69,7 @@ export interface CategoryInfo {
   defaultImage: string;
 }
 
-export const CATEGORIES: CategoryInfo[] = [
+const ALL_CATEGORY_INFO: CategoryInfo[] = [
   {
     slug: "apps",
     name: "앱/게임",
@@ -203,28 +203,48 @@ export const CATEGORIES: CategoryInfo[] = [
 ];
 
 export const CATEGORY_MAP = Object.fromEntries(
-  CATEGORIES.map((c) => [c.slug, c]),
+  ALL_CATEGORY_INFO.map((c) => [c.slug, c]),
 ) as Record<CategorySlug, CategoryInfo>;
 
-export const CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug) as CategorySlug[];
-
-/** 전문 서비스 홍보에 공통으로 사용하는 입력 안내. */
-export const SPECIALTY_CATEGORIES = {
-  "photography": { kind: "예) 여행 스냅 · 웨딩 · 가족 · 프로필 · 영상", duration: "예) 1시간 촬영 · 보정본 20장", provider: "예) 작가 경력 · 포트폴리오" },
-  "psych-test": { kind: "예) 성격검사 · 적성검사 · 정서검사", duration: "예) 검사 60분 · 해석 30분", provider: "예) 검사 실시·해석 자격 및 소속" },
-  "counseling": { kind: "예) 개인 · 부부 · 가족 · 청소년", duration: "예) 1회 50분", provider: "예) 상담 자격 · 발급기관 · 소속" },
-  "occupational-therapy": { kind: "예) 일상생활 훈련 · 아동 작업치료", duration: "예) 1회 40분", provider: "예) 작업치료사 면허 및 의료기관·소속" },
+/** Legacy slugs are readable during rolling migration, but not shown as top-level categories. */
+export const LEGACY_SERVICE_FIELDS = { photography: "photography", "psych-test": "psychology", counseling: "psychology", "occupational-therapy": "therapy" } as const;
+export function legacyServiceField(value: unknown): ServiceField | undefined {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(LEGACY_SERVICE_FIELDS, value) ? LEGACY_SERVICE_FIELDS[value as keyof typeof LEGACY_SERVICE_FIELDS] : undefined;
+}
+export const CATEGORIES = ALL_CATEGORY_INFO.filter(c => !legacyServiceField(c.slug));
+export const CATEGORY_SLUGS = CATEGORIES.map(c => c.slug);
+export const SERVICE_FIELDS = {
+  "photography": {"name":"촬영","kindLabel":"촬영 종류","kind":"예) 여행 스냅 · 웨딩 · 가족 · 상품 · 영상","durationLabel":"촬영 시간·인원·보정본","duration":"예) 1시간 · 2인 · 보정본 20장","providerLabel":"작가 정보·경력","provider":"예) 작가 경력 · 포트폴리오","title":"예) 울산 야외 스냅 촬영"},
+  "psychology": {"name":"심리·상담","kindLabel":"검사·상담 종류","kind":"예) 성격검사 · 개인상담 · 부부상담","durationLabel":"검사·상담 시간·회기","duration":"예) 검사 60분 · 해석 30분","providerLabel":"전문가 자격·소속","provider":"예) 상담·검사 관련 자격 · 소속","title":"예) 성인 심리검사 및 상담"},
+  "therapy": {"name":"치료·재활","kindLabel":"프로그램 종류","kind":"예) 작업치료 · 언어재활 · 놀이치료","durationLabel":"대상·시간·프로그램","duration":"예) 아동 대상 · 1회 40분","providerLabel":"면허·자격·기관","provider":"예) 작업치료사 면허 · 소속 기관","title":"예) 아동 작업치료 안내"},
+  "education": {"name":"교육·레슨","kindLabel":"수업 분야","kind":"예) 외국어 · 음악 · 운동 · 과외","durationLabel":"수준·횟수·수업 시간","duration":"예) 초급 · 주 2회 · 60분","providerLabel":"강사 정보·경력","provider":"예) 강사 경력 · 자격","title":"예) 초급 영어 회화 레슨"},
+  "performance": {"name":"공연·행사","kindLabel":"공연·행사 종류","kind":"예) 축가 · 사회 · 마술 · 행사 공연","durationLabel":"공연 시간·출장 범위","duration":"예) 30분 · 전국 출장 협의","providerLabel":"출연자 정보·경력","provider":"예) 공연 경력 · 영상","title":"예) 결혼식 축가 및 사회"},
+  "beauty": {"name":"뷰티·미용","kindLabel":"시술 종류","kind":"예) 헤어 · 네일 · 메이크업","durationLabel":"소요 시간·제공 내용","duration":"예) 60분 · 기본 시술","providerLabel":"전문가 자격·경력","provider":"예) 미용 자격 · 포트폴리오","title":"예) 출장 메이크업"},
+  "travel": {"name":"여행·가이드","kindLabel":"서비스 종류","kind":"예) 현지 가이드 · 통역 · 여행 동행","durationLabel":"국가·도시·언어·인원","duration":"예) 멕시코시티 · 한국어 · 2인","providerLabel":"가이드 정보·경력","provider":"예) 현지 경력 · 관련 자격","title":"예) 현지 여행 가이드"},
+  "pets": {"name":"반려동물","kindLabel":"서비스 종류","kind":"예) 돌봄 · 훈련 · 미용 · 호텔","durationLabel":"동물 종류·크기·기간","duration":"예) 소형견 · 1일 돌봄","providerLabel":"제공자·시설 정보","provider":"예) 경력 · 시설 안내","title":"예) 반려견 방문 돌봄"},
+  "home": {"name":"생활·출장","kindLabel":"작업 종류","kind":"예) 청소 · 수리 · 설치 · 이사","durationLabel":"출장 범위·작업 조건","duration":"예) 울산 · 20평 기준","providerLabel":"업체·작업자 정보","provider":"예) 작업 경력 · 업체 정보","title":"예) 가정 방문 청소"},
+  "creative": {"name":"개발·디자인","kindLabel":"제작 종류","kind":"예) 웹 · 앱 · 로고 · 영상","durationLabel":"작업 범위·제작 기간","duration":"예) 웹사이트 5페이지 · 2주","providerLabel":"제작자·포트폴리오","provider":"예) 개발 경력 · 포트폴리오","title":"예) 소상공인 웹사이트 제작"},
+  "consulting": {"name":"컨설팅·대행","kindLabel":"전문 분야","kind":"예) 취업 · 진로 · 창업 · 구매대행","durationLabel":"제공 범위·진행 기간","duration":"예) 1회 상담 · 결과 자료 제공","providerLabel":"전문가 정보·경력","provider":"예) 관련 경력 · 자격","title":"예) 취업 및 이력서 컨설팅"},
+  "other": {"name":"기타 서비스","kindLabel":"서비스 종류","kind":"예) 제공하는 서비스","durationLabel":"제공 내용·기간","duration":"예) 작업 범위 · 기간","providerLabel":"제공자 정보","provider":"예) 업체 또는 개인 경력","title":"예) 서비스 소개"},
 } as const;
-
-export function isSpecialtyCategory(value: unknown): value is keyof typeof SPECIALTY_CATEGORIES {
-  return typeof value === "string" && Object.prototype.hasOwnProperty.call(SPECIALTY_CATEGORIES, value);
+export type ServiceField = keyof typeof SERVICE_FIELDS;
+export function isServiceField(value: unknown): value is ServiceField {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(SERVICE_FIELDS, value);
+}
+export const SERVICE_PRICE_FILTERS = { listed: "요금 안내 있음", unlisted: "요금 미기재", free: "무료", under50: "5만원 미만", under100: "5만~10만원 미만", under300: "10만~30만원 미만", over300: "30만원 이상" } as const;
+export type ServicePriceFilter = keyof typeof SERVICE_PRICE_FILTERS;
+export function isServicePriceFilter(value: unknown): value is ServicePriceFilter {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(SERVICE_PRICE_FILTERS, value);
+}
+export function servicePriceBand(amount: number) {
+  return amount === 0 ? "free" : amount < 50000 ? "under50" : amount < 100000 ? "under100" : amount < 300000 ? "under300" : "over300";
 }
 
 /** 커뮤니티의 '홍보글 쓰는 법' 안내 글 */
 export const WRITING_GUIDE_PATH = "/community/8ca6c06d-0eac-4fa8-8e30-784fe0ba5134";
 
 export function isCategorySlug(v: unknown): v is CategorySlug {
-  return typeof v === "string" && v in CATEGORY_MAP;
+  return typeof v === "string" && Object.prototype.hasOwnProperty.call(CATEGORY_MAP, v);
 }
 
 export const REGIONS = [

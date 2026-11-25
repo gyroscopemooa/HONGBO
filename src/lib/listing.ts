@@ -1,3 +1,4 @@
+import { isServiceField, isServicePriceFilter, type ServiceField, type ServicePriceFilter } from "./constants";
 import { isRegion } from "./policy";
 import { cleanQuery, parsePositiveInt, pickFirst } from "./utils";
 
@@ -8,16 +9,22 @@ export interface ListParams {
   page: number;
   region?: string;
   q: string;
+  service?: ServiceField;
+  price?: ServicePriceFilter;
 }
 
 export function parseListParams(sp: SearchParams, defaultSort: ListParams["sort"] = "latest"): ListParams {
   const sortRaw = pickFirst(sp.sort);
   const region = pickFirst(sp.region);
+  const service = pickFirst(sp.service);
+  const price = pickFirst(sp.price);
   return {
     sort: sortRaw === "popular" ? "popular" : sortRaw === "latest" ? "latest" : defaultSort,
     page: Math.min(parsePositiveInt(sp.page, 1), 500),
     region: isRegion(region) ? region : undefined,
     q: cleanQuery(sp.q),
+    service: isServiceField(service) ? service : undefined,
+    price: isServicePriceFilter(price) ? price : undefined,
   };
 }
 

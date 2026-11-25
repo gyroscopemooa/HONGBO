@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { TopAds } from "@/components/TopAds";
 import { ListView } from "@/components/ListView";
-import { CATEGORY_MAP, isCategorySlug } from "@/lib/constants";
+import { CATEGORY_MAP, isCategorySlug, legacyServiceField } from "@/lib/constants";
 import { buildHref, parseListParams, type SearchParams } from "@/lib/listing";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
@@ -17,13 +17,15 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     title: `${c.name} 무료 홍보 - ${c.name} 홍보 사이트`,
     description: `${c.desc} 무료 홍보 사이트 더홍보에서 ${c.name} 홍보글을 마음껏 올리고 둘러보세요.`,
     alternates: {
-      canonical: buildHref(`/category/${slug}`, { sort: p.sort === "popular" ? "popular" : undefined, region: p.region, page: p.page > 1 ? p.page : undefined }),
+      canonical: buildHref(`/category/${slug}`, { sort: p.sort === "popular" ? "popular" : undefined, region: p.region, service: slug === "services" ? p.service : undefined, price: slug === "services" ? p.price : undefined, page: p.page > 1 ? p.page : undefined }),
     },
   };
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const legacy = legacyServiceField(slug);
+  if (legacy) redirect(buildHref("/category/services", { ...(parseListParams(await searchParams)), page: undefined, sort: undefined, service: legacy, price: undefined }));
   if (!isCategorySlug(slug)) notFound();
   const c = CATEGORY_MAP[slug];
   const p = parseListParams(await searchParams);

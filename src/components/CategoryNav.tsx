@@ -58,7 +58,6 @@ function GroupMenu({ label, pathname, items, linkCls }: { label: string; pathnam
 /** 데스크톱 카테고리 묶음 (비슷한 것끼리) */
 const CATEGORY_GROUPS = [
   { label: "앱·웹", slugs: ["apps", "websites", "services"] },
-  { label: "촬영·심리·치료", slugs: ["photography", "psych-test", "counseling", "occupational-therapy"] },
   { label: "가게·상품", slugs: ["offline", "products"] },
   { label: "콘텐츠·모집", slugs: ["content", "events"] },
   { label: "자유·한줄", slugs: ["free", "quick"] },

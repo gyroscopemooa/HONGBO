@@ -1,5 +1,5 @@
 import type { PlayConditions } from "./play-conditions";
-import type { CategorySlug } from "./constants";
+import type { CategorySlug, ServiceField } from "./constants";
 
 export type PostStatus = "active" | "hidden" | "blocked" | "expired" | "deleted";
 
@@ -50,6 +50,9 @@ export interface PostExtra {
   /** 서비스: online | offline | mixed */
   usageType?: string;
   /** 전문 서비스 홍보 정보 (공개 가능한 제공자 정보만). */
+  serviceField?: ServiceField;
+  servicePrice?: number;
+  servicePriceBand?: string;
   specialtyType?: string;
   specialtyDuration?: string;
   specialtyProvider?: string;

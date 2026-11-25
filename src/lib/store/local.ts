@@ -2,7 +2,7 @@ import { matchesPlayConditions } from "../play-conditions";
 import { isDuplicatePost } from "../post-duplicates";
 import fs from "node:fs";
 import path from "node:path";
-import type { CategorySlug } from "../constants";
+import { legacyServiceField, type CategorySlug } from "../constants";
 import { SEED_BANNERS, SEED_NOTICES, SEED_ORDER, SEED_POSTS, seedExternalUrl, seedImageUrl } from "@/data/seed";
 import { AD_BANNER_SLOTS, AD_PREMIUM_SLOTS, adEndsAt, isAdLive, nextFreeSlot, premiumCapacityError } from "../ads";
 import type { Ad, Banner, EventType, Notice, Post, Profile, Report } from "../types";
@@ -188,7 +188,11 @@ function matches(p: Post, q: ListQuery, now: number): boolean {
     } else if (p.status !== q.status) return false;
     else if (q.status === "active" && p.expiresAt && new Date(p.expiresAt).getTime() <= now) return false;
   }
-  if (q.category && p.category !== q.category) return false;
+  const legacy = legacyServiceField(p.category);
+  const category = legacy ? "services" : p.category;
+  if (q.category && category !== q.category) return false;
+  if (q.service && (legacy ?? p.extra.serviceField ?? "other") !== q.service) return false;
+  if (q.priceFilter && (q.priceFilter === "listed" ? !p.price : q.priceFilter === "unlisted" ? !!p.price : p.extra.servicePriceBand !== q.priceFilter)) return false;
   if (q.region && p.region !== q.region) return false;
   if (q.tag && !p.tags.includes(q.tag)) return false;
   if (q.hasRegion && !p.region) return false;
@@ -229,6 +233,11 @@ function sortPosts(items: Post[], q: ListQuery): Post[] {
   return items.sort((a, b) => b.bumpedAt.localeCompare(a.bumpedAt) || b.id - a.id);
 }
 
+function normalizeLegacyPost(p: Post): Post {
+  const serviceField = legacyServiceField(p.category);
+  return serviceField ? { ...p, category: "services", extra: { ...p.extra, serviceField } } : p;
+}
+
 const clone = <T,>(v: T): T => structuredClone(v);
 
 export const localStore: Store = {
@@ -241,12 +250,12 @@ export const localStore: Store = {
     );
     const pageSize = q.pageSize ?? 20;
     const page = Math.max(1, q.page ?? 1);
-    return { items: clone(all.slice((page - 1) * pageSize, page * pageSize)), total: all.length };
+    return { items: clone(all.slice((page - 1) * pageSize, page * pageSize).map(normalizeLegacyPost)), total: all.length };
   },
 
   async getPost(id) {
     const p = load().posts.find((x) => x.id === id);
-    return p ? clone(p) : null;
+    return p ? clone(normalizeLegacyPost(p)) : null;
   },
 
   async createPost(authorId, input, expiresAt) {

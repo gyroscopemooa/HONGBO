@@ -12,8 +12,10 @@ import {
   APP_PLATFORMS,
   CATEGORIES,
   CATEGORY_MAP,
-  isSpecialtyCategory,
-  SPECIALTY_CATEGORIES,
+  legacyServiceField,
+  isServiceField,
+  SERVICE_FIELDS,
+  type ServiceField,
   BENEFITS,
   BENEFIT_MAX,
   EXCLUSIVE_CODE_MAX,
@@ -71,6 +73,8 @@ export interface FormState {
   platforms: string[];
   snsPlatform: string;
   usageType: string;
+  serviceField?: ServiceField;
+  servicePrice?: string;
   specialtyType?: string;
   specialtyDuration?: string;
   specialtyProvider?: string;
@@ -120,6 +124,8 @@ const EMPTY: FormState = {
   platforms: [],
   snsPlatform: "youtube",
   usageType: "",
+  serviceField: "other",
+  servicePrice: "",
   specialtyType: "",
   specialtyDuration: "",
   specialtyProvider: "",
@@ -171,7 +177,9 @@ const TITLE_PLACEHOLDER: Record<CategorySlug, string> = {
 export function postToFormState(p: Post): FormState {
   return {
     ...EMPTY,
-    category: p.category,
+    category: legacyServiceField(p.category) ? "services" : p.category,
+    serviceField: legacyServiceField(p.category) ?? p.extra.serviceField ?? "other",
+    servicePrice: p.extra.servicePrice == null ? "" : String(p.extra.servicePrice),
     bodyBlocks: p.extra.bodyBlocks ?? [],
     bodyFormat: p.extra.bodyFormat,
     play: p.extra.play,
@@ -250,6 +258,8 @@ function toPayload(f: FormState) {
       appStoreUrl: f.appStoreUrl,
       siteUrl: f.siteUrl,
       usageType: f.usageType,
+      serviceField: f.category === "services" ? f.serviceField ?? "other" : undefined,
+      servicePrice: f.category === "services" && f.servicePrice?.trim() ? Number(f.servicePrice) : undefined,
       specialtyType: f.specialtyType ?? "",
       specialtyDuration: f.specialtyDuration ?? "",
       specialtyProvider: f.specialtyProvider ?? "",
@@ -318,7 +328,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
         if (d && (d.title || d.description || d.category)) {
           // 브라우저 저장소(외부 시스템)에서 초안을 복원하는 의도된 동작
           // eslint-disable-next-line react-hooks/set-state-in-effect
-          setF({ ...EMPTY, ...d });
+          setF({ ...EMPTY, ...d, ...(legacyServiceField(d.category) ? { category: "services", serviceField: legacyServiceField(d.category) } : {}) });
           setRestored(true);
         }
       }
@@ -342,7 +352,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
   }, [f, mode]);
 
   const cat = f.category ? CATEGORY_MAP[f.category] : null;
-  const specialty = isSpecialtyCategory(f.category) ? SPECIALTY_CATEGORIES[f.category] : null;
+  const specialty = f.category === "services" ? SERVICE_FIELDS[isServiceField(f.serviceField) ? f.serviceField : "other"] : null;
 
   const missing = useMemo(() => {
     const m: string[] = [];
@@ -355,7 +365,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
     if (f.exclusiveOn && !f.exclusiveAgree) m.push("전용 이벤트 동의");
     if (f.category === "apps" && !f.playUrl.trim() && !f.appStoreUrl.trim() && !f.siteUrl.trim()) m.push("앱 링크");
     else if (f.category === "offline" && !f.mapUrl.trim() && !f.businessUrl.trim()) m.push("지도/문의 링크");
-    else if (isSpecialtyCategory(f.category)) {
+    else if (f.category === "services") {
       if (!f.externalUrl.trim() && !(f.contactPublic && f.contact.trim())) m.push("문의·예약 링크 또는 공개 연락처");
     }
     else if (f.category && f.category !== "apps" && f.category !== "offline" && f.category !== "quick" && !(f.category === "events" && f.exclusiveOn && f.exclusiveMethod === "survey") && !f.externalUrl.trim()) m.push("링크");
@@ -443,12 +453,12 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
       images: [],
       externalUrl: "",
       platform: null,
-      price: (f.category === "products" || isSpecialtyCategory(f.category)) && f.price.trim() ? f.price.trim() : null,
-      region: f.region || (f.category === "offline" || isSpecialtyCategory(f.category) ? inferRegion(f.address) : null),
+      price: (f.category === "products" || f.category === "services") && f.price.trim() ? f.price.trim() : null,
+      region: f.region || (f.category === "offline" || f.category === "services" ? inferRegion(f.address) : null),
       address: null,
       mapUrl: null,
       tags: [],
-      extra: { benefits: f.exclusiveOn ? [...f.benefits, EXCLUSIVE_SLUG] : f.benefits, ...(f.exclusiveOn ? { exclusive: { reward: f.exclusiveReward, how: f.exclusiveHow } } : {}) },
+      extra: { ...(f.category === "services" ? { serviceField: f.serviceField ?? "other" } : {}), benefits: f.exclusiveOn ? [...f.benefits, EXCLUSIVE_SLUG] : f.benefits, ...(f.exclusiveOn ? { exclusive: { reward: f.exclusiveReward, how: f.exclusiveHow } } : {}) },
       contact: null,
       status: "active",
       adminPinned: false,
@@ -622,6 +632,11 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                     </select>
                   </Field>
                 )}
+                {specialty && <Field id="serviceField" label="서비스 분야" error={errors.serviceField}>
+                  <select id="serviceField" value={f.serviceField ?? "other"} onChange={e => { if (isServiceField(e.target.value)) set("serviceField", e.target.value); }} className="field">
+                    {Object.entries(SERVICE_FIELDS).map(([slug, field]) => <option key={slug} value={slug}>{field.name}</option>)}
+                  </select>
+                </Field>}
                 <LinkInput
                   id="externalUrl"
                   label={
@@ -667,19 +682,22 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                 )}
                 {specialty && (
                   <div className="space-y-4">
-                    <Field id="specialtyType" label="서비스 종류" optional error={errors.specialtyType}>
+                    <Field id="specialtyType" label={specialty.kindLabel} optional error={errors.specialtyType}>
                       <input id="specialtyType" value={f.specialtyType ?? ""} maxLength={100} onChange={(e) => set("specialtyType", e.target.value)} placeholder={specialty.kind} className="field" />
                     </Field>
-                    <Field id="specialtyDuration" label="소요 시간·제공 내용" optional error={errors.specialtyDuration}>
+                    <Field id="specialtyDuration" label={specialty.durationLabel} optional error={errors.specialtyDuration}>
                       <input id="specialtyDuration" value={f.specialtyDuration ?? ""} maxLength={100} onChange={(e) => set("specialtyDuration", e.target.value)} placeholder={specialty.duration} className="field" />
                     </Field>
-                    <Field id="specialtyProvider" label={f.category === "photography" ? "작가 정보·경력" : "제공자 자격·소속"} optional error={errors.specialtyProvider}>
+                    <Field id="specialtyProvider" label={specialty.providerLabel} optional error={errors.specialtyProvider}>
                       <input id="specialtyProvider" value={f.specialtyProvider ?? ""} maxLength={100} onChange={(e) => set("specialtyProvider", e.target.value)} placeholder={specialty.provider} className="field" />
                     </Field>
                     <Field id="price" label="이용 요금" optional error={errors.price} hint="1회 기준, 패키지 또는 문의 후 결정 등 실제 요금 안내를 입력해주세요.">
                       <input id="price" value={f.price} maxLength={LIMITS.priceMax} onChange={(e) => set("price", e.target.value)} placeholder="예) 1회 80,000원 · 가격 협의" className="field" />
                     </Field>
-                    {f.category !== "photography" && <p className="rounded-lg bg-soft p-3 text-[13px] text-muted">서비스 홍보만 가능하며 검사 결과, 환자·내담자 개인정보나 진료기록은 공개 글에 올리지 마세요. 자격과 소속을 정확히 표시해주세요.</p>}
+                    <Field id="servicePrice" label="검색용 기준 요금 (원)" optional error={errors["extra.servicePrice"]} hint="숫자로 입력하면 가격대 검색에 포함됩니다. 무료는 0, 협의·외화 요금은 비워두세요.">
+                      <input id="servicePrice" type="number" min={0} max={1000000000} step={1} value={f.servicePrice ?? ""} onChange={e => set("servicePrice", e.target.value)} placeholder="80000" className="field" />
+                    </Field>
+                    {(f.serviceField === "psychology" || f.serviceField === "therapy") && <p className="rounded-lg bg-soft p-3 text-[13px] text-muted">서비스 홍보만 가능하며 검사 결과, 환자·내담자 개인정보나 진료기록은 공개 글에 올리지 마세요. 자격과 소속을 정확히 표시해주세요.</p>}
                   </div>
                 )}
                 {f.category === "products" && (
@@ -727,7 +745,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
               value={f.title}
               maxLength={LIMITS.titleMax + 20}
               onChange={(e) => set("title", e.target.value)}
-              placeholder={f.category ? TITLE_PLACEHOLDER[f.category] : "홍보할 대상의 이름을 적어주세요"}
+              placeholder={specialty?.title ?? (f.category ? TITLE_PLACEHOLDER[f.category] : "홍보할 대상의 이름을 적어주세요")}
               aria-invalid={!!errors.title}
               className="field"
             />
