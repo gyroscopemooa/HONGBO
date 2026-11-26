@@ -1,6 +1,9 @@
+"use client";
+
 import { SHOW_POST_SOCIAL } from "@/lib/features";
 import Link from "next/link";
 import { Eye, MapPin, MessageCircle, ThumbsUp } from "lucide-react";
+import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { CATEGORY_MAP, LIMITS, benefitLabels, SERVICE_FIELDS, isServiceField } from "@/lib/constants";
 import type { Post } from "@/lib/types";
 import { cn, formatCount, isWithinWeek, relativeTime } from "@/lib/utils";
@@ -13,13 +16,45 @@ import { PostImage } from "./PostImage";
 
 const CARD_SIZES = "(min-width:1024px) 190px, (min-width:640px) 30vw, 46vw";
 
+const HIDE_KEY = "hb-hidden-posts-until";
+const DUST_SPRING = { stiffness: 260, damping: 24 };
+const SEOUL_DATE = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
+
+function hiddenToday(postId: string) {
+  try { const saved: Record<string, string> = JSON.parse(localStorage.getItem(HIDE_KEY) ?? "{}"); return saved[postId] === SEOUL_DATE(); } catch { return false; }
+}
+function rememberHiddenToday(postId: string) {
+  try { const saved: Record<string, string> = JSON.parse(localStorage.getItem(HIDE_KEY) ?? "{}"); localStorage.setItem(HIDE_KEY, JSON.stringify({ ...saved, [postId]: SEOUL_DATE() })); } catch { /* 이번 화면에서만 숨김 */ }
+}
+function DustDismissButton({ postId, title, thumbnailRef, onDone }: { postId: string; title: string; thumbnailRef: RefObject<HTMLDivElement | null>; onDone: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null); const frameRef = useRef<number | null>(null);
+  useEffect(() => () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); }, []);
+  const dismiss = () => {
+    if (!window.confirm(`“${title}” 홍보를 오늘은 보지 않을까요?\n내일 다시 표시됩니다.`)) return;
+    rememberHiddenToday(postId); const host = thumbnailRef.current; const canvas = canvasRef.current;
+    if (!host || !canvas || matchMedia("(prefers-reduced-motion: reduce)").matches) { onDone(); return; }
+    const rect = host.getBoundingClientRect(); const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.round(rect.width * ratio)); canvas.height = Math.max(1, Math.round(rect.height * ratio)); canvas.style.width = `${rect.width}px`; canvas.style.height = `${rect.height}px`; canvas.style.opacity = "1";
+    const ctx = canvas.getContext("2d"); if (!ctx) { onDone(); return; } ctx.scale(ratio, ratio);
+    const dots = Array.from({ length: Math.min(1200, Math.max(260, Math.round(rect.width * rect.height / 18))) }, () => { const x = Math.random() * rect.width; const y = Math.random() * rect.height; return { x, y, delay: ((rect.width - x) / rect.width) * 260 + Math.random() * 90, vx: -(55 + Math.random() * 165), vy: -(20 + Math.random() * 90), color: Math.random() > .66 ? "240,79,74" : Math.random() > .5 ? "255,255,255" : "58,62,71" }; });
+    const started = performance.now();
+    const draw = (now: number) => { const elapsed = now - started; ctx.clearRect(0, 0, rect.width, rect.height); for (const dot of dots) { const age = Math.max(0, elapsed - dot.delay); const progress = Math.min(1, age / 650); if (!progress) continue; const drift = age / 1000; ctx.fillStyle = `rgba(${dot.color},${1 - progress})`; ctx.fillRect(dot.x + dot.vx * drift + Math.sin(age / 90 + dot.y) * 5 * drift, dot.y + dot.vy * drift + 50 * drift * drift, 2, 2); } if (elapsed < 860) frameRef.current = requestAnimationFrame(draw); else onDone(); };
+    host.style.transition = `opacity 860ms cubic-bezier(.22,1,.36,1), transform ${Math.round(1000 / DUST_SPRING.damping * DUST_SPRING.stiffness / 26)}ms cubic-bezier(.22,1,.36,1)`; host.style.opacity = "0"; host.style.transform = "scale(.985)"; frameRef.current = requestAnimationFrame(draw);
+  };
+  return <><canvas ref={canvasRef} aria-hidden className="pointer-events-none absolute inset-0 z-20 size-full opacity-0" /><button type="button" onClick={dismiss} aria-label={`${title} 오늘 안 보기`} title="오늘 안 보기" className="absolute right-1.5 top-1.5 z-30 grid size-7 place-items-center rounded-full bg-white/95 text-lg font-medium leading-none text-ink-2 shadow-sm transition-[transform,background-color] duration-200 hover:scale-110 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">×</button></>;
+}
+
 /** 모든 카테고리가 공유하는 홍보 카드 (대표 이미지 / 제목 / 한 줄 소개 / 카테고리 / 지역) */
 export function PostCard({ post, eager = false, preview = false, ad = false, rank }: { post: Post; eager?: boolean; preview?: boolean; ad?: boolean; rank?: number }) {
+  const hiddenStored = useSyncExternalStore(() => () => {}, () => hiddenToday(String(post.id)), () => false);
+  const [dismissed, setDismissed] = useState(false);
+  const thumbnailRef = useRef<HTMLDivElement>(null);
   const fresh = isNewPost(post.publishedAt);
   const price = post.price?.trim();
+  if (hiddenStored || dismissed) return null;
   const inner = (
     <>
-      <div className="relative">
+      <div ref={thumbnailRef} className="relative">
         <PostImage src={post.primaryImageUrl} alt="" category={post.category} sizes={CARD_SIZES} eager={eager} />
         {ad && <GlassLens src={post.primaryImageUrl || CATEGORY_MAP[post.category].defaultImage} size={104} />}
         <div className="pointer-events-none absolute inset-x-1.5 top-1.5 z-10 flex items-start justify-between gap-1">
@@ -89,9 +124,10 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
       {preview ? (
         <div className="flex h-full flex-col">{inner}</div>
       ) : (
-        <Link href={`/post/${post.id}`} className="flex h-full flex-col" aria-label={post.title}>
-          {inner}
-        </Link>
+        <>
+          <Link href={`/post/${post.id}`} className="flex h-full flex-col" aria-label={post.title}>{inner}</Link>
+          <DustDismissButton postId={String(post.id)} title={post.title} thumbnailRef={thumbnailRef} onDone={() => setDismissed(true)} />
+        </>
       )}
     </article>
   );
