@@ -50,12 +50,12 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
             {post.title}
           </h3>
           {price && (
-            <p title={price} className="line-clamp-2 shrink-0 text-[12.5px] font-bold leading-[17px] text-ink [overflow-wrap:anywhere]">
+            <p title={price} className="line-clamp-1 shrink-0 text-[12.5px] font-bold leading-[17px] text-ink [overflow-wrap:anywhere]">
               {price}
             </p>
           )}
           {post.shortDescription && (
-            <p className={cn("min-h-0 overflow-hidden text-[12px] leading-[17px] text-muted [overflow-wrap:anywhere]", price ? "line-clamp-2" : "line-clamp-3")}>{post.shortDescription}</p>
+            <p className={cn("shrink-0 overflow-hidden text-[12px] leading-[17px] text-muted [overflow-wrap:anywhere]", price ? "line-clamp-1" : "line-clamp-2")}>{post.shortDescription}</p>
           )}
         </div>
         <div className="flex min-w-0 items-center justify-between gap-1 overflow-hidden">
