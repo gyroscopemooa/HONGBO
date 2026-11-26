@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { Flame, Clock, Sparkles, ChevronDown } from "lucide-react";
+import { Flame, Clock, FilePlus, ChevronDown } from "lucide-react";
 import { PAGE_SIZE, SERVICE_FIELDS, SERVICE_PRICE_FILTERS, GENERAL_SERVICE_FIELDS, isGeneralServiceField, isIndependentService, isServiceCategory, type CategorySlug } from "@/lib/constants";
 import { buildHref, type ListParams } from "@/lib/listing";
 import { getPopularMode, getPopularPosts } from "@/lib/queries";
@@ -133,7 +133,7 @@ export async function ListView({
             <Clock size={15} aria-hidden /> 최신순
           </Link>
           <Link href={href({ sort: "published", page: undefined })} className={tab(params.sort === "published")}>
-            <Sparkles size={15} aria-hidden /> 신규 등록순
+            <FilePlus size={15} aria-hidden /> 신규 등록순
           </Link>
           <Link href={href({ sort: "popular", page: undefined })} className={tab(params.sort === "popular")}>
             <Flame size={15} aria-hidden /> 인기순
