@@ -95,7 +95,7 @@ function NavInner() {
 
   return (
     <nav aria-label="카테고리" className="wrap flex items-center">
-      <div className="no-scrollbar -mx-1 flex min-w-0 flex-1 items-center overflow-x-auto overscroll-x-contain whitespace-nowrap xl:overflow-visible">
+      <div className="no-scrollbar -mx-1 flex min-w-0 flex-1 items-center overflow-x-auto overscroll-x-contain whitespace-nowrap 2xl:overflow-visible">
         <Link href="/posts" className={linkCls(activeCat === "all")} aria-current={activeCat === "all" ? "page" : undefined}>
           <CategoryIcon slug="all" size={17} />
           전체보기
@@ -110,7 +110,7 @@ function NavInner() {
           <span className="font-extrabold text-[#1762e8]">놀러가자</span>
           {underline(pathname.startsWith("/play"))}
         </Link>
-        <div className="flex w-max shrink-0 items-center xl:hidden">
+        <div className="flex w-max shrink-0 items-center 2xl:hidden">
           {[...["photography", "counseling", "psych-test", "services"].flatMap(slug => CATEGORIES.filter(c => c.slug === slug)), ...CATEGORIES.filter(c => !["photography", "counseling", "psych-test", "services"].includes(c.slug))].map((c) => {
             const active = activeCat === c.slug;
             return (
@@ -136,7 +136,7 @@ function NavInner() {
           })}
         </div>
         {/* 데스크톱: 비슷한 카테고리끼리 묶은 드롭다운 */}
-        <div className="hidden w-max shrink-0 items-center xl:flex">
+        <div className="hidden w-max shrink-0 items-center 2xl:flex">
           {CATEGORY_GROUPS.map((g) => (
             g.slugs.length === 1 ? <Link key={g.label} href={`/category/${g.slugs[0]}`} className={linkCls(activeCat === g.slugs[0])} aria-current={activeCat === g.slugs[0] ? "page" : undefined}>{g.label}{underline(activeCat === g.slugs[0])}</Link> : <GroupMenu key={g.label} label={g.label} pathname={pathname} items={g.slugs.map((slug) => [`/category/${slug}`, CATEGORY_NAME[slug]] as [string, string])} linkCls={linkCls} />
           ))}
@@ -147,7 +147,7 @@ function NavInner() {
           </Link>
           <GroupMenu label="혜택" pathname={pathname} items={[...BENEFITS.map((b) => [`/benefit/${b.value}`, b.label] as [string, string]), ["/benefit", "이벤트 모음 전체"]]} linkCls={linkCls} />
         </div>
-        <div className="flex w-max shrink-0 items-center xl:hidden">
+        <div className="flex w-max shrink-0 items-center 2xl:hidden">
           {extra.map(([href, label]) => (
             <Link key={href} href={href} className={linkCls(pathname.startsWith(href))} aria-current={pathname.startsWith(href) ? "page" : undefined}>
               {label}
@@ -160,7 +160,7 @@ function NavInner() {
           <Link href="/region" className={linkCls(pathname === "/region")}>지역별</Link>
         </div>
       </div>
-      <div className="hidden shrink-0 items-center border-l border-line pl-2 xl:flex">
+      <div className="hidden shrink-0 items-center border-l border-line pl-2 2xl:flex">
         <GroupMenu label="커뮤니티" pathname={pathname} items={extra} linkCls={linkCls} />
         <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
         <Link href="/posts?sort=popular" className={linkCls(sort === "popular")}>
