@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { ChevronDown, Flame, Clock, MapPin } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { BENEFITS, CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "./CategoryIcon";
@@ -146,6 +146,7 @@ function NavInner() {
             {underline(pathname === "/benefit/exclusive")}
           </Link>
           <GroupMenu label="혜택" pathname={pathname} items={[...BENEFITS.map((b) => [`/benefit/${b.value}`, b.label] as [string, string]), ["/benefit", "이벤트 모음 전체"]]} linkCls={linkCls} />
+          <GroupMenu label="더보기" pathname={pathname} items={[...extra, ["/posts?sort=popular", "인기글"], ["/posts?sort=published", "최신글"], ["/region", "지역별"]]} linkCls={linkCls} />
         </div>
         <div className="flex w-max shrink-0 items-center 2xl:hidden">
           {extra.map(([href, label]) => (
@@ -159,19 +160,6 @@ function NavInner() {
           <Link href="/posts?sort=published" className={linkCls(sort === "published")}>최신글</Link>
           <Link href="/region" className={linkCls(pathname === "/region")}>지역별</Link>
         </div>
-      </div>
-      <div className="hidden shrink-0 items-center border-l border-line pl-2 2xl:flex">
-        <GroupMenu label="커뮤니티" pathname={pathname} items={extra} linkCls={linkCls} />
-        <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />
-        <Link href="/posts?sort=popular" className={linkCls(sort === "popular")}>
-          <Flame size={15} aria-hidden /> 인기글
-        </Link>
-        <Link href="/posts?sort=published" className={linkCls(sort === "published")}>
-          <Clock size={15} aria-hidden /> 최신글
-        </Link>
-        <Link href="/region" className={linkCls(pathname === "/region")}>
-          <MapPin size={15} aria-hidden /> 지역별
-        </Link>
       </div>
     </nav>
   );
