@@ -51,6 +51,7 @@ export interface PostExtra {
   usageType?: string;
   /** 전문 서비스 홍보 정보 (공개 가능한 제공자 정보만). */
   serviceField?: ServiceField;
+  regularPrice?: string;
   servicePrice?: number;
   servicePriceBand?: string;
   specialtyType?: string;

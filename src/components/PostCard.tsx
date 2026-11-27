@@ -6,6 +6,7 @@ import { Eye, MapPin, MessageCircle, ThumbsUp } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { CATEGORY_MAP, LIMITS, benefitLabels, SERVICE_FIELDS, isServiceField } from "@/lib/constants";
 import type { Post } from "@/lib/types";
+import { productDiscount } from "@/lib/product-price";
 import { cn, formatCount, isWithinWeek, relativeTime } from "@/lib/utils";
 import { BenefitBadges } from "./BenefitBadges";
 import { CategoryBadge } from "./CategoryBadge";
@@ -51,6 +52,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
   const thumbnailRef = useRef<HTMLDivElement>(null);
   const fresh = isNewPost(post.publishedAt);
   const price = post.price?.trim();
+  const discount = post.category === "products" ? productDiscount(post.extra.regularPrice, price) : null;
   if (hiddenStored || dismissed) return null;
   const inner = (
     <>
@@ -86,6 +88,7 @@ export function PostCard({ post, eager = false, preview = false, ad = false, ran
           </h3>
           {price && (
             <p title={price} className="line-clamp-1 shrink-0 text-[12.5px] font-bold leading-[17px] text-ink [overflow-wrap:anywhere]">
+              {discount != null && <><span className="mr-1 text-brand">{discount}% 할인</span><s className="mr-1 font-normal text-muted">{post.extra.regularPrice}</s></>}
               {price}
             </p>
           )}

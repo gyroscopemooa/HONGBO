@@ -99,6 +99,7 @@ export interface FormState {
   couponCode: string;
   couponNote: string;
   videoUrl: string;
+  regularPrice: string;
   price: string;
   deliveryMethod: string;
   deliveryPeriod: string;
@@ -150,6 +151,7 @@ const EMPTY: FormState = {
   couponCode: "",
   couponNote: "",
   videoUrl: "",
+  regularPrice: "",
   price: "",
   deliveryMethod: "",
   deliveryPeriod: "",
@@ -223,6 +225,7 @@ export function postToFormState(p: Post): FormState {
     couponCode: p.extra.couponCode ?? "",
     couponNote: p.extra.couponNote ?? "",
     videoUrl: p.extra.youtubeId ? youtubeWatchUrl(p.extra.youtubeId) : "",
+    regularPrice: p.extra.regularPrice ?? "",
     price: p.price ?? "",
     deliveryMethod: p.extra.deliveryMethod ?? "",
     deliveryPeriod: p.extra.deliveryMethod ? (p.extra.deliveryPeriod ?? "") : "",
@@ -255,6 +258,7 @@ function toPayload(f: FormState) {
       bodyBlocks: f.bodyBlocks,
       bodyFormat: f.bodyFormat,
       play: f.play,
+      regularPrice: f.category === "products" ? f.regularPrice : undefined,
       deliveryMethod: f.category === "products" ? f.deliveryMethod : "",
       deliveryPeriod: f.category === "products" && f.deliveryMethod?.trim() ? f.deliveryPeriod : "",
       saleMethod: f.category === "products" ? f.saleMethod : "",
@@ -464,7 +468,7 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
       address: null,
       mapUrl: null,
       tags: [],
-      extra: { ...(isServiceCategory(f.category) ? { serviceField: resolveServiceField(f.category, f.serviceField) } : {}), benefits: f.exclusiveOn ? [...f.benefits, EXCLUSIVE_SLUG] : f.benefits, ...(f.exclusiveOn ? { exclusive: { reward: f.exclusiveReward, how: f.exclusiveHow } } : {}) },
+      extra: { regularPrice: f.category === "products" ? f.regularPrice : undefined, ...(isServiceCategory(f.category) ? { serviceField: resolveServiceField(f.category, f.serviceField) } : {}), benefits: f.exclusiveOn ? [...f.benefits, EXCLUSIVE_SLUG] : f.benefits, ...(f.exclusiveOn ? { exclusive: { reward: f.exclusiveReward, how: f.exclusiveHow } } : {}) },
       contact: null,
       status: "active",
       adminPinned: false,
@@ -718,7 +722,10 @@ export function PostForm({ mode, post, canManageConsent = false, initialThreadsC
                 )}
                 {f.category === "products" && (
                   <>
-                  <Field id="price" label="가격" optional error={errors.price} hint="예) 12,900원 · 무료 · 가격 협의">
+                    <Field id="regularPrice" label="정가" optional error={errors.regularPrice} hint="할인 전 가격을 입력해주세요.">
+                      <input id="regularPrice" value={f.regularPrice} maxLength={LIMITS.priceMax} onChange={(e) => set("regularPrice", e.target.value)} placeholder="예) 19,900원" className="field" />
+                    </Field>
+                  <Field id="price" label="할인가 / 판매가" optional error={errors.price} hint="예) 12,900원 · 무료 · 가격 협의">
                     <input id="price" value={f.price} maxLength={LIMITS.priceMax} onChange={(e) => set("price", e.target.value)} placeholder="12,900원" className="field" />
                   </Field>
                     <div className="grid min-w-0 gap-4 sm:grid-cols-2">

@@ -36,6 +36,7 @@ import { BenefitBadges } from "@/components/BenefitBadges";
 import { CopyCodeButton } from "@/components/CopyCodeButton";
 import { ctaLabel, platformText, secondaryLinks } from "@/lib/post-links";
 import { effectiveStatus, isPostPublic } from "@/lib/queries";
+import { productDiscount } from "@/lib/product-price";
 import { store } from "@/lib/store";
 import { formatCount, formatDate, getDomain, relativeTime, siteUrl } from "@/lib/utils";
 
@@ -112,6 +113,7 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
   const others = secondaryLinks(post);
   const plat = platformText(post);
   const usage = post.extra.usageType ? PLATFORM_LABELS[post.extra.usageType] : null;
+  const discount = post.category === "products" ? productDiscount(post.extra.regularPrice, post.price) : null;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -216,9 +218,7 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
               </div>
             )}
 
-            {post.price && (
-              <p className="mt-4 text-[26px] font-black tracking-[-0.03em] text-brand">{post.price}</p>
-            )}
+            {post.price && <div className="mt-4 flex flex-wrap items-end gap-x-2 gap-y-1"><p className="text-[26px] font-black tracking-[-0.03em] text-brand">{post.price}</p>{discount != null && <><span className="text-[14px] text-muted line-through">정가 {post.extra.regularPrice}</span><span className="rounded-md bg-[#ffecec] px-2 py-1 text-[13px] font-extrabold text-[#c4262b]">{discount}% 할인</span></>}</div>}
 
             {rows.length > 0 && (
               <dl className="mt-4 space-y-2.5 border-t border-line pt-4 text-[14px]">

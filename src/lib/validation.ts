@@ -76,6 +76,7 @@ const rawSchema = z.object({
       siteUrl: str(2100),
       usageType: str(40),
       serviceField: str(40),
+      regularPrice: str(200),
       servicePrice: z.number().int().min(0).max(1000000000).optional().nullable(),
       specialtyType: str(200),
       specialtyDuration: str(200),
@@ -189,6 +190,9 @@ export function parsePostInput(raw: unknown): ParseResult {
   }
   if (v.extra.play) extra.play = v.extra.play;
   if (category === "products") {
+    const regularPrice = blankToNull(v.extra.regularPrice);
+    if (regularPrice && regularPrice.length > LIMITS.priceMax) errors.regularPrice = `정가는 ${LIMITS.priceMax}자까지 입력할 수 있어요.`;
+    else if (regularPrice) extra.regularPrice = regularPrice;
     for (const key of ["deliveryMethod", "saleMethod"] as const) {
       const value = (v.extra[key] ?? "").replace(/\s+/g, " ").trim();
       if (value.length > 80) errors[key] = "80자 이내로 입력해주세요.";
